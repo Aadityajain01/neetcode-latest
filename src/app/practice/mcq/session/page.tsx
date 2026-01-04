@@ -92,8 +92,8 @@ export default function MCQSessionPage() {
       setSubmitted(true);
       setResult({
         correct: response.isCorrect,
-        correctAnswer: response.correctAnswer || "",
-        explanation: response.explanation || "",
+        correctAnswer: response.correctAnswer,
+        explanation: response.explanation,
       });
 
       toast.success(

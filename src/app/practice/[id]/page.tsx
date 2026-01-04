@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Loader2, Play, Send, Clock, Database } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { auth } from '@/lib/firebase';
+import { BackHeader } from '@/components/BacHeader';
 
 const LANGUAGE_TEMPLATES: Record<string, string> = {
   javascript: `function solve(input) {\n  return input;\n}`,
@@ -180,7 +181,7 @@ export default function PracticeDetailPage() {
         <Card className="bg-[#1E293B] border-[#334155]">
           <CardHeader>
             <CardTitle className="text-[#E5E7EB] text-2xl">
-              {problem.title}
+              <BackHeader title={problem.title} ></BackHeader>
             </CardTitle>
           </CardHeader>
           <CardContent>
