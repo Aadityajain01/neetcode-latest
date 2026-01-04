@@ -41,7 +41,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/problems', label: 'DSA Problems', icon: Code2 },
     { href: '/practice', label: 'Practice', icon: BookOpen },
-    { href: '/mcqs', label: 'MCQs', icon: Target },
+    // { href: '/mcqs', label: 'MCQs', icon: Target },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/communities', label: 'Communities', icon: Users },
     { href: '/profile', label: 'Profile', icon: User },
