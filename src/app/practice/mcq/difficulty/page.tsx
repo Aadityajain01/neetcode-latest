@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import MainLayout from '@/components/layouts/main-layout';
 import { mcqApi, MCQ } from '@/lib/api-modules';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { BackHeader } from '@/components/BacHeader';
 
 type DifficultyMeta = {
@@ -16,7 +14,8 @@ type DifficultyMeta = {
   hard: number;
 };
 
-export default function MCQDifficultyPage() {
+// 1. INNER COMPONENT: Logic & Params
+function MCQDifficultyContent() {
   const params = useSearchParams();
   const router = useRouter();
   const lang = params.get('lang');
@@ -30,6 +29,7 @@ export default function MCQDifficultyPage() {
 
   useEffect(() => {
     if (lang) fetchDifficultyMeta();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
   const fetchDifficultyMeta = async () => {
@@ -64,7 +64,7 @@ export default function MCQDifficultyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
+      <div className="min-h-[50vh] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
       </div>
     );
@@ -106,25 +106,38 @@ export default function MCQDifficultyPage() {
   };
 
   return (
-    <MainLayout>
-
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <BackHeader
-  title={`${lang.toUpperCase()} MCQ Practice`}
-  subtitle="Choose a difficulty level"
-/>
-
-        </div>
-
-        {/* Difficulty Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {renderCard('easy', 'green', 'Easy')}
-          {renderCard('medium', 'yellow', 'Medium')}
-          {renderCard('hard', 'red', 'Hard')}
-        </div>
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <BackHeader
+          title={`${lang.toUpperCase()} MCQ Practice`}
+          subtitle="Choose a difficulty level"
+        />
       </div>
+
+      {/* Difficulty Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {renderCard('easy', 'green', 'Easy')}
+        {renderCard('medium', 'yellow', 'Medium')}
+        {renderCard('hard', 'red', 'Hard')}
+      </div>
+    </div>
+  );
+}
+
+// 2. OUTER COMPONENT: Suspense Wrapper
+export default function MCQDifficultyPage() {
+  return (
+    <MainLayout>
+      <Suspense 
+        fallback={
+          <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
+            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+          </div>
+        }
+      >
+        <MCQDifficultyContent />
+      </Suspense>
     </MainLayout>
   );
 }
