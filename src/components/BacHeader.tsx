@@ -17,7 +17,7 @@ export function BackHeader({ title, subtitle }: Props) {
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="text-[#9CA3AF] hover:text-[#E5E7EB] p-0 h-auto"
+        className="text-[#9CA3AF] hover:text-black p-0 h-auto"
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
         Back

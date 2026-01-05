@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { Loader2, Play, Send, Clock, Database } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { auth } from "@/lib/firebase";
+import { BackHeader } from "@/components/BacHeader";
 
 const LANGUAGE_TEMPLATES: Record<string, string> = {
   javascript: `// JavaScript Solution
@@ -76,12 +77,22 @@ const JUDGE0_LANGUAGE_MAP: Record<string, number> = {
   c: 11,
   typescript: 74,
 };
+function shuffleArray(arr: string[]) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function ProblemDetailPage() {
   const router = useRouter();
   const params = useParams();
 
   const problemId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const [sessionProblems, setSessionProblems] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   const [problem, setProblem] = useState<Problem | null>(null);
   const [sampleTestCases, setSampleTestCases] = useState<TestCase[]>([]);
@@ -94,10 +105,72 @@ export default function ProblemDetailPage() {
   const [currentSubmission, setCurrentSubmission] = useState<Submission | null>(
     null
   );
+  const [customInput, setCustomInput] = useState("");
+  const startNewSession = async (difficulty: string) => {
+    try {
+      const res = await problemApi.getProblems({
+        type: "dsa",
+        difficulty,
+        limit: 500,
+      });
+
+      const ids = res.problems.map((p: Problem) => p._id);
+      const shuffled = shuffleArray(ids);
+
+      sessionStorage.setItem(
+        `dsa-session-${difficulty}`,
+        JSON.stringify({ list: shuffled, index: 0 })
+      );
+
+      setSessionProblems(shuffled);
+      setCurrentIndex(0);
+
+      router.replace(`/problems/${shuffled[0]}`);
+    } catch {
+      toast.error("Failed to start DSA session");
+    }
+  };
+
+  useEffect(() => {
+    if (!problem?.difficulty) return;
+
+    const key = `dsa-session-${problem.difficulty}`;
+    const stored = sessionStorage.getItem(key);
+
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setSessionProblems(parsed.list);
+      setCurrentIndex(parsed.index);
+    } else {
+      startNewSession(problem.difficulty);
+    }
+  }, [problem?.difficulty]);
 
   useEffect(() => {
     if (problemId) fetchProblem();
   }, [problemId]);
+  // 🔹 Poll submission status after submit
+  useEffect(() => {
+    if (!currentSubmission?._id) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const updated = await submissionApi.getSubmissionById(
+          currentSubmission._id
+        );
+
+        setCurrentSubmission(updated);
+
+        if (updated.status !== "pending" && updated.status !== "running") {
+          clearInterval(interval);
+        }
+      } catch (err) {
+        clearInterval(interval);
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [currentSubmission?._id]);
 
   const fetchProblem = async () => {
     if (!problemId) return;
@@ -128,6 +201,28 @@ export default function ProblemDetailPage() {
     setLanguage(newLanguage);
     setCode(LANGUAGE_TEMPLATES[newLanguage] || code);
   };
+const goToNextProblem = () => {
+  const nextIndex = currentIndex + 1;
+
+  if (nextIndex >= sessionProblems.length) {
+    toast.success("🎉 You have completed all questions!");
+    sessionStorage.removeItem(`dsa-session-${problem?.difficulty}`);
+    return;
+  }
+
+  const key = `dsa-session-${problem?.difficulty}`;
+
+  sessionStorage.setItem(
+    key,
+    JSON.stringify({
+      list: sessionProblems,
+      index: nextIndex,
+    })
+  );
+
+  setCurrentIndex(nextIndex);
+  router.push(`/problems/${sessionProblems[nextIndex]}`);
+};
 
   const handleRunCode = async () => {
     if (!problem) return;
@@ -156,7 +251,7 @@ export default function ProblemDetailPage() {
           body: JSON.stringify({
             source_code: code,
             language_id: languageId,
-            stdin: sampleTestCases[0]?.input || "",
+            stdin: customInput || sampleTestCases[0]?.input || "",
           }),
         }
       );
@@ -226,9 +321,7 @@ export default function ProblemDetailPage() {
         <div className="space-y-6">
           <Card className="bg-[#1E293B] border-[#334155]">
             <CardHeader>
-              <CardTitle className="text-2xl text-[#E5E7EB] mb-2">
-                {problem.title}
-              </CardTitle>
+              <BackHeader title={problem.title} ></BackHeader>
               <div className="flex flex-wrap gap-2">
                 {problem.difficulty && (
                   <span className="px-3 py-1 bg-[#22C55E]/10 text-[#22C55E] rounded-full text-sm font-medium">
@@ -265,7 +358,7 @@ export default function ProblemDetailPage() {
 
                 <Select value={language} onValueChange={handleLanguageChange}>
                   <SelectTrigger className="w-40 bg-[#0F172A] border-[#334155] text-[#E5E7EB]">
-                    <SelectValue  />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1E293B] border-[#334155]">
                     {problem.languages.map((lang) => (
@@ -318,21 +411,101 @@ export default function ProblemDetailPage() {
               )}
               Submit
             </Button>
+            <Button
+  onClick={() => goToNextProblem()}
+  disabled={
+    !currentSubmission ||
+    currentSubmission.status !== "accepted"
+  }
+  className="flex-1 bg-[#9333EA]"
+>
+  Next Question →
+</Button>
+
           </div>
 
-          <Card className="bg-[#1E293B] border-[#334155]">
-            <CardHeader>
-              <CardTitle className="text-[#E5E7EB]">Output</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={output}
-                readOnly
-                className="bg-[#0F172A] border-[#334155] text-[#E5E7EB] min-h-[150px] font-mono"
-                placeholder="Output will appear here..."
-              />
-            </CardContent>
-          </Card>
+          {isRunning || isSubmitting || output ? (
+            <Card className="bg-[#1E293B] border-[#334155]">
+              <CardHeader>
+                <CardTitle className="text-[#E5E7EB]">
+                  {currentSubmission ? "Submission Result" : "Output"}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-2 text-sm text-[#E5E7EB]">
+                {!currentSubmission ? (
+                  <Textarea
+                    value={output}
+                    readOnly
+                    className="bg-[#0F172A] border-[#334155] text-[#E5E7EB] min-h-[150px] font-mono"
+                    placeholder="Output will appear here..."
+                  />
+                ) : currentSubmission.status === "pending" ||
+                  currentSubmission.status === "running" ? (
+                  <p className="text-[#9CA3AF]">Judging submission...</p>
+                ) : (
+                  <>
+                    <p>
+                      <strong>Verdict:</strong>{" "}
+                      <span className="capitalize">
+                        {currentSubmission.status}
+                      </span>
+                    </p>
+
+                    {typeof currentSubmission.testCasesPassed === "number" && (
+                      <p>
+                        <strong>Test Cases:</strong>{" "}
+                        {currentSubmission.testCasesPassed} /{" "}
+                        {currentSubmission.totalTestCases}
+                      </p>
+                    )}
+
+                    {currentSubmission.score! > 0 && (
+                      <p>
+                        <strong>Score:</strong> {currentSubmission.score}
+                      </p>
+                    )}
+
+                    {currentSubmission.failureDetails && (
+                      <div className="mt-2">
+                        <p className="font-semibold">Failed Test Case</p>
+                        <pre className="bg-[#0F172A] p-2 rounded text-xs whitespace-pre-wrap">
+                          {`Input:
+${currentSubmission.failureDetails.input}
+
+Expected:
+${currentSubmission.failureDetails.expected}
+
+Your Output:
+${currentSubmission.failureDetails.output}`}
+                        </pre>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-[#1E293B] border-[#334155]">
+              <CardHeader>
+                <CardTitle className="text-[#E5E7EB]">
+                  Custom Input (stdin)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  placeholder={
+                    sampleTestCases[0]?.input
+                      ? `Example:\n${sampleTestCases[0].input}`
+                      : "Enter input here"
+                  }
+                  className="bg-[#0F172A] border-[#334155] text-[#E5E7EB] min-h-[120px] font-mono"
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </MainLayout>
