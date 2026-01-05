@@ -92,18 +92,18 @@ function MCQSessionContent() {
 
       setSubmitted(true);
       const normalizedCorrectAnswer =
-        typeof (response as any ).correctAnswer === "string"
-          ? parseInt((response as any ).correctAnswer, 10)
-          : (response as any ).correctAnswer;
+        typeof (response as any).correctAnswer === "string"
+          ? parseInt((response as any).correctAnswer, 10)
+          : (response as any).correctAnswer;
 
       setResult({
-        correct: Boolean((response as any ).isCorrect),
+        correct: Boolean((response as any).isCorrect),
         correctAnswer: normalizedCorrectAnswer,
-        explanation: (response as any ).explanation ?? "",
+        explanation: (response as any).explanation ?? "",
       });
 
       toast.success(
-        (response as any ).isCorrect ? "Correct answer!" : "Incorrect answer"
+        (response as any).isCorrect ? "Correct answer!" : "Incorrect answer"
       );
     } catch (error: any) {
       toast.error(error.message || "Failed to submit answer");
@@ -186,7 +186,10 @@ function MCQSessionContent() {
                   if (submitted && result) {
                     if (index === result.correctAnswer) {
                       style = "bg-green-500/10 border-green-500";
-                    } else if (index === selectedAnswer) {
+                    } else if (
+                      index === selectedAnswer &&
+                      index !== result.correctAnswer
+                    ) {
                       style = "bg-red-500/10 border-red-500";
                     }
                   }
