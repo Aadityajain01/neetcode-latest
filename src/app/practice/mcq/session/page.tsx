@@ -184,11 +184,11 @@ function MCQSessionContent() {
 
                   // After submit
                   if (submitted && result) {
-                    if (index === (result as any).correctAnswer) {
+                    if (index == (result as any).correctAnswer) {
                       style = "bg-green-500/10 border-green-500";
                     } else if (
-                      index === selectedAnswer &&
-                      index !== (result as any).correctAnswer
+                      index == selectedAnswer &&
+                      index != (result as any).correctAnswer
                     ) {
                       style = "bg-red-500/10 border-red-500";
                     }
