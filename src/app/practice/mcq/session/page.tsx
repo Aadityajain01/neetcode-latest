@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import MainLayout from '@/components/layouts/main-layout';
-import { mcqApi, MCQ } from '@/lib/api-modules';
-import { BackHeader } from '@/components/BacHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RadioGroup } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, BookOpen } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import MainLayout from "@/components/layouts/main-layout";
+import { mcqApi, MCQ } from "@/lib/api-modules";
+import { BackHeader } from "@/components/BacHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, BookOpen } from "lucide-react";
+import { toast } from "sonner";
 
 type ResultState = {
   correct: boolean;
@@ -21,8 +21,8 @@ type ResultState = {
 // 1. INNER COMPONENT: Logic, State & Search Params
 function MCQSessionContent() {
   const params = useSearchParams();
-  const lang = params.get('lang');
-  const difficulty = params.get('difficulty');
+  const lang = params.get("lang");
+  const difficulty = params.get("difficulty");
 
   const [loading, setLoading] = useState(true);
   const [mcq, setMCQ] = useState<MCQ | null>(null);
@@ -69,7 +69,7 @@ function MCQSessionContent() {
       setResult(null);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load MCQ');
+      toast.error("Failed to load MCQ");
     } finally {
       setLoading(false);
     }
@@ -91,17 +91,22 @@ function MCQSessionContent() {
       const submission = response;
 
       setSubmitted(true);
+      const normalizedCorrectAnswer =
+        typeof (response as any ).correctAnswer === "string"
+          ? parseInt((response as any ).correctAnswer, 10)
+          : (response as any ).correctAnswer;
+
       setResult({
-        correct: response.isCorrect,
-        correctAnswer: response.correctAnswer,
-        explanation: response.explanation,
+        correct: Boolean((response as any ).isCorrect),
+        correctAnswer: normalizedCorrectAnswer,
+        explanation: (response as any ).explanation ?? "",
       });
 
       toast.success(
-        submission.isCorrect ? 'Correct answer!' : 'Incorrect answer'
+        (response as any ).isCorrect ? "Correct answer!" : "Incorrect answer"
       );
     } catch (error: any) {
-      toast.error(error.message || 'Failed to submit answer');
+      toast.error(error.message || "Failed to submit answer");
     } finally {
       setSubmitting(false);
     }
@@ -170,19 +175,19 @@ function MCQSessionContent() {
               <RadioGroup className="space-y-3">
                 {mcq.options.map((option, index) => {
                   let style =
-                    'bg-[#0F172A] border-[#334155] hover:border-[#38BDF8]';
+                    "bg-[#0F172A] border-[#334155] hover:border-[#38BDF8]";
 
                   // Selected (before submit)
                   if (!submitted && selectedAnswer === index) {
-                    style = 'bg-[#38BDF8]/10 border-[#38BDF8]';
+                    style = "bg-[#38BDF8]/10 border-[#38BDF8]";
                   }
 
                   // After submit
                   if (submitted && result) {
                     if (index === result.correctAnswer) {
-                      style = 'bg-green-500/10 border-green-500';
+                      style = "bg-green-500/10 border-green-500";
                     } else if (index === selectedAnswer) {
-                      style = 'bg-red-500/10 border-red-500';
+                      style = "bg-red-500/10 border-red-500";
                     }
                   }
 
@@ -211,23 +216,23 @@ function MCQSessionContent() {
               size="lg"
             >
               <BookOpen className="mr-2 h-4 w-4" />
-              {submitting ? 'Submitting...' : 'Submit Answer'}
+              {submitting ? "Submitting..." : "Submit Answer"}
             </Button>
           ) : (
             <Card
               className={`border-2 ${
-                result?.correct ? 'border-green-500' : 'border-red-500'
+                result?.correct ? "border-green-500" : "border-red-500"
               } bg-[#1E293B]`}
             >
               <CardContent className="py-6 text-center space-y-4">
                 <h2
                   className={`text-2xl font-bold ${
-                    result?.correct ? 'text-green-400' : 'text-red-400'
+                    result?.correct ? "text-green-400" : "text-red-400"
                   }`}
                 >
                   {result?.correct
-                    ? 'Correct! 🎉'
-                    : 'Incorrect. Keep practicing!'}
+                    ? "Correct! 🎉"
+                    : "Incorrect. Keep practicing!"}
                 </h2>
 
                 {result?.explanation && (

@@ -201,28 +201,28 @@ export default function ProblemDetailPage() {
     setLanguage(newLanguage);
     setCode(LANGUAGE_TEMPLATES[newLanguage] || code);
   };
-const goToNextProblem = () => {
-  const nextIndex = currentIndex + 1;
+  const goToNextProblem = () => {
+    const nextIndex = currentIndex + 1;
 
-  if (nextIndex >= sessionProblems.length) {
-    toast.success("🎉 You have completed all questions!");
-    sessionStorage.removeItem(`dsa-session-${problem?.difficulty}`);
-    return;
-  }
+    if (nextIndex >= sessionProblems.length) {
+      toast.success("🎉 You have completed all questions!");
+      sessionStorage.removeItem(`dsa-session-${problem?.difficulty}`);
+      return;
+    }
 
-  const key = `dsa-session-${problem?.difficulty}`;
+    const key = `dsa-session-${problem?.difficulty}`;
 
-  sessionStorage.setItem(
-    key,
-    JSON.stringify({
-      list: sessionProblems,
-      index: nextIndex,
-    })
-  );
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        list: sessionProblems,
+        index: nextIndex,
+      })
+    );
 
-  setCurrentIndex(nextIndex);
-  router.push(`/problems/${sessionProblems[nextIndex]}`);
-};
+    setCurrentIndex(nextIndex);
+    router.push(`/problems/${sessionProblems[nextIndex]}`);
+  };
 
   const handleRunCode = async () => {
     if (!problem) return;
@@ -321,7 +321,7 @@ const goToNextProblem = () => {
         <div className="space-y-6">
           <Card className="bg-[#1E293B] border-[#334155]">
             <CardHeader>
-              <BackHeader title={problem.title} ></BackHeader>
+              <BackHeader title={problem.title}></BackHeader>
               <div className="flex flex-wrap gap-2">
                 {problem.difficulty && (
                   <span className="px-3 py-1 bg-[#22C55E]/10 text-[#22C55E] rounded-full text-sm font-medium">
@@ -412,16 +412,14 @@ const goToNextProblem = () => {
               Submit
             </Button>
             <Button
-  onClick={() => goToNextProblem()}
-  disabled={
-    !currentSubmission ||
-    currentSubmission.status !== "accepted"
-  }
-  className="flex-1 bg-[#9333EA]"
->
-  Next Question →
-</Button>
-
+              onClick={() => goToNextProblem()}
+              disabled={
+                !currentSubmission || currentSubmission.status !== "accepted"
+              }
+              className="flex-1 bg-[#9333EA]"
+            >
+              Next Question →
+            </Button>
           </div>
 
           {isRunning || isSubmitting || output ? (
@@ -466,18 +464,18 @@ const goToNextProblem = () => {
                       </p>
                     )}
 
-                    {currentSubmission.failureDetails && (
+                    {(currentSubmission as any)?.failureDetails && (
                       <div className="mt-2">
                         <p className="font-semibold">Failed Test Case</p>
                         <pre className="bg-[#0F172A] p-2 rounded text-xs whitespace-pre-wrap">
                           {`Input:
-${currentSubmission.failureDetails.input}
+                                ${(currentSubmission as any)?.failureDetails?.input}
 
-Expected:
-${currentSubmission.failureDetails.expected}
+                                Expected:
+                                ${(currentSubmission as any)?.failureDetails?.expected}
 
-Your Output:
-${currentSubmission.failureDetails.output}`}
+                                Your Output:
+                                ${(currentSubmission as any)?.failureDetails?.output}`}
                         </pre>
                       </div>
                     )}
