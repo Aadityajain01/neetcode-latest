@@ -98,7 +98,7 @@ function MCQSessionContent() {
 
       setResult({
         correct: Boolean((response as any).isCorrect),
-        correctAnswer: normalizedCorrectAnswer,
+        correctAnswer: (response as any).correctAnswer,
         explanation: (response as any).explanation ?? "",
       });
 
@@ -184,11 +184,11 @@ function MCQSessionContent() {
 
                   // After submit
                   if (submitted && result) {
-                    if (index === result.correctAnswer) {
+                    if (index === (result as any).correctAnswer) {
                       style = "bg-green-500/10 border-green-500";
                     } else if (
                       index === selectedAnswer &&
-                      index !== result.correctAnswer
+                      index !== (result as any).correctAnswer
                     ) {
                       style = "bg-red-500/10 border-red-500";
                     }
