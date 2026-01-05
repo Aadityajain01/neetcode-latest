@@ -224,26 +224,26 @@ function MCQSessionContent() {
           ) : (
             <Card
               className={`border-2 ${
-                result?.correct ? "border-green-500" : "border-red-500"
+                (result as any).correct ? "border-green-500" : "border-red-500"
               } bg-[#1E293B]`}
             >
               <CardContent className="py-6 text-center space-y-4">
                 <h2
                   className={`text-2xl font-bold ${
-                    result?.correct ? "text-green-400" : "text-red-400"
+                    (result as any).correct ? "text-green-400" : "text-red-400"
                   }`}
                 >
-                  {result?.correct
+                  {(result as any).correct
                     ? "Correct! 🎉"
                     : "Incorrect. Keep practicing!"}
                 </h2>
 
-                {result?.explanation && (
+                {(result as any).explanation && (
                   <div className="bg-[#0F172A] p-4 rounded border border-[#334155] text-left">
                     <h3 className="text-[#E5E7EB] font-semibold mb-2">
                       Explanation
                     </h3>
-                    <p className="text-[#9CA3AF]">{result.explanation}</p>
+                    <p className="text-[#9CA3AF]">{(result as any).explanation}</p>
                   </div>
                 )}
 
@@ -267,11 +267,11 @@ export default function MCQSessionPage() {
   return (
     <MainLayout>
       <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-          </div>
-        }
+        // fallback={
+        //   <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
+        //     <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
+        //   </div>
+        // }
       >
         <MCQSessionContent />
       </Suspense>
