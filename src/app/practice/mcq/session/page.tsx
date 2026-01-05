@@ -98,7 +98,7 @@ function MCQSessionContent() {
 
       setResult({
         correct: Boolean((response as any).isCorrect),
-        correctAnswer: (response as any).correctAnswer,
+        correctAnswer: normalizedCorrectAnswer,
         explanation: (response as any).explanation ?? "",
       });
 
