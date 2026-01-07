@@ -24,38 +24,96 @@ import { toast } from "sonner";
 import { Loader2, Play, Send, Clock, Database } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { auth } from "@/lib/firebase";
-import { BackHeader } from "@/components/BacHeader";
+import { BackHeader } from "@/components/BackButton";
 
+// 1. ADD THESE IMPORTS
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+// 🔹 Templates using Standard I/O (stdin/stdout)
 const LANGUAGE_TEMPLATES: Record<string, string> = {
-  javascript: `// JavaScript Solution
-function solve(input) {
-  // Your code here
-  return input;
-}`,
+  javascript: `// JavaScript Solution (Node.js)
+const fs = require('fs');
+const stdin = fs.readFileSync(0, 'utf-8');
+
+function solve() {
+  const lines = stdin.trim().split('\\n');
+  // Your code here. 
+  // Example: const [a, b] = lines[0].split(' ').map(Number);
+  // console.log(a + b);
+}
+
+solve();`,
+
   python: `# Python Solution
+import sys
+
 def solve():
+    # Read from stdin
+    input_data = sys.stdin.read().split()
+    
+    if not input_data:
+        return
+
     # Your code here
-    pass`,
+    # Example:
+    # a = int(input_data[0])
+    # b = int(input_data[1])
+    # print(a + b)
+
+if __name__ == '__main__':
+    solve()`,
+
   java: `// Java Solution
-import java.util.*;
-public class Solution {
+import java.util.Scanner;
+
+public class Main {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
         // Your code here
+        // Example:
+        // int a = scanner.nextInt();
+        // int b = scanner.nextInt();
+        // System.out.println(a + b);
+        
+        scanner.close();
     }
 }`,
+
   cpp: `// C++ Solution
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
 using namespace std;
 
 int main() {
+    // Optimize I/O operations
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
     // Your code here
+    // Example:
+    // int a, b;
+    // cin >> a >> b;
+    // cout << a + b << endl;
+
     return 0;
 }`,
+
   c: `// C Solution
 #include <stdio.h>
+#include <stdlib.h>
 
 int main() {
     // Your code here
+    // Example:
+    // int a, b;
+    // scanf("%d %d", &a, &b);
+    // printf("%d", a + b);
+
     return 0;
 }`,
 };
@@ -77,6 +135,7 @@ const JUDGE0_LANGUAGE_MAP: Record<string, number> = {
   c: 11,
   typescript: 74,
 };
+
 function shuffleArray(arr: string[]) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -106,6 +165,7 @@ export default function ProblemDetailPage() {
     null
   );
   const [customInput, setCustomInput] = useState("");
+
   const startNewSession = async (difficulty: string) => {
     try {
       const res = await problemApi.getProblems({
@@ -149,7 +209,7 @@ export default function ProblemDetailPage() {
   useEffect(() => {
     if (problemId) fetchProblem();
   }, [problemId]);
-  // 🔹 Poll submission status after submit
+
   useEffect(() => {
     if (!currentSubmission?._id) return;
 
@@ -201,6 +261,7 @@ export default function ProblemDetailPage() {
     setLanguage(newLanguage);
     setCode(LANGUAGE_TEMPLATES[newLanguage] || code);
   };
+
   const goToNextProblem = () => {
     const nextIndex = currentIndex + 1;
 
@@ -258,7 +319,6 @@ export default function ProblemDetailPage() {
 
       const { token } = await submitRes.json();
 
-      // Poll execution result
       let result: any = null;
       for (let i = 0; i < 20; i++) {
         const res = await fetch(
@@ -283,7 +343,6 @@ export default function ProblemDetailPage() {
     }
   };
 
-  /** 🔹 Submit Code */
   const handleSubmitCode = async () => {
     if (!problem || !problemId) return;
     setIsSubmitting(true);
@@ -331,8 +390,11 @@ export default function ProblemDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-invert whitespace-pre-wrap text-[#E5E7EB]">
-                {problem.description}
+              {/* 2. UPDATE THIS SECTION: Use ReactMarkdown */}
+              <div className="prose prose-invert max-w-none text-[#E5E7EB] prose-headings:text-white prose-p:text-[#9CA3AF] prose-strong:text-[#E5E7EB] prose-code:text-[#38BDF8] prose-code:bg-[#0F172A] prose-code:px-1 prose-code:rounded">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {problem.description}
+                </ReactMarkdown>
               </div>
 
               <div className="mt-6 p-4 bg-[#0F172A] rounded-lg border border-[#334155] text-sm text-[#9CA3AF] space-y-2">

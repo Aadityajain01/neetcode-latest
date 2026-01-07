@@ -1,141 +1,110 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import MainLayout from '@/components/layouts/main-layout';
-import { problemApi, Problem } from '@/lib/api-modules';
-import { BackHeader } from '@/components/BacHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Search } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import MainLayout from "@/components/layouts/main-layout";
+import { problemApi, Problem } from "@/lib/api-modules";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Search, Filter, Code2, ArrowRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { BackButton } from "@/components/BackButton"; // Import
 
-// 1. The Inner Component: Contains all the logic and useSearchParams
 function ProblemListContent() {
   const params = useSearchParams();
   const router = useRouter();
-  const lang = params.get('lang');
-
+  const lang = params.get("lang");
   const [loading, setLoading] = useState(true);
   const [problems, setProblems] = useState<Problem[]>([]);
-  const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [difficulty, setDifficulty] = useState<string>("all");
 
   useEffect(() => {
     if (lang) fetchProblems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
   const fetchProblems = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const data = await problemApi.getProblems({
-        type: 'practice',
-        search: search || undefined,
-        difficulty: difficulty !== 'all' ? difficulty : undefined,
-        limit: 100,
-        offset: 0,
-      });
-
-      // Language filter (frontend-safe)
-      const filtered = (data.problems || []).filter((p: Problem) =>
-        p.languages?.some((l) => l.toLowerCase() === lang?.toLowerCase())
-      );
-
+      const data = await problemApi.getProblems({ type: "practice", search: search || undefined, difficulty: difficulty !== "all" ? difficulty : undefined, limit: 100 });
+      const filtered = (data.problems || []).filter((p: Problem) => p.languages?.some((l) => l.toLowerCase() === lang?.toLowerCase()));
       setProblems(filtered);
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load practice problems');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <BackHeader
-        title={`${lang?.toUpperCase() || 'CODE'} Programming Practice`}
-        subtitle="Select a problem to solve"
-      />
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* 🔹 ADDED BACK BUTTON */}
+      <BackButton href={`/practice/module?lang=${lang}`} label="Back to Modules" />
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchProblems()}
-            placeholder="Search problems..."
-            className="pl-10 bg-[#0F172A] border-[#334155] text-[#E5E7EB]"
-          />
+      {/* Header Filter Bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">{lang?.toUpperCase()} Problems</h1>
+          <p className="text-zinc-400 text-sm">Select a challenge to solve.</p>
         </div>
-
-        <Select value={difficulty} onValueChange={setDifficulty}>
-          <SelectTrigger className="w-48 bg-[#0F172A] border-[#334155] text-[#E5E7EB]">
-            <SelectValue placeholder="Difficulty" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1E293B] border-[#334155]">
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="easy">Easy</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="hard">Hard</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Button
-          onClick={fetchProblems}
-          className="bg-[#38BDF8] hover:bg-[#38BDF8]/90 text-white"
-        >
-          Apply
-        </Button>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchProblems()}
+              placeholder="Search..."
+              className="pl-9 bg-zinc-950 border-zinc-700 text-zinc-100 focus:ring-emerald-500/50"
+            />
+          </div>
+          <Select value={difficulty} onValueChange={setDifficulty}>
+            <SelectTrigger className="w-32 bg-zinc-950 border-zinc-700 text-zinc-100">
+              <SelectValue placeholder="Level" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+              <SelectItem value="all">All Levels</SelectItem>
+              <SelectItem value="easy">Easy</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="hard">Hard</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={fetchProblems} className="bg-emerald-500 hover:bg-emerald-600 text-white"><Filter className="h-4 w-4" /></Button>
+        </div>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-        </div>
-      ) : problems.length === 0 ? (
-        <Card className="bg-[#1E293B] border-[#334155]">
-          <CardContent className="py-12 text-center">
-            <p className="text-[#9CA3AF]">
-              No problems found for this language
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* List (Unchanged logic, just truncated for brevity) */}
+      {loading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div> : 
+       problems.length === 0 ? <div className="text-center text-zinc-500 py-20">No problems found.</div> : (
+        <div className="grid grid-cols-1 gap-3">
           {problems.map((problem) => (
-            <Card
+            <div
               key={problem._id}
               onClick={() => router.push(`/practice/${problem._id}`)}
-              className="bg-[#1E293B] border-[#334155] hover:border-[#38BDF8] cursor-pointer transition"
+              className="group flex items-center justify-between p-4 bg-zinc-900/30 border border-zinc-800/50 rounded-xl hover:bg-zinc-900 hover:border-emerald-500/30 transition-all cursor-pointer"
             >
-              <CardHeader>
-                <CardTitle className="text-[#E5E7EB]">
-                  {problem.title}
-                </CardTitle>
-                <CardDescription className="text-[#9CA3AF] line-clamp-2">
-                  {problem.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex flex-wrap gap-2">
-                {problem.difficulty && (
-                  <Badge className="bg-[#22C55E]/10 text-[#22C55E]">
-                    {problem.difficulty}
-                  </Badge>
-                )}
-                <Badge className="bg-[#38BDF8]/10 text-[#38BDF8]">
-                  {problem.languages.length} Languages
-                </Badge>
-              </CardContent>
-            </Card>
+              <div className="flex items-center gap-4">
+                <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center border",
+                  problem.difficulty === 'easy' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
+                  problem.difficulty === 'medium' ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-500" :
+                  "bg-red-500/10 border-red-500/20 text-red-500"
+                )}>
+                  <Code2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-200 group-hover:text-emerald-400 transition-colors">{problem.title}</h3>
+                  <p className="text-sm text-zinc-500 line-clamp-1 max-w-md">{problem.description}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                 <Badge variant="outline" className={cn("capitalize border-0 bg-opacity-10",
+                    problem.difficulty === 'easy' ? "bg-emerald-500 text-emerald-500" :
+                    problem.difficulty === 'medium' ? "bg-yellow-500 text-yellow-500" :
+                    "bg-red-500 text-red-500"
+                 )}>{problem.difficulty}</Badge>
+                 <ArrowRight className="h-5 w-5 text-zinc-600 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -143,18 +112,10 @@ function ProblemListContent() {
   );
 }
 
-// 2. The Wrapper Component (Default Export)
-// This handles the Suspense boundary required for build
 export default function PracticeProblemSelectPage() {
   return (
     <MainLayout>
-      <Suspense 
-        fallback={
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-          </div>
-        }
-      >
+      <Suspense fallback={<div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>}>
         <ProblemListContent />
       </Suspense>
     </MainLayout>
