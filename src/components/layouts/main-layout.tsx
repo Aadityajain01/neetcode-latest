@@ -84,7 +84,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   );
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
+    <div className="flex min-h-screen bg-zinc-950 overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
       
       {/* Mobile Menu Overlay */}
       {sidebarOpen && (
