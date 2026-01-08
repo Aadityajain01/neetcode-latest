@@ -70,12 +70,13 @@ const handleEmailLogin = async (e: React.FormEvent) => {
         body: JSON.stringify({ idToken: token }),
       }
     );
-
+console.log("Login response:", res);
     if (!res.ok) throw new Error("Backend sync failed");
 
     toast.success("Login successful!");
     router.push("/dashboard");
   } catch (error: any) {
+    console.log(error)
     if (error.code === "auth/invalid-credential") {
       toast.error("Invalid email or password");
     } else {
