@@ -35,7 +35,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login'); // Redirect to login, not home, usually better UX
+    router.push('/'); // Redirect to login, not home, usually better UX
   };
 
   const navItems = [
