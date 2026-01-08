@@ -32,7 +32,7 @@ useEffect(() => {
     if (fbUser) {
       // Get ID token and sync with backend
       const idToken = await fbUser.getIdToken();
-      await fetch('/auth/login', {
+      await fetch('api/auth/login', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${idToken}` }
       });

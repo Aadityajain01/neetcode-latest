@@ -43,52 +43,49 @@ export default function LoginPage() {
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleEmailLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const { user } = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+  try {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-      // 🚫 Unverified → Show popup (do NOT sign out yet)
-      if (!user.emailVerified) {
-        setVerificationEmail(user.email || email);
-        setShowVerificationAlert(true);
-        return;
-      }
-
-      // ✅ Verified → sync backend
-      const token = await user.getIdToken();
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ idToken: token }),
-        }
-      );
-
-      if (!res.ok) throw new Error("Backend sync failed");
-
-      toast.success("Login successful!");
-      router.push("/dashboard");
-    } catch (error: any) {
-      if (error.code === "auth/invalid-credential") {
-        toast.error("Invalid email or password");
-      } else {
-        toast.error(error.message || "Login failed");
-      }
-    } finally {
-      setLoading(false);
+    // ❗ STOP HERE — block unverified users BEFORE backend
+    if (!user.emailVerified) {
+      setVerificationEmail(user.email || email);
+      setShowVerificationAlert(true);
+      return; // ⛔ do NOT call backend
     }
-  };
+
+    // ✅ Backend sync allowed only for verified users
+    const token = await user.getIdToken();
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ idToken: token }),
+      }
+    );
+
+    if (!res.ok) throw new Error("Backend sync failed");
+
+    toast.success("Login successful!");
+    router.push("/dashboard");
+  } catch (error: any) {
+    if (error.code === "auth/invalid-credential") {
+      toast.error("Invalid email or password");
+    } else {
+      toast.error(error.message || "Login failed");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -253,15 +250,14 @@ export default function LoginPage() {
       </div>
 
       {/* 🔔 Verification Popup */}
-      <AlertDialog
-        open={showVerificationAlert}
-        onOpenChange={async (open) => {
-          setShowVerificationAlert(open);
+<AlertDialog
+  open={showVerificationAlert}
+  onOpenChange={async (open) => {
+    setShowVerificationAlert(open);
+    if (!open) await signOut(auth);
+  }}
+>
 
-          // Sign out only AFTER closing popup
-        
-        }}
-      >
         <AlertDialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-amber-500">

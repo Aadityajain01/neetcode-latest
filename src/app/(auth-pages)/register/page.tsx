@@ -37,34 +37,29 @@ export default function RegisterPage() {
   const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+  setLoading(true);
 
-    if (!PASSWORD_REGEX.test(password)) {
-      toast.error("Password must be 8+ chars and include a number");
-      return;
-    }
+  try {
+    // 🔹 Ensure NO leftover session exists
+    await signOut(auth).catch(() => {});
 
-    setLoading(true);
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-    try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(user, { displayName: name });
-      await sendEmailVerification(user);
-      
-      await authApi.register({
-        firebaseUid: user.uid,
-        email: user.email || "",
-        displayName: name,
-      });
+    await updateProfile(user, { displayName: name });
+    await sendEmailVerification(user);
 
-      await signOut(auth);
-      setVerifyEmail(user.email || email);
-      setShowVerifyPopup(true);
+    await authApi.register({
+      firebaseUid: user.uid,
+      email: user.email || "",
+      displayName: name,
+    });
+
+    await signOut(auth);
+
+    setVerifyEmail(user.email || email);
+    setShowVerifyPopup(true);
     } catch (err: any) {
       if (err.code === "auth/email-already-in-use") {
         toast.error("Email already registered");
