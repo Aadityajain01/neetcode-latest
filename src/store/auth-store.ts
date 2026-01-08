@@ -64,7 +64,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 // --------------------------------------------------
 // 🔐 GLOBAL AUTH LISTENER (Stable & Race-Safe)
-// --------------------------------------------------
 onAuthStateChanged(auth, async (firebaseUser) => {
   const store = useAuthStore.getState();
 
@@ -77,30 +76,24 @@ onAuthStateChanged(auth, async (firebaseUser) => {
     return;
   }
 
-  // ❗ Block unverified users & stop execution
+  // Block unverified users
   if (!firebaseUser.emailVerified) {
     store.setFirebaseUser(null);
     store.setUser(null);
     store.setToken(null);
     store.setLoading(false);
-    return; // <-- IMPORTANT
+    return;
   }
 
   try {
     const token = await firebaseUser.getIdToken(true);
 
-    // ✅ Call backend login ONLY if not already synced
-    if (!store.user) {
-      const res = await api.post("/auth/login", { idToken: token });
-
-      store.setUser(res.data.user);
-      store.setToken(token);
-    }
-
-    // Always keep Firebase state updated
+    // ✅ ONLY store Firebase state
+    store.setToken(token);
     store.setFirebaseUser(firebaseUser);
+
   } catch (err) {
-    console.error("Auth sync failed:", err);
+    console.error("Auth state sync failed:", err);
   } finally {
     store.setLoading(false);
   }

@@ -383,12 +383,12 @@ export default function ProblemDetailPage() {
                               <div className="bg-zinc-900 rounded-lg p-3 border border-red-900/30 text-xs space-y-2">
                                  <div className="text-red-400 font-bold flex items-center gap-2"><AlertTriangle className="h-3 w-3" /> Failed Case</div>
                                  <div className="grid grid-cols-1 gap-2">
-                                    <div><span className="text-zinc-500 block mb-1">Input:</span> <pre className="text-zinc-300 bg-black/30 p-2 rounded whitespace-pre-wrap">{currentSubmission.failureDetails.input}</pre></div>
-                                    <div><span className="text-zinc-500 block mb-1">Expected:</span> <pre className="text-emerald-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{currentSubmission.failureDetails.expected}</pre></div>
-                                    <div><span className="text-zinc-500 block mb-1">Your Output:</span> <pre className="text-red-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{currentSubmission.failureDetails.output}</pre></div>
+                                    <div><span className="text-zinc-500 block mb-1">Input:</span> <pre className="text-zinc-300 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.input}</pre></div>
+                                    <div><span className="text-zinc-500 block mb-1">Expected:</span> <pre className="text-emerald-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.expected}</pre></div>
+                                    <div><span className="text-zinc-500 block mb-1">Your Output:</span> <pre className="text-red-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.output}</pre></div>
                                  </div>
                               </div>
-                           )}
+                           )}1
                         </div>
                      ) : (
                         <>
