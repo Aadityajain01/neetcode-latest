@@ -5,7 +5,7 @@ export interface Community {
   _id: string;
   name: string;
   description: string;
-  ownerId: string;
+  ownerId: string | { _id: string; displayName: string; email: string }; // Expanded to handle populated owner
   type: 'open' | 'domain_restricted';
   domain?: string;
   memberCount: number;
@@ -16,7 +16,7 @@ export interface Community {
 export interface CommunityMember {
   _id: string;
   communityId: string;
-  userId: string;
+  userId: string | { _id: string; displayName: string; email: string; avatarUrl?: string }; // Expanded to handle populated user
   role: 'owner' | 'admin' | 'member';
   joinedAt: string;
 }
@@ -24,16 +24,22 @@ export interface CommunityMember {
 // --- Community API ---
 export const communityApi = {
   getCommunities: async (params?: { search?: string }) => {
-    // 🛡️ CRITICAL FIX: Default to [] if data is undefined to prevent crashes
-    const response = await api.get<{ communities: Community[] }>('/communities', { params });
-    return response.data?.communities || [];
+
+
+
+    // Matches backend: res.json({ communities: [...] })
+   const response = await api.get<Community[]>('/communities');
+return response.data || [];
+
+
   },
 
   getCommunityById: async (communityId: string) => {
+    // Matches backend: res.json({ community, isMember, userRole })
     const response = await api.get<{
       community: Community;
       isMember: boolean;
-      userRole?: string;
+      userRole: string | null; // Fixed: Backend returns null, not undefined
     }>(`/communities/${communityId}`);
     return response.data;
   },
@@ -59,6 +65,7 @@ export const communityApi = {
   },
 
   getMembers: async (communityId: string, params?: { limit?: number; offset?: number }) => {
+    // Matches backend: res.json({ members: [...] })
     const response = await api.get<{ members: CommunityMember[] }>(
       `/communities/${communityId}/members`,
       { params }
@@ -71,8 +78,29 @@ export const communityApi = {
     return response.data;
   },
 
-  getMyRole: async (communityId: string) => {
-    const response = await api.get<{ role: string | null }>(`/communities/${communityId}/my-role`);
-    return response.data.role;
+  // --- 🚨 ADDED MISSING METHODS BELOW ---
+
+  // 1. Promote Member (Owner only)
+  promoteMember: async (communityId: string, userId: string) => {
+    const response = await api.post(`/communities/${communityId}/promote`, { userId });
+    return response.data;
   },
+
+  // 2. Transfer Ownership (Owner only)
+  transferOwnership: async (communityId: string, newOwnerId: string) => {
+    const response = await api.post(`/communities/${communityId}/transfer-owner`, { newOwnerId });
+    return response.data;
+  },
+
+  // 3. Update Settings (Owner only)
+  updateSettings: async (communityId: string, data: { name: string; description: string }) => {
+    const response = await api.patch(`/communities/${communityId}/settings`, data);
+    return response.data;
+  },
+
+  // 4. Delete Community (Owner only)
+  deleteCommunity: async (communityId: string) => {
+    const response = await api.delete(`/communities/${communityId}`);
+    return response.data;
+  }
 };
