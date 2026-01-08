@@ -218,7 +218,7 @@ export default function ProblemDetailPage() {
         return;
       }
 
-      const submitRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute`, {
+      const submitRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ source_code: code, language_id: languageId, stdin: customInput || sampleTestCases[0]?.input || "" }),
@@ -228,7 +228,7 @@ export default function ProblemDetailPage() {
       console.log("Execution token:", token);
       let result: any = null;
       for (let i = 0; i < 20; i++) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/${token}/status`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/execute/${token}/status`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
         result = await res.json();
@@ -391,8 +391,10 @@ export default function ProblemDetailPage() {
                            )}
                         </div>
                      ) : (
-                        // Standard Output
-                        <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">// Run code to see output...</span>}</pre>
+                        <>
+                           {/* Standard Output */}
+                           <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">Run code to see output...</span>}</pre>
+                        </>
                      )}
                      
                      {/* Clear Button */}
