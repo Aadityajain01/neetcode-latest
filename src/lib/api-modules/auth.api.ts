@@ -1,30 +1,44 @@
-import { api } from '@/lib/api';
-
+import { api } from "@/lib/api";
+import axios, { AxiosInstance } from "axios";
+import { User } from "firebase/auth";
+import { headers } from "next/headers";
+const AuthApiInstance : AxiosInstance = axios.create({
+  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 export const authApi = {
   register: async (data: {
     firebaseUid: string;
     email: string;
     displayName?: string;
   }) => {
-    const response = await api.post<{ user: any }>('/auth/register', data);
+    const response = await AuthApiInstance.post<{ user: any }>("/auth/register", data);
     return response.data.user;
   },
 
   login: async (idToken: string) => {
-    const response = await api.post<{ user: any; idToken: string }>(
-      '/auth/login',
-      { idToken }
+    const response = await AuthApiInstance.post<{ user: any; idToken: string }>(
+      "/auth/login",{idToken}
+    
+      // {
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Authorization": `Bearer ${idToken}`,
+      //   },
+      // }
     );
     return response.data;
   },
 
   logout: async () => {
-    const response = await api.post('/auth/logout');
+    const response = await AuthApiInstance.post("/auth/logout");
     return response.data;
   },
 
   getMe: async () => {
-    const response = await api.get<{ user: any }>('/auth/me');
+    const response = await AuthApiInstance.get<{ user: any }>("/auth/me");
     return response.data.user;
   },
 
@@ -37,10 +51,11 @@ export const authApi = {
   // },
 
   verifyToken: async (idToken: string) => {
-    const response = await api.post<{ valid: boolean; uid: string; email: string }>(
-      '/auth/verify-token',
-      { idToken }
-    );
+    const response = await api.post<{
+      valid: boolean;
+      uid: string;
+      email: string;
+    }>("/auth/verify-token", { idToken });
     return response.data;
   },
 };

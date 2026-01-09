@@ -12,6 +12,7 @@ export const api: AxiosInstance = axios.create({
   },
 });
 
+
 // Attach token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

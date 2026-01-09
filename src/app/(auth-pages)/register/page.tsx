@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Mail, Terminal, Code2, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
-import { authApi } from "@/auth/auth.api";
+import { authApi } from "@/lib/api-modules/auth.api";
 
 import {
   AlertDialog,
@@ -56,7 +56,7 @@ export default function RegisterPage() {
       displayName: name,
     });
 
-    await signOut(auth);
+    // await signOut(auth);
 
     setVerifyEmail(user.email || email);
     setShowVerifyPopup(true);
