@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+
 export default function CommunitiesPage() {
   const router = useRouter();
   const { initialized, isAuthenticated } = useAuthStore();
@@ -98,18 +99,22 @@ export default function CommunitiesPage() {
   }, [debouncedSearch, allCommunities]);
 
   /* -------------------- FETCH ONCE -------------------- */
-  const fetchCommunities = async () => {
-    try {
-      setLoading(true);
-      const data = await communityApi.getCommunities();
-      setAllCommunities(data);
-      setCommunities(data);
-    } catch {
-      toast.error("Failed to load communities");
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchCommunities = async () => {
+  try {
+    setLoading(true);
+
+    const list = await communityApi.getCommunities(); // ✅ always array
+    console.log("communities-list", list);
+
+    setAllCommunities(list);
+    setCommunities(list);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load communities");
+  } finally {
+    setLoading(false);
+  }
+};
 
   /* -------------------- CREATE COMMUNITY -------------------- */
   const handleCreateCommunity = async () => {

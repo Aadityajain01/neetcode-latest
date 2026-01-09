@@ -7,9 +7,14 @@ import {
   Flame, Trophy, Target, Zap, X, Save, Loader2
 } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "sonner"; // Assuming you use sonner or similar for toasts, remove if not.
+// import { toast } from "sonner"; 
+import { profileApi } from "@/lib/api-modules/profile.api";
 
-// --- TYPES (Inline for safety, but better in src/types/user.ts) ---
+// IMPORT YOUR MAIN LAYOUT HERE
+// Ensure this path matches where you saved the MainLayout component
+import MainLayout from "@/components/layouts/main-layout"; 
+
+// --- TYPES ---
 interface SocialLinks {
   github?: string;
   linkedin?: string;
@@ -72,9 +77,10 @@ export default function ProfilePage() {
   // Fetch Data
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/profile/me`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      const json = await res.json();
+      const res = profileApi.getMyProfile();
+      console.log(res); 
+      const json = (await res).data;
+      console.log("profile-json", json);
       if (json.profile) {
         setData(json.profile);
       }
@@ -89,186 +95,181 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
-  if (loading) return (
-    <div className="min-h-[80vh] flex items-center justify-center text-emerald-500">
-      <Loader2 className="w-8 h-8 animate-spin" />
-    </div>
-  );
-  
-  if (!data) return <div className="text-center mt-20 text-gray-400">User not found</div>;
+  // --- RENDERING ---
 
-  const { details, stats, activity, communities } = data;
-
-  // Transform API heatmap data for the Calendar component
-  const calendarData = activity.heatmap.map((item) => ({
-    date: item._id, 
-    count: item.count,
-    level: Math.min(item.count, 4),
-  }));
-
+  // 1. Wrap everything in MainLayout so the Sidebar appears
   return (
-    <div className="min-h-screen bg-[#020617] text-gray-200 font-sans pb-20">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <MainLayout>
+      <div className="text-gray-200 font-sans pb-20">
         
-        {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-800 pb-8">
-          <div className="flex items-center gap-6">
-            {/* Avatar */}
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 p-1 shadow-2xl shadow-emerald-500/20">
-              <div className="w-full h-full rounded-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
-                {details.avatarUrl ? (
-                  <img src={details.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-4xl font-bold text-white">
-                    {details.displayName?.[0]?.toUpperCase() || "U"}
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            {/* Name & Title */}
-            <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                {details.displayName || "Anonymous User"}
-              </h1>
-              <p className="text-lg text-gray-400 font-medium">@{details.username || "user"}</p>
-              <div className="flex items-center gap-2 pt-2 text-sm text-emerald-400">
-                 <Zap size={14} fill="currentColor" /> 
-                 <span>Pro Member</span>
-              </div>
-            </div>
+        {/* Loading State - Centered in Content Area */}
+        {loading && (
+          <div className="min-h-[60vh] flex items-center justify-center text-emerald-500">
+            <Loader2 className="w-8 h-8 animate-spin" />
           </div>
+        )}
 
-          <button 
-            onClick={() => setIsEditOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#1a1a1a] hover:bg-[#252525] hover:text-white border border-gray-800 rounded-lg transition-all text-sm font-medium group"
-          >
-            <Edit size={16} className="text-gray-400 group-hover:text-emerald-400 transition-colors" /> 
-            Edit Profile
-          </button>
-        </div>
+        {/* Error State */}
+        {!loading && !data && (
+           <div className="text-center mt-20 text-gray-400">User not found</div>
+        )}
 
-        {/* --- BENTO GRID --- */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-
-          {/* LEFT COLUMN (4 spans) */}
-          <div className="md:col-span-4 space-y-6">
+        {/* Profile Content */}
+        {!loading && data && (
+          <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             
-            {/* Bio Card */}
-            <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-               <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                 <MapPin size={14} className="text-emerald-500" /> About Me
-               </h3>
-               <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">
-                 {details.bio || "No bio added yet."}
-               </p>
-               
-               <div className="mt-6 pt-6 border-t border-gray-800/60 space-y-3">
-                 <div className="flex items-center gap-3 text-gray-500 text-sm">
-                   <Calendar size={15} /> Joined {format(new Date(details.createdAt), "MMMM yyyy")}
-                 </div>
-                 {details.socialLinks?.github && (
-                   <a href={details.socialLinks.github} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
-                     <Github size={15} /> GitHub
-                   </a>
-                 )}
-                 {details.socialLinks?.linkedin && (
-                   <a href={details.socialLinks.linkedin} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors text-sm">
-                     <Linkedin size={15} /> LinkedIn
-                   </a>
-                 )}
-                 {details.socialLinks?.twitter && (
-                   <a href={details.socialLinks.twitter} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-sky-400 transition-colors text-sm">
-                     <Twitter size={15} /> Twitter
-                   </a>
-                 )}
-                 {details.socialLinks?.website && (
-                   <a href={details.socialLinks.website} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                     <Globe size={15} /> Website
-                   </a>
-                 )}
-               </div>
-            </div>
-
-            {/* Communities */}
-            <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Communities</h3>
-              <div className="flex flex-wrap gap-2">
-                {communities.length > 0 ? communities.map((c) => (
-                  <span key={c.id} className="px-3 py-1 bg-[#1a1d24] text-xs font-medium text-gray-300 rounded-full border border-gray-700/50 hover:border-emerald-500/50 transition-colors cursor-default">
-                    {c.name}
-                  </span>
-                )) : (
-                  <span className="text-gray-500 text-sm italic">No communities joined.</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN (8 spans) */}
-          <div className="md:col-span-8 space-y-6">
-            
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard icon={<Trophy className="text-yellow-500" size={20} />} label="Global Rank" value={`#${stats.rank}`} />
-              <StatCard icon={<Zap className="text-emerald-500" size={20} />} label="Total Score" value={stats.score} />
-              <StatCard icon={<Target className="text-blue-500" size={20} />} label="Problems Solved" value={stats.solvedBreakdown.total} />
-              <StatCard icon={<Flame className="text-orange-500" size={20} />} label="Active Streak" value="12 Days" />
-            </div>
-
-            {/* Progress Bars */}
-            <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-6">Solving Stats</h3>
-              <div className="space-y-5">
-                <DifficultyBar label="Easy" count={stats.solvedBreakdown.easy} total={stats.solvedBreakdown.total} color="bg-emerald-500" bg="bg-emerald-500/10" />
-                <DifficultyBar label="Medium" count={stats.solvedBreakdown.medium} total={stats.solvedBreakdown.total} color="bg-yellow-500" bg="bg-yellow-500/10" />
-                <DifficultyBar label="Hard" count={stats.solvedBreakdown.hard} total={stats.solvedBreakdown.total} color="bg-red-500" bg="bg-red-500/10" />
-              </div>
-            </div>
-
-            {/* Heatmap */}
-            <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-white">Activity</h3>
-                <span className="text-xs text-gray-500">{new Date().getFullYear()}</span>
-              </div>
-              <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-800">
-                {/* <ActivityCalendar
-                  data={calendarData}
-                  theme={{
-                    light: ['#1f2937', '#064e3b', '#065f46', '#10b981', '#34d399'],
-                    dark: ['#1a1d24', '#064e3b', '#059669', '#10b981', '#34d399'],
-                  }}
-                  blockSize={13}
-                  blockMargin={4}
-                  fontSize={12}
-                /> */}
-              </div>
-            </div>
-
-            {/* Recent Solves */}
-            <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Recent Solves</h3>
-              <div className="space-y-3">
-                {activity.recent.map((sub, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-[#16181d] rounded-lg hover:bg-[#1c1f26] transition-colors border border-gray-800/50">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        sub.problemId.difficulty === 'Easy' ? 'bg-emerald-500' :
-                        sub.problemId.difficulty === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
-                      }`} />
-                      <span className="text-sm font-medium text-gray-200">{sub.problemId.title}</span>
-                    </div>
-                    <span className="text-xs text-gray-500 font-mono">{format(new Date(sub.createdAt), "MMM d")}</span>
+            {/* --- HEADER --- */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-800 pb-8">
+              <div className="flex items-center gap-6">
+                {/* Avatar */}
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 p-1 shadow-2xl shadow-emerald-500/20">
+                  <div className="w-full h-full rounded-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+                    {data.details.avatarUrl ? (
+                      <img src={data.details.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-4xl font-bold text-white">
+                        {data.details.displayName?.[0]?.toUpperCase() || "U"}
+                      </span>
+                    )}
                   </div>
-                ))}
-                {activity.recent.length === 0 && <p className="text-gray-500 text-sm">No recent activity.</p>}
+                </div>
+                
+                {/* Name & Title */}
+                <div className="space-y-1">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                    {data.details.displayName || "Anonymous User"}
+                  </h1>
+                  <p className="text-lg text-gray-400 font-medium">@{data.details.username || "user"}</p>
+                  <div className="flex items-center gap-2 pt-2 text-sm text-emerald-400">
+                     <Zap size={14} fill="currentColor" /> 
+                     <span>Pro Member</span>
+                  </div>
+                </div>
               </div>
+
+              <button 
+                onClick={() => setIsEditOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#1a1a1a] hover:bg-[#252525] hover:text-white border border-gray-800 rounded-lg transition-all text-sm font-medium group"
+              >
+                <Edit size={16} className="text-gray-400 group-hover:text-emerald-400 transition-colors" /> 
+                Edit Profile
+              </button>
             </div>
 
+            {/* --- BENTO GRID --- */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+              {/* LEFT COLUMN (4 spans) */}
+              <div className="md:col-span-4 space-y-6">
+                
+                {/* Bio Card */}
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                   <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                     <MapPin size={14} className="text-emerald-500" /> About Me
+                   </h3>
+                   <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">
+                     {data.details.bio || "No bio added yet."}
+                   </p>
+                   
+                   <div className="mt-6 pt-6 border-t border-gray-800/60 space-y-3">
+                     <div className="flex items-center gap-3 text-gray-500 text-sm">
+                       <Calendar size={15} /> Joined {format(new Date(data.details.createdAt), "MMMM yyyy")}
+                     </div>
+                     {data.details.socialLinks?.github && (
+                       <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
+                         <Github size={15} /> GitHub
+                       </a>
+                     )}
+                     {data.details.socialLinks?.linkedin && (
+                       <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors text-sm">
+                         <Linkedin size={15} /> LinkedIn
+                       </a>
+                     )}
+                     {data.details.socialLinks?.twitter && (
+                       <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-sky-400 transition-colors text-sm">
+                         <Twitter size={15} /> Twitter
+                       </a>
+                     )}
+                     {data.details.socialLinks?.website && (
+                       <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                         <Globe size={15} /> Website
+                       </a>
+                     )}
+                   </div>
+                </div>
+
+                {/* Communities */}
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
+                  <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Communities</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {data.communities.length > 0 ? data.communities.map((c) => (
+                      <span key={c.id} className="px-3 py-1 bg-[#1a1d24] text-xs font-medium text-gray-300 rounded-full border border-gray-700/50 hover:border-emerald-500/50 transition-colors cursor-default">
+                        {c.name}
+                      </span>
+                    )) : (
+                      <span className="text-gray-500 text-sm italic">No communities joined.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN (8 spans) */}
+              <div className="md:col-span-8 space-y-6">
+                
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <StatCard icon={<Trophy className="text-yellow-500" size={20} />} label="Global Rank" value={`#${data.stats.rank}`} />
+                  <StatCard icon={<Zap className="text-emerald-500" size={20} />} label="Total Score" value={data.stats.score} />
+                  <StatCard icon={<Target className="text-blue-500" size={20} />} label="Problems Solved" value={data.stats.solvedBreakdown.total} />
+                  <StatCard icon={<Flame className="text-orange-500" size={20} />} label="Active Streak" value="12 Days" />
+                </div>
+
+                {/* Progress Bars */}
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-6">Solving Stats</h3>
+                  <div className="space-y-5">
+                    <DifficultyBar label="Easy" count={data.stats.solvedBreakdown.easy} total={data.stats.solvedBreakdown.total} color="bg-emerald-500" bg="bg-emerald-500/10" />
+                    <DifficultyBar label="Medium" count={data.stats.solvedBreakdown.medium} total={data.stats.solvedBreakdown.total} color="bg-yellow-500" bg="bg-yellow-500/10" />
+                    <DifficultyBar label="Hard" count={data.stats.solvedBreakdown.hard} total={data.stats.solvedBreakdown.total} color="bg-red-500" bg="bg-red-500/10" />
+                  </div>
+                </div>
+
+                {/* Heatmap */}
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 overflow-hidden">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold text-white">Activity</h3>
+                    <span className="text-xs text-gray-500">{new Date().getFullYear()}</span>
+                  </div>
+                  <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-800">
+                    {/* Activity Calendar component here */}
+                  </div>
+                </div>
+
+                {/* Recent Solves */}
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Recent Solves</h3>
+                  <div className="space-y-3">
+                    {data.activity.recent.map((sub, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-[#16181d] rounded-lg hover:bg-[#1c1f26] transition-colors border border-gray-800/50">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${
+                            sub.problemId.difficulty === 'Easy' ? 'bg-emerald-500' :
+                            sub.problemId.difficulty === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`} />
+                          <span className="text-sm font-medium text-gray-200">{sub.problemId.title}</span>
+                        </div>
+                        <span className="text-xs text-gray-500 font-mono">{format(new Date(sub.createdAt), "MMM d")}</span>
+                      </div>
+                    ))}
+                    {data.activity.recent.length === 0 && <p className="text-gray-500 text-sm">No recent activity.</p>}
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* --- EDIT PROFILE MODAL --- */}
         {isEditOpen && data && (
@@ -276,13 +277,13 @@ export default function ProfilePage() {
             user={data.details} 
             onClose={() => setIsEditOpen(false)} 
             onUpdate={() => {
-              fetchProfile(); // Refresh data after update
+              fetchProfile(); 
               setIsEditOpen(false);
             }} 
           />
         )}
       </div>
-    </div>
+    </MainLayout>
   );
 }
 
@@ -348,7 +349,7 @@ function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-[#0f1115] border border-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#16181d]">
           <h2 className="text-xl font-bold text-white">Edit Profile</h2>
