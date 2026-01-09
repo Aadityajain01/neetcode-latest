@@ -23,37 +23,24 @@ export interface CommunityMember {
 
 // --- Community API ---
 export const communityApi = {
-  getCommunities: async (params?: { search?: string }) => {
-
-
-
-    // Matches backend: res.json({ communities: [...] })
-   const response = await api.get<Community[]>('/communities');
-return response.data || [];
-
-
-  },
-
-  getCommunityById: async (communityId: string) => {
-    // Matches backend: res.json({ community, isMember, userRole })
-    const response = await api.get<{
-      community: Community;
-      isMember: boolean;
-      userRole: string | null; // Fixed: Backend returns null, not undefined
-    }>(`/communities/${communityId}`);
-    return response.data;
+  // 🔹 Fetch ALL communities (no search here)
+  getCommunities: async () => {
+    const response = await api.get<Community[]>("/communities");
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   createCommunity: async (data: {
     name: string;
     description: string;
-    type: 'open' | 'domain_restricted';
+    type: "open" | "domain_restricted";
     domain?: string;
   }) => {
-    const response = await api.post<{ community: Community }>('/communities', data);
+    const response = await api.post<{ community: Community }>(
+      "/communities",
+      data
+    );
     return response.data.community;
   },
-
   joinCommunity: async (communityId: string) => {
     const response = await api.post(`/communities/${communityId}/join`);
     return response.data;

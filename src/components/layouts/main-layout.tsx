@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils'; // Make sure you have this util, or remove if standard classNames
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Code2,
@@ -20,7 +20,8 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
-  Zap
+  Zap,
+  User // <--- Added User Icon
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -35,15 +36,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/'); // Redirect to login, not home, usually better UX
+    router.push('/'); 
   };
 
+  // --- UPDATED NAVIGATION ITEMS ---
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/problems', label: 'Problem Set', icon: Code2 },
     { href: '/practice', label: 'Practice Arena', icon: Zap },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/communities', label: 'Communities', icon: Users },
+    { href: '/profile', label: 'My Profile', icon: User }, // <--- Added Profile Route
   ];
 
   const adminNavItems = [
@@ -147,20 +150,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
           )}
         </ScrollArea>
 
-        {/* User Profile Footer */}
+        {/* --- UPDATED USER FOOTER (Clickable) --- */}
         <div className="p-4 border-t border-white/5 bg-zinc-900/30">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-emerald-500/30 transition-colors group">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
-              {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.displayName || 'Developer'}</p>
-              <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
-            </div>
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-zinc-800/50 border border-white/5 hover:border-emerald-500/30 transition-colors group relative">
+            
+            {/* 1. Clickable Area for Profile Navigation */}
+            <Link href="/profile" className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-bold text-sm overflow-hidden">
+                {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate group-hover:text-emerald-400 transition-colors">
+                  {user?.displayName || 'Developer'}
+                </p>
+                <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
+              </div>
+            </Link>
+
+            {/* 2. Logout Button (Separate from Link to prevent navigation conflict) */}
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors z-10"
               onClick={handleLogout}
               title="Logout"
             >
