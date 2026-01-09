@@ -86,8 +86,9 @@ export default function LoginPage() {
       const { user } = await signInWithPopup(auth, googleProvider);
       const token = await user.getIdToken();
 
-      await authApi.login(token);
-
+      const res = await authApi.login(token);
+      useAuthStore.getState().setUser(res.user);
+      useAuthStore.getState().setToken(token);
       toast.success("Login successful!");
       router.push("/dashboard");
     } catch (error: any) {
