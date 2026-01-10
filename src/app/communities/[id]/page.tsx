@@ -79,7 +79,7 @@ export default function CommunityDetailsPage() {
     try {
       setLoading(true);
       const communityData = await communityApi.getCommunityById(communityId);
-      
+      console.log("communityData", communityData);
       setCommunity(communityData.community);
       setEditForm({ 
         name: communityData.community.name, 
@@ -93,6 +93,7 @@ export default function CommunityDetailsPage() {
       try {
         const membersList = await communityApi.getMembers(communityId);
         // FIX: Ensure we are setting an array
+        console.log("membersList", membersList);
         setMembers(Array.isArray(membersList) ? membersList : []);
       } catch (e) {
         setMembers([]); 

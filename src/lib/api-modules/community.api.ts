@@ -1,6 +1,5 @@
 import { api } from "@/lib/api";
 
-// --- Shared Types ---
 export interface Community {
   _id: string;
   name: string;
@@ -21,22 +20,20 @@ export interface CommunityMember {
   joinedAt: string;
 }
 
-/** ✅ Backend returns { communities: Community[] } */
-type CommunitiesResponse = {
-  communities: Community[];
-};
-
-// --- Community API ---
 export const communityApi = {
-  /** ✅ Always return array only */
   getCommunities: async (): Promise<Community[]> => {
-    const response = await api.get<CommunitiesResponse>("/communities");
+    const response = await api.get<{ communities: Community[] }>("/communities");
     return response.data.communities ?? [];
   },
 
   getCommunityById: async (communityId: string) => {
-    const response = await api.get<{ community: Community }>(`/communities/${communityId}`);
-    return response.data.community;
+    // ✅ This expects the exact object structure returned by the route above
+    const res = await api.get<{ 
+      community: Community; 
+      isMember: boolean; 
+      userRole: string | null 
+    }>(`/communities/${communityId}`);
+    return res.data;
   },
 
   createCommunity: async (data: {
@@ -61,7 +58,17 @@ export const communityApi = {
 
   getMembers: async (communityId: string, params?: { limit?: number; offset?: number }) => {
     const response = await api.get<{ members: CommunityMember[] }>(`/communities/${communityId}/members`, { params });
-    return response.data.members ?? [];
+    return response.data;
+  },
+
+  updateSettings: async (communityId: string, data: { name: string; description: string }) => {
+    const response = await api.patch(`/communities/${communityId}/settings`, data);
+    return response.data;
+  },
+
+  deleteCommunity: async (communityId: string) => {
+    const response = await api.delete(`/communities/${communityId}`);
+    return response.data;
   },
 
   removeMember: async (communityId: string, userId: string) => {
@@ -76,16 +83,6 @@ export const communityApi = {
 
   transferOwnership: async (communityId: string, newOwnerId: string) => {
     const response = await api.post(`/communities/${communityId}/transfer-owner`, { newOwnerId });
-    return response.data;
-  },
-
-  updateSettings: async (communityId: string, data: { name: string; description: string }) => {
-    const response = await api.patch(`/communities/${communityId}/settings`, data);
-    return response.data;
-  },
-
-  deleteCommunity: async (communityId: string) => {
-    const response = await api.delete(`/communities/${communityId}`);
     return response.data;
   },
 };

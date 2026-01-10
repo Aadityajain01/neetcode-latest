@@ -40,7 +40,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-
 export default function CommunitiesPage() {
   const router = useRouter();
   const { initialized, isAuthenticated } = useAuthStore();
@@ -99,22 +98,22 @@ export default function CommunitiesPage() {
   }, [debouncedSearch, allCommunities]);
 
   /* -------------------- FETCH ONCE -------------------- */
-const fetchCommunities = async () => {
-  try {
-    setLoading(true);
+  const fetchCommunities = async () => {
+    try {
+      setLoading(true);
 
-    const list = await communityApi.getCommunities(); // ✅ always array
-    console.log("communities-list", list);
+      const list = await communityApi.getCommunities(); // ✅ always array
+      console.log("communities-list", list);
 
-    setAllCommunities(list);
-    setCommunities(list);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load communities");
-  } finally {
-    setLoading(false);
-  }
-};
+      setAllCommunities(list);
+      setCommunities(list);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load communities");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* -------------------- CREATE COMMUNITY -------------------- */
   const handleCreateCommunity = async () => {
@@ -123,10 +122,7 @@ const fetchCommunities = async () => {
       return;
     }
 
-    if (
-      newCommunity.type === "domain_restricted" &&
-      !newCommunity.domain
-    ) {
+    if (newCommunity.type === "domain_restricted" && !newCommunity.domain) {
       toast.error("Domain is required");
       return;
     }
@@ -165,7 +161,6 @@ const fetchCommunities = async () => {
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-
         {/* -------------------- HERO -------------------- */}
         <div className="relative rounded-3xl bg-zinc-900/50 border border-zinc-800 p-8 overflow-hidden">
           <div className="absolute right-0 top-0 opacity-5 p-6">
@@ -178,11 +173,15 @@ const fetchCommunities = async () => {
                 Communities
               </h1>
               <p className="text-zinc-400 max-w-xl">
-                Join developers from your university or organization and grow together.
+                Join developers from your university or organization and grow
+                together.
               </p>
             </div>
 
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
                   <Plus className="mr-2 h-5 w-5" /> Create Community
@@ -203,7 +202,10 @@ const fetchCommunities = async () => {
                     <Input
                       value={newCommunity.name}
                       onChange={(e) =>
-                        setNewCommunity({ ...newCommunity, name: e.target.value })
+                        setNewCommunity({
+                          ...newCommunity,
+                          name: e.target.value,
+                        })
                       }
                       className="bg-zinc-900 border-zinc-800"
                     />
@@ -261,7 +263,10 @@ const fetchCommunities = async () => {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setIsCreateDialogOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button
@@ -293,18 +298,12 @@ const fetchCommunities = async () => {
         </div>
 
         {/* -------------------- GRID -------------------- */}
+        {/* -------------------- GRID -------------------- */}
         {loading ? (
           <div className="py-20 flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
           </div>
-        ) : communities.length === 0 ? (
-          <div className="py-20 text-center border border-dashed border-zinc-800 rounded-xl">
-            <Users className="h-10 w-10 mx-auto text-zinc-600 mb-2" />
-            <p className="text-zinc-500">
-              No communities found for "{search}"
-            </p>
-          </div>
-        ) : (
+        ) : communities.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {communities.map((c) => (
               <Link key={c._id} href={`/communities/${c._id}`}>
@@ -352,6 +351,11 @@ const fetchCommunities = async () => {
                 </div>
               </Link>
             ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center border border-dashed border-zinc-800 rounded-xl">
+            <Users className="h-10 w-10 mx-auto text-zinc-600 mb-2" />
+            <p className="text-zinc-500">No communities found for "{search}"</p>
           </div>
         )}
       </div>
