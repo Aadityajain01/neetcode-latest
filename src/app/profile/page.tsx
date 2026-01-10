@@ -177,17 +177,17 @@ export default function ProfilePage() {
                        <Calendar size={15} /> Joined {format(new Date(data.details.createdAt), "MMMM yyyy")}
                      </div>
                      {data.details.socialLinks?.github && (
-                       <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
+                       <a href={data.details.socialLinks.github}  className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
                          <Github size={15} /> GitHub
                        </a>
                      )}
                      {data.details.socialLinks?.linkedin && (
-                       <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors text-sm">
+                       <a href={data.details.socialLinks.linkedin}  className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors text-sm">
                          <Linkedin size={15} /> LinkedIn
                        </a>
                      )}
                      {data.details.socialLinks?.twitter && (
-                       <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-sky-400 transition-colors text-sm">
+                       <a href={data.details.socialLinks.twitter}  className="flex items-center gap-3 text-gray-400 hover:text-sky-400 transition-colors text-sm">
                          <Twitter size={15} /> Twitter
                        </a>
                      )}
@@ -222,7 +222,7 @@ export default function ProfilePage() {
                   <StatCard icon={<Trophy className="text-yellow-500" size={20} />} label="Global Rank" value={`#${data.stats.rank}`} />
                   <StatCard icon={<Zap className="text-emerald-500" size={20} />} label="Total Score" value={data.stats.score} />
                   <StatCard icon={<Target className="text-blue-500" size={20} />} label="Problems Solved" value={data.stats.solvedBreakdown.total} />
-                  <StatCard icon={<Flame className="text-orange-500" size={20} />} label="Active Streak" value="12 Days" />
+                  <StatCard icon={<Flame className="text-orange-500" size={20} />} label="Active Streak" value="0 days" />
                 </div>
 
                 {/* Progress Bars */}
@@ -331,12 +331,14 @@ function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails, onCl
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('/api/user/me', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      if (res.ok) {
+      const res = await profileApi.updateProfile(formData)
+      // const res = await fetch('/api/users/me', {
+      //   method: 'PATCH',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // });
+      console.log("update-response", res);
+      if (res.status === 200) {
         onUpdate();
       } else {
         alert("Failed to update profile");
