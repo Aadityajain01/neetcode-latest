@@ -1,7 +1,7 @@
+"use client"
 import { api } from "@/lib/api";
 import axios, { AxiosInstance } from "axios";
-import { User } from "firebase/auth";
-import { headers } from "next/headers";
+// import { User } from "firebase/auth";
 const AuthApiInstance : AxiosInstance = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
   headers: {

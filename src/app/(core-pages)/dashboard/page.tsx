@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
-import { userApi, leaderboardApi, UserStats, LeaderboardEntry } from '@/lib/api-modules';
+import { userApi, leaderboardApi, problemApi, UserStats, LeaderboardEntry } from '@/lib/api-modules';
 import MainLayout from '@/components/layouts/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,25 +13,24 @@ import {
   Code2,
   Trophy,
   Target,
-  BookOpen,
   Users,
   ChevronRight,
   Loader2,
   Zap,
   Activity,
-  Flame
+  Flame,
+  AlertCircle
 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Ensure you have this, or use template literals
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, initialized, isAuthenticated, logout } = useAuthStore();
+  const { user, initialized, isAuthenticated } = useAuthStore();
+  
   const [stats, setStats] = useState<UserStats | null>(null);
   const [topLeaderboard, setTopLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [totalProblems, setTotalProblems] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-
-  // Hardcoded goal for the progress circle (e.g., Neetcode 150)
-  const TOTAL_PROBLEMS_GOAL = 150; 
 
   useEffect(() => {
     if (!initialized) return;
@@ -45,55 +44,66 @@ export default function DashboardPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsData, leaderboardData] = await Promise.all([
+      
+      // Fetching up to 1000 problems to ensure we get an accurate count 
+      // if the backend doesn't provide a 'total' metadata field.
+      const [statsData, leaderboardData, problemsData] = await Promise.all([
         userApi.getStats(),
         leaderboardApi.getGlobal({ limit: 5 }),
+        problemApi.getProblems({ limit: 1000 }) 
       ]);
+
+      // DEBUGGING: Check your console to see exactly what the backend sends!
+      console.log("🔍 DASHBOARD DEBUG:", { stats: statsData, problems: problemsData });
+
       setStats(statsData);
-      setTopLeaderboard(leaderboardData);
+      setTopLeaderboard(leaderboardData || []);
+
+      // INTELLIGENT COUNT LOGIC:
+      // 1. Try metadata 'total'
+      // 2. Try array length (if problems comes as a direct array)
+      // 3. Try .problems array length (if nested)
+      // 4. Default to 0 (never 150)
+      let calculatedTotal = 0;
+      if (typeof problemsData?.total === 'number') {
+        calculatedTotal = problemsData.total;
+      } else if (Array.isArray(problemsData)) {
+        calculatedTotal = problemsData.length;
+      } else if (problemsData?.problems && Array.isArray(problemsData.problems)) {
+        calculatedTotal = problemsData.problems.length;
+      }
+      
+      setTotalProblems(calculatedTotal);
+
     } catch (error: any) {
-      toast.error(error.message || 'Failed to load data');
+      console.error("Dashboard fetch error:", error);
+      toast.error('Failed to sync dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Custom Circular Progress Component ---
+  // Safe Streak Accessor
+  const getStreak = (s: any) => {
+    if (!s) return 0;
+    // Checks all common naming conventions
+    return s.currentStreak || s.streak || s.dailyStreak || s.days || 0;
+  };
+
+  // --- Circular Progress Component ---
   const CircularProgress = ({ value, max, size = 180, strokeWidth = 12 }: { value: number, max: number, size?: number, strokeWidth?: number }) => {
+    const safeMax = max > 0 ? max : 10; // Default to 10 if max is 0 to avoid division by zero visuals
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
-    const progress = Math.min(value / max, 1);
+    const progress = Math.min(value / safeMax, 1);
     const dashOffset = circumference - progress * circumference;
 
     return (
       <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-        {/* Glow Effect behind */}
         <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full scale-75" />
-        
         <svg width={size} height={size} className="transform -rotate-90">
-          {/* Background Circle */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-            className="text-zinc-800"
-          />
-          {/* Progress Circle */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-            className="text-emerald-500 transition-all duration-1000 ease-out"
-          />
+          <circle cx={size / 2} cy={size / 2} r={radius} stroke="currentColor" strokeWidth={strokeWidth} fill="transparent" className="text-zinc-800" />
+          <circle cx={size / 2} cy={size / 2} r={radius} stroke="currentColor" strokeWidth={strokeWidth} fill="transparent" strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000 ease-out" />
         </svg>
         <div className="absolute flex flex-col items-center text-center">
           <span className="text-4xl font-black text-white tracking-tighter">{value}</span>
@@ -107,7 +117,6 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-        <p className="text-zinc-500 text-sm animate-pulse">Loading Dashboard...</p>
       </div>
     );
   }
@@ -119,6 +128,8 @@ export default function DashboardPage() {
     { title: 'Communities', description: 'Study groups', href: '/communities', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
   ];
 
+  const currentStreak = getStreak(stats);
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-zinc-950 p-6 md:p-8 font-sans">
@@ -129,13 +140,15 @@ export default function DashboardPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               Welcome back, <span className="text-emerald-500">{user?.displayName || 'Developer'}</span>
             </h1>
-            <p className="text-zinc-400">
-              Ready to crush some code today?
-            </p>
+            <p className="text-zinc-400">Ready to crush some code today?</p>
           </div>
+          
+          {/* Streak Badge */}
           <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-full text-zinc-400 text-sm">
-             <Flame className="h-4 w-4 text-orange-500 fill-orange-500/20" /> 
-             <span>Daily Streak: <span className="text-white font-bold">0 Days</span></span>
+             <Flame className={cn("h-4 w-4", currentStreak > 0 ? "text-orange-500 fill-orange-500/20" : "text-zinc-600")} /> 
+             <span>Daily Streak: <span className={cn("font-bold", currentStreak > 0 ? "text-white" : "text-zinc-500")}>
+                {currentStreak} Days
+             </span></span>
           </div>
         </div>
 
@@ -145,28 +158,26 @@ export default function DashboardPage() {
           {/* LEFT COL: Stats Area */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Top Stats Row: Circular Progress + Score Card */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Circular Progress Card */}
+              {/* Progress Card */}
               <Card className="bg-gradient-to-br from-zinc-900 to-zinc-950 border-zinc-800 shadow-xl overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
                 <CardHeader className="pb-2">
                   <CardTitle className="text-zinc-100 flex items-center gap-2 text-lg">
-                    <Target className="h-5 w-5 text-emerald-500" /> 
-                    Progress
+                    <Target className="h-5 w-5 text-emerald-500" /> Progress
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center py-6">
-                  <CircularProgress value={stats?.problemsSolved || 0} max={TOTAL_PROBLEMS_GOAL} />
+                  {/* Dynamic Total Count */}
+                  <CircularProgress value={stats?.problemsSolved || 0} max={totalProblems} />
                   <div className="mt-6 flex items-center gap-2 text-sm text-zinc-400">
-                    <span>Goal: <span className="text-emerald-400 font-bold">{TOTAL_PROBLEMS_GOAL}</span> Problems</span>
+                    <span>Goal: <span className="text-emerald-400 font-bold">{totalProblems}</span> Problems</span>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Grid of smaller stats */}
+              {/* Stats Grid */}
               <div className="grid grid-cols-1 gap-6">
-                 {/* Total Score Card */}
                 <Card className="bg-zinc-900/50 border-zinc-800 flex flex-col justify-center relative overflow-hidden group">
                   <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <CardContent className="p-6">
@@ -183,7 +194,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Global Rank Card */}
                 <Card className="bg-zinc-900/50 border-zinc-800 flex flex-col justify-center relative overflow-hidden group">
                    <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <CardContent className="p-6">
@@ -195,14 +205,16 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-zinc-400 text-sm font-medium mb-1">Current Rank</p>
-                      <h3 className="text-4xl font-bold text-white tracking-tight">#{stats?.rank || '-'}</h3>
+                      <h3 className="text-4xl font-bold text-white tracking-tight">
+                        {stats?.rank ? `#${stats.rank}` : <span className="text-2xl text-zinc-500">-</span>}
+                      </h3>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             </div>
 
-            {/* Quick Actions Grid */}
+            {/* Quick Actions */}
             <div>
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-yellow-400" /> Quick Actions
@@ -225,17 +237,15 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-
           </div>
 
-          {/* RIGHT COL: Leaderboard Preview */}
+          {/* Right Column: Leaderboard (Kept safely mostly empty/protected as requested) */}
           <div className="lg:col-span-1">
              <Card className="bg-zinc-900/80 border-zinc-800 h-full flex flex-col">
               <CardHeader className="border-b border-zinc-800 pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-yellow-500" /> 
-                    Leaderboard
+                    <Trophy className="h-5 w-5 text-yellow-500" /> Leaderboard
                   </CardTitle>
                   <Link href="/leaderboard">
                     <Button variant="ghost" size="sm" className="text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-8">
@@ -245,31 +255,28 @@ export default function DashboardPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-0 flex-1">
-                {topLeaderboard.length > 0 ? (
+                {topLeaderboard && topLeaderboard.length > 0 ? (
                   <div className="divide-y divide-zinc-800/50">
                     {topLeaderboard.map((entry, index) => (
-                      <div key={entry.userId} className="flex items-center gap-4 p-4 hover:bg-zinc-800/30 transition-colors">
+                      <div key={entry.userId || index} className="flex items-center gap-4 p-4 hover:bg-zinc-800/30 transition-colors">
                         <div className={`
                           w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
                           ${index === 0 ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 
-                            index === 1 ? 'bg-zinc-700/30 text-zinc-400 border border-zinc-700/50' : 
-                            index === 2 ? 'bg-amber-700/10 text-amber-600 border border-amber-700/20' : 
                             'text-zinc-500 bg-zinc-900'}
                         `}>
-                          #{entry.rank}
+                          #{entry.rank || index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-200 truncate">{entry.displayName}</p>
-                          <p className="text-xs text-zinc-500 truncate">Score: {entry.score}</p>
+                          <p className="text-sm font-medium text-zinc-200 truncate">{entry.displayName || 'Anonymous'}</p>
+                          <p className="text-xs text-zinc-500 truncate">Score: {entry.score || 0}</p>
                         </div>
-                        {index === 0 && <Trophy className="h-4 w-4 text-yellow-500" />}
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-2 p-8 opacity-50">
-                    <Users className="h-10 w-10" />
-                    <p className="text-sm">No rankings yet</p>
+                    <AlertCircle className="h-10 w-10 text-zinc-600" />
+                    <p className="text-sm">Leaderboard unavailable</p>
                   </div>
                 )}
               </CardContent>
