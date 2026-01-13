@@ -103,7 +103,7 @@ export default function CommunitiesPage() {
     try {
       setLoading(true);
 
-      const list = await communityApi.getCommunities(); 
+      const list = await communityApi.getCommunities();
       setAllCommunities(list);
       setCommunities(list);
     } catch (err) {
@@ -308,66 +308,71 @@ export default function CommunitiesPage() {
               const owner = typeof c.ownerId === 'object' ? c.ownerId : null;
 
               return (
-              <Link key={c._id} href={`/communities/${c._id}`}>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/30 transition h-full flex flex-col">
-                  <div className="flex justify-between mb-4">
-                    <div
-                      className={cn(
-                        "h-12 w-12 rounded-lg flex items-center justify-center",
-                        c.type === "domain_restricted"
-                          ? "bg-amber-500/10 text-amber-500"
-                          : "bg-emerald-500/10 text-emerald-500"
-                      )}
-                    >
-                      {c.type === "domain_restricted" ? (
-                        <Lock className="h-6 w-6" />
-                      ) : (
-                        <Globe className="h-6 w-6" />
-                      )}
-                    </div>
-
-                    {c.type === "domain_restricted" && (
-                      <Badge className="bg-amber-500/10 text-amber-500">
-                        {c.domain}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {c.name}
-                  </h3>
-
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
-                    {c.description}
-                  </p>
-                  
-                  {/* NEW: Created By Section */}
-                  {owner && (
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-4 border-t border-zinc-800/50 pt-3">
-                      <span>Created by</span>
-                      <Link 
-                        href={`/profile/${owner._id}`} 
-                        onClick={(e) => e.stopPropagation()} // Prevents clicking the whole card
-                        className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
+                <Link key={c._id} href={`/communities/${c._id}`}>
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/30 transition h-full flex flex-col">
+                    <div className="flex justify-between mb-4">
+                      <div
+                        className={cn(
+                          "h-12 w-12 rounded-lg flex items-center justify-center",
+                          c.type === "domain_restricted"
+                            ? "bg-amber-500/10 text-amber-500"
+                            : "bg-emerald-500/10 text-emerald-500"
+                        )}
                       >
-                         <User className="w-3 h-3" />
-                         {owner.displayName || 'User'}
-                      </Link>
-                    </div>
-                  )}
+                        {c.type === "domain_restricted" ? (
+                          <Lock className="h-6 w-6" />
+                        ) : (
+                          <Globe className="h-6 w-6" />
+                        )}
+                      </div>
 
-                  <div className="flex justify-between text-sm mt-auto pt-2">
-                    <div className="flex items-center gap-2 text-zinc-400">
-                      <Users className="h-4 w-4" />
-                      {c.memberCount} Members
+                      {c.type === "domain_restricted" && (
+                        <Badge className="bg-amber-500/10 text-amber-500">
+                          {c.domain}
+                        </Badge>
+                      )}
                     </div>
-                    <span className="text-emerald-500 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
-                      View <ArrowRight className="h-3 w-3" />
-                    </span>
+
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {c.name}
+                    </h3>
+
+                    <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
+                      {c.description}
+                    </p>
+
+                    {/* NEW: Created By Section */}
+                    {owner && (
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-4 border-t border-zinc-800/50 pt-3">
+                        <span>Created by</span>
+                        <div
+                          key={c._id}
+                          onClick={(e) => {
+                            router.push(`/communities/${c._id}`)
+                            e.stopPropagation()
+                          }}
+                          // onClick={(e) => e.stopPropagation()} // Prevents clicking the whole card
+                          className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
+                        >
+                          <User className="w-3 h-3" />
+                          {owner.displayName || 'User'}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-sm mt-auto pt-2">
+                      <div className="flex items-center gap-2 text-zinc-400">
+                        <Users className="h-4 w-4" />
+                        {c.memberCount} Members
+                      </div>
+                      <span className="text-emerald-500 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
+                        View <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            )})}
+                </Link>
+              )
+            })}
           </div>
         ) : (
           <div className="py-20 text-center border border-dashed border-zinc-800 rounded-xl">

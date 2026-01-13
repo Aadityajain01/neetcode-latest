@@ -13,6 +13,7 @@ import {
   Github
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 // --- INTERNAL COMPONENTS FOR "MEGA PAGE" STRUCTURE ---
 
@@ -108,8 +109,8 @@ export default function HomePage() {
           
           {/* Logo */}
           <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg p-1.5 shadow-lg shadow-emerald-500/20">
-              <Code2 className="h-5 w-5 text-white" />
+            <div className=" rounded-lg p-1.5 shadow-lg  inverted ">
+              <Image src={'/favicon.ico'} width={32} height={32} alt="NeetCode Logo" />
             </div>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">NeetCode</span>
           </div>

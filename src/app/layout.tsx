@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     description: "Competitive coding platform for mastering algorithms and data structures",
     type: "website",
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

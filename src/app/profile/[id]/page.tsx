@@ -166,8 +166,8 @@ export default function PublicProfilePage() {
             
             {/* --- HEADER --- */}
             {/* Added a Back Button for better navigation */}
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-[-10px]">
-                <ArrowLeft size={16} /> Back
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-[5px]">
+                <ArrowLeft size={16} />
             </button>
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-800 pb-8">
