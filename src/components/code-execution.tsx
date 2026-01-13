@@ -2,29 +2,56 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Play, Send, ChevronRight, Code2, RotateCcw, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { 
+  Loader2, Play, Send, ChevronRight, Code2, RotateCcw, 
+  CheckCircle2, XCircle, AlertTriangle, HelpCircle 
+} from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { submissionApi, Submission, Problem, TestCase } from "@/lib/api-modules";
-import { useUIStore } from "@/store/ui-store"; // ✅ Import store for tutorial trigger
+import { useUIStore } from "@/store/ui-store";
 
-// --- 1. UPDATED TEMPLATES (LeetCode Style) ---
+// --- 1. USER-FRIENDLY TEMPLATES (Self-Documenting) ---
 const LANGUAGE_TEMPLATES: Record<string, string> = {
   python: `class Solution:
     def solve(self, args):
-        # Write your code here
-        # 'args' is a list of input values
-        # Example: return args[0] + args[1]
+        """
+        :param args: list - Contains the input values
+        :return: The result of your calculation
+        
+        Usage:
+        - args[0] is the first input, args[1] is the second, etc.
+        - Do NOT use input(). We handle reading for you.
+        - Return your answer. Do NOT print() it.
+        """
+        
+        # Example: For 'Sum of Two Numbers' (Input: 3 5)
+        # val1 = int(args[0])
+        # val2 = int(args[1])
+        # return val1 + val2
+        
         return None`,
 
   javascript: `class Solution {
+    /**
+     * @param {any[]} args - The input arguments from the test case
+     * @returns {any} - The result
+     */
     solve(args) {
-        // Write your code here
-        // 'args' is an array of input values
+        // Usage:
+        // - args[0] is the first input line.
+        // - Do NOT use process.stdin. We handle it.
+        // - Return the result.
+        
+        // Example:
+        // const num = parseInt(args[0]);
+        // return num % 2 === 0 ? "Even" : "Odd";
+        
         return null;
     }
 }`,
@@ -34,8 +61,17 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        // For Java, standard input is still the best way
         Scanner scanner = new Scanner(System.in);
-        // Your code here
+        
+        // 1. Read Input
+        // int a = scanner.nextInt();
+        
+        // 2. Process logic...
+        
+        // 3. Print Output
+        // System.out.println(a);
+        
         scanner.close();
     }
 }`,
@@ -49,9 +85,19 @@ public class Main {
 using namespace std;
 
 int main() {
+    // Optimize I/O operations
     ios::sync_with_stdio(0);
     cin.tie(0);
-    // Your code here
+
+    // 1. Read Input
+    // int a;
+    // cin >> a;
+
+    // 2. Process logic...
+
+    // 3. Print Output
+    // cout << a;
+
     return 0;
 }`,
 
@@ -60,12 +106,22 @@ int main() {
 #include <stdlib.h>
 
 int main() {
-    // Your code here
+    // 1. Read Input
+    // int a;
+    // scanf("%d", &a);
+
+    // 2. Process logic...
+
+    // 3. Print Output
+    // printf("%d", a);
+
     return 0;
 }`,
 };
 
-// --- 2. HIDDEN DRIVER CODE ---
+// --- 2. HIDDEN DRIVER CODE (Handles the "Magic") ---
+// This code is appended to the user's code before execution.
+// It reads stdin, parses it, calls the user's class, and prints the result.
 const DRIVER_CODE: Record<string, string> = {
   python: `
 # --- DRIVER CODE (HIDDEN) ---
@@ -73,24 +129,28 @@ import sys, json
 
 if __name__ == "__main__":
     try:
+        # 1. Read all input from standard input
         input_str = sys.stdin.read().strip()
-        # Attempt to parse as JSON first (for complex inputs), fallback to splitting
+        
+        # 2. Parse Input: Try JSON first (for arrays/objects), else split by spaces
         try:
             args = [json.loads(x) for x in input_str.splitlines() if x]
         except:
             args = input_str.split()
 
+        # 3. Call the User's Solution
         sol = Solution()
         if hasattr(sol, 'solve'):
             result = sol.solve(args)
+            
+            # 4. Print Result (JSON formatted if possible)
             if result is not None:
-                # Print result as JSON if possible, else string
                 try:
                     print(json.dumps(result))
                 except:
                     print(result)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Runtime Error: {e}")
 `,
 
   javascript: `
@@ -98,23 +158,27 @@ if __name__ == "__main__":
 const fs = require('fs');
 
 try {
+    // 1. Read Input
     const input = fs.readFileSync(0, 'utf-8').trim();
-    if (!input) process.exit(0);
-
-    const lines = input.split('\\n');
+    
+    // 2. Parse Input (Try JSON line by line)
+    const lines = input ? input.split('\\n') : [];
     const args = lines.map(line => {
         try { return JSON.parse(line); } catch(e) { return line; }
     });
 
+    // 3. Call User's Solution
     const sol = new Solution();
     if (typeof sol.solve === 'function') {
         const result = sol.solve(args);
+        
+        // 4. Print Result
         if (result !== undefined && result !== null) {
             console.log(JSON.stringify(result));
         }
     }
 } catch (e) {
-    console.error(e);
+    console.error("Runtime Error:", e);
 }
 `
 };
@@ -155,18 +219,20 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
   const [output, setOutput] = useState("");
   const [currentSubmission, setCurrentSubmission] = useState<Submission | null>(null);
 
-  // Tutorial Trigger
   const triggerTutorial = useUIStore((state) => state.triggerTutorialIfFirstTime);
 
   // --- INITIALIZATION ---
   useEffect(() => {
-    triggerTutorial(); // Check if tutorial is needed
+    triggerTutorial();
 
     if (problem.languages && problem.languages.length > 0) {
       const firstLang = problem.languages[0].toLowerCase();
       setLanguage(firstLang);
+      // Set the helpful template
       setCode(LANGUAGE_TEMPLATES[firstLang] || "");
     }
+    
+    // Set default custom input from sample
     if (sampleTestCases?.[0]?.input) {
         setCustomInput(sampleTestCases[0].input);
     }
@@ -197,8 +263,8 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     setCode(LANGUAGE_TEMPLATES[newLanguage] || code);
   };
 
+  // Helper: Combines User Code + Hidden Driver
   const getExecutableCode = () => {
-    // Only inject driver for supported languages
     if (DRIVER_CODE[language]) {
         return code + "\n" + DRIVER_CODE[language];
     }
@@ -223,6 +289,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
         return;
       }
 
+      // Inject driver code before sending
       const sourceCode = getExecutableCode();
 
       const submitRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/execute`, {
@@ -237,6 +304,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
 
       const { token } = await submitRes.json();
       
+      // Poll for Run status
       let result: any = null;
       for (let i = 0; i < 20; i++) {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/execute/${token}/status`, {
@@ -265,7 +333,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
 
       const submission = await submissionApi.submitCode({ 
           problemId: problem._id, 
-          code: sourceCode, // Send the code WITH driver to backend
+          code: sourceCode, // Send code + driver
           language 
       });
 
@@ -285,9 +353,27 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
       {/* EDITOR */}
       <div className="flex-1 flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden relative shadow-sm">
           <div className="h-12 flex items-center justify-between px-4 border-b border-zinc-800 bg-zinc-950">
+            
+            {/* Title with Help Tooltip */}
             <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-wider">
                 <Code2 className="h-4 w-4 text-emerald-500" /> Code Editor
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-4 w-4 text-zinc-600 hover:text-zinc-400 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-zinc-900 border-zinc-700 text-zinc-300 max-w-xs p-3">
+                      <p className="font-semibold text-emerald-400 mb-1">How inputs work:</p>
+                      <p className="text-xs">
+                        For Python/JS, we use a hidden wrapper.<br/>
+                        Use the <code>args</code> variable to access inputs.<br/>
+                        Do NOT read standard input manually.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </div>
+
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-36 h-7 bg-zinc-900 border-zinc-700 text-zinc-300 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-300">
@@ -297,6 +383,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex-1 relative bg-[#1e1e1e]">
             <Editor
               height="100%"
@@ -306,6 +393,8 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
               theme="vs-dark"
               options={{ minimap: { enabled: false }, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", padding: { top: 16 } }}
             />
+            
+            {/* Action Buttons */}
             <div className="absolute bottom-4 right-6 flex gap-2 z-10">
               <Button onClick={handleRunCode} disabled={isRunning || isSubmitting} size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 shadow-lg backdrop-blur-md">
                 {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />} Run
@@ -341,7 +430,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
               <div className="w-full h-full p-4 font-mono text-sm overflow-auto text-zinc-300 custom-scrollbar relative">
                   
                   {outputMode === 'submit' && currentSubmission ? (
-                    // SUBMISSION VIEW
+                    // SUBMISSION RESULTS
                     <div className="space-y-4 animate-in slide-in-from-bottom-2">
                         <div className="flex items-center gap-3">
                           <div className={cn("p-2 rounded-lg", currentSubmission.status === 'accepted' ? "bg-emerald-500/10" : (currentSubmission.status === 'pending' || currentSubmission.status === 'running') ? "bg-blue-500/10" : "bg-red-500/10")}>
@@ -361,7 +450,6 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                           </div>
                         </div>
                         
-                        {/* Fail Details */}
                         {(currentSubmission as any)?.failureDetails && (
                           <div className="bg-zinc-900 rounded-lg p-3 border border-red-900/30 text-xs space-y-2">
                               <div className="text-red-400 font-bold flex items-center gap-2"><AlertTriangle className="h-3 w-3" /> Failed Case</div>
@@ -374,10 +462,8 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                         )}
                     </div>
                   ) : (
-                    // RUN OUTPUT VIEW
-                    <>
-                        <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">Run code to see output...</span>}</pre>
-                    </>
+                    // RUN OUTPUT
+                    <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">Run code to see output...</span>}</pre>
                   )}
                   
                   {/* Clear Button */}

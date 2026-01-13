@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar'; 
 import { TutorialGuide } from '@/components/TutorialGuide';
-
+import logo from '../../../public/logo.png'
 interface MainLayoutProps {
   children: React.ReactNode;
 }

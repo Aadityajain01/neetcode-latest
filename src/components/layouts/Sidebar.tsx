@@ -21,7 +21,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import Image from 'next/image';
-
+import logo from '../../../public/logo.png'
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -85,8 +85,8 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       
       {/* Logo Area */}
       <div className="h-16 flex items-center gap-3 px-6 border-b border-white/5 bg-zinc-900/50">
-        <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-          <Image src="/favicon.ico" alt="Logo" width={20} height={20} className="invert brightness-0" />
+        <div className="h-8 w-8 rounded-lg  flex items-center justify-center shadow-lg shadow-white-500/20">
+          <Image src={logo} alt="Logo" width={40} height={40} className='rounded-lg inset-0'  />
         </div>
         <div>
           <h1 className="font-bold text-lg tracking-tight text-white">NeetCode</h1>

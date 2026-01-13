@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { Loader2, Mail, Code2, CheckCircle2, User, Terminal } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { authApi } from "@/lib/api-modules/auth.api";
-
+import logo from "../../../../public/logo.png"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -121,9 +122,9 @@ export default function RegisterPage() {
          <div className="relative z-10 text-right">
            <div className="flex items-center justify-end gap-2 text-white font-bold text-xl mb-12">
              <span className="text-zinc-200">NeetCode</span>
-             <div className="bg-emerald-500 rounded-lg p-1.5 shadow-lg shadow-emerald-500/20">
-                <Code2 className="h-5 w-5 text-zinc-950" />
-             </div>
+              <div className="p-1.5 shadow-lg shadow-emerald-500/20">
+              <Image src={logo} alt="NeetCode" width={40} height={40} />
+            </div>
            </div>
            
            <h1 className="text-5xl font-black text-white tracking-tight leading-[1.1] mb-6">

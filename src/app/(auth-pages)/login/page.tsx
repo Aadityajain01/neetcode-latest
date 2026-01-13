@@ -31,7 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { authApi } from "@/lib/api-modules";
-
+import Image from "next/image";
+import logo from "../../../../public/logo.png"
 export default function LoginPage() {
   const router = useRouter();
   const { setLoading, isLoading } = useAuthStore();
@@ -108,8 +109,8 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 text-white font-bold text-xl mb-12">
-            <div className="bg-emerald-500 rounded-lg p-1.5 shadow-lg shadow-emerald-500/20">
-              <Code2 className="h-5 w-5 text-zinc-950" />
+            <div className="p-1.5 shadow-lg shadow-emerald-500/20">
+              <Image src={logo} alt="NeetCode" width={40} height={40} />
             </div>
             NeetCode
           </div>

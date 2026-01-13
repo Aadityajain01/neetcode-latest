@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-
+import logo from "../../public/logo.png";
 // --- INTERNAL COMPONENTS FOR "MEGA PAGE" STRUCTURE ---
 
 const FeatureCard = ({ icon: Icon, title, description, delay }: { icon: any, title: string, description: string, delay: number }) => (
@@ -110,7 +110,7 @@ export default function HomePage() {
           {/* Logo */}
           <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight cursor-pointer" onClick={() => window.scrollTo(0,0)}>
             <div className=" rounded-lg p-1.5 shadow-lg  inverted ">
-              <Image src={'/favicon.ico'} width={32} height={32} alt="NeetCode Logo" />
+              <Image src={logo} width={40} height={40} alt="NeetCode Logo" />
             </div>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">NeetCode</span>
           </div>
