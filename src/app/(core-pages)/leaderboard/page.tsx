@@ -2,137 +2,140 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // <--- IMPORT THIS
+import Link from 'next/link'; // ✅ Import Link for profile clicking
 import { useAuthStore } from '@/store/auth-store';
 import { leaderboardApi, userApi, LeaderboardEntry } from '@/lib/api-modules';
 import MainLayout from '@/components/layouts/main-layout';
 import { Button } from '@/components/ui/button';
+// ✅ Import Avatar components
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
 import { toast } from 'sonner';
 import { Loader2, Trophy, Globe, Users, Medal, Crown, Sparkles, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ... (Rest of imports and interfaces remain the same)
+interface CommunityOption {
+  id: string;
+  name: string;
+}
 
 export default function LeaderboardPage() {
-  // ... (Keep existing state and useEffects exactly as they are)
   const router = useRouter();
   const { user, initialized, isAuthenticated } = useAuthStore();
+
   const [activeTab, setActiveTab] = useState<string>('global');
-  const [communities, setCommunities] = useState<any[]>([]);
+  const [communities, setCommunities] = useState<CommunityOption[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [myStats, setMyStats] = useState<{ rank: number; score: number } | null>(null);
 
-  // ... (Keep initPage and fetchRankings exactly as they are)
   useEffect(() => {
-      if (!initialized) return;
-      if (!isAuthenticated) {
-        router.push('/login');
-        return;
-      }
-      initPage();
-    }, [initialized, isAuthenticated, router]);
-  
-    useEffect(() => {
-      if (initialized && isAuthenticated) {
-        fetchRankings(activeTab);
-      }
-    }, [activeTab, initialized, isAuthenticated]);
-  
-    const initPage = async () => {
-      try {
-        setLoading(true);
-        const myCommunities = await userApi.getCommunities(user?.id);
-        const formatted = (myCommunities || []).map((c: any) => ({
-          id: c.id || c._id,
-          name: c.name
-        }));
-        setCommunities(formatted);
-      } catch (error) {
-        toast.error('Failed to load community filters');
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    const fetchRankings = async (scope: string) => {
-      setRankingLoading(true);
-      setLeaderboard([]);
-      setMyStats(null);
-  
-      try {
-        const listPromise = scope === 'global' 
-          ? leaderboardApi.getGlobal({ limit: 50 }) 
-          : leaderboardApi.getCommunity(scope, { limit: 50 });
-  
-        const statsPromise = scope === 'global'
-          ? leaderboardApi.getGlobalMe().catch(() => null)
-          : leaderboardApi.getCommunityMe(scope).catch(() => null);
-  
-        const [data, stats] = await Promise.all([listPromise, statsPromise]);
-  
-        const processed = (data || [])
-          .filter(entry => entry.displayName !== 'Anonymous' && entry.displayName !== 'admin')
-          .slice(0, 10);
-  
-        setLeaderboard(processed);
-  
-        const myEntryInList = processed.find(entry => entry.userId === user?.id);
-  
-        if (myEntryInList) {
-          setMyStats({ rank: myEntryInList.rank, score: myEntryInList.score });
-        } else if (stats) {
-          setMyStats({ rank: stats.rank, score: stats.score });
-        }
-  
-      } catch (error) {
-        toast.error('Could not load rankings');
-      } finally {
-        setRankingLoading(false);
-      }
-    };
-  
-    const isMeInTop10 = useMemo(() => {
-      return leaderboard.some(entry => entry.userId === user?.id);
-    }, [leaderboard, user]);
+    if (!initialized) return;
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    initPage();
+  }, [initialized, isAuthenticated, router]);
 
-  // --- MODIFIED UI HELPERS ---
+  useEffect(() => {
+    if (initialized && isAuthenticated) {
+      fetchRankings(activeTab);
+    }
+  }, [activeTab, initialized, isAuthenticated]);
+
+  const initPage = async () => {
+    try {
+      setLoading(true);
+      const myCommunities = await userApi.getCommunities(user?.id);
+      const formatted = (myCommunities || []).map((c: any) => ({
+        id: c.id || c._id,
+        name: c.name
+      }));
+      setCommunities(formatted);
+    } catch (error) {
+      toast.error('Failed to load community filters');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRankings = async (scope: string) => {
+    setRankingLoading(true);
+    setLeaderboard([]);
+    setMyStats(null);
+
+    try {
+      const listPromise = scope === 'global' 
+        ? leaderboardApi.getGlobal({ limit: 50 }) 
+        : leaderboardApi.getCommunity(scope, { limit: 50 });
+
+      const statsPromise = scope === 'global'
+        ? leaderboardApi.getGlobalMe().catch(() => null)
+        : leaderboardApi.getCommunityMe(scope).catch(() => null);
+
+      const [data, stats] = await Promise.all([listPromise, statsPromise]);
+
+      const processed = (data || [])
+        .filter(entry => entry.displayName !== 'Anonymous' && entry.displayName !== 'admin')
+        .slice(0, 10);
+
+      setLeaderboard(processed);
+
+      const myEntryInList = processed.find(entry => entry.userId === user?.id);
+
+      if (myEntryInList) {
+        setMyStats({ rank: myEntryInList.rank, score: myEntryInList.score });
+      } else if (stats) {
+        setMyStats({ rank: stats.rank, score: stats.score });
+      }
+
+    } catch (error) {
+      toast.error('Could not load rankings');
+    } finally {
+      setRankingLoading(false);
+    }
+  };
+
+  const isMeInTop10 = useMemo(() => {
+    return leaderboard.some(entry => entry.userId === user?.id);
+  }, [leaderboard, user]);
+
+  // --- UI HELPERS ---
 
   const getRankStyles = (rank: number) => {
-    // ... (Keep same logic)
     switch(rank) {
-        case 1: return { 
-          icon: <Crown className="h-5 w-5 text-amber-400 fill-amber-400/20" />, 
-          color: "text-amber-400", 
-          bg: "bg-amber-400/5 border-amber-400/20 shadow-[0_0_15px_-3px_rgba(251,191,36,0.2)]" 
-        };
-        case 2: return { 
-          icon: <Medal className="h-5 w-5 text-slate-300 fill-slate-300/20" />, 
-          color: "text-slate-300", 
-          bg: "bg-slate-300/5 border-slate-300/20" 
-        };
-        case 3: return { 
-          icon: <Medal className="h-5 w-5 text-amber-700 fill-amber-700/20" />, 
-          color: "text-amber-700", 
-          bg: "bg-amber-700/5 border-amber-700/20" 
-        };
-        default: return { 
-          icon: <span className="text-zinc-500 font-mono font-bold text-sm">#{rank}</span>, 
-          color: "text-zinc-400", 
-          bg: "hover:bg-zinc-800/50 border-transparent" 
-        };
-      }
+      case 1: return { 
+        icon: <Crown className="h-5 w-5 text-amber-400 fill-amber-400/20" />, 
+        color: "text-amber-400", 
+        bg: "bg-amber-400/5 border-amber-400/20 shadow-[0_0_15px_-3px_rgba(251,191,36,0.2)]" 
+      };
+      case 2: return { 
+        icon: <Medal className="h-5 w-5 text-slate-300 fill-slate-300/20" />, 
+        color: "text-slate-300", 
+        bg: "bg-slate-300/5 border-slate-300/20" 
+      };
+      case 3: return { 
+        icon: <Medal className="h-5 w-5 text-amber-700 fill-amber-700/20" />, 
+        color: "text-amber-700", 
+        bg: "bg-amber-700/5 border-amber-700/20" 
+      };
+      default: return { 
+        icon: <span className="text-zinc-500 font-mono font-bold text-sm">#{rank}</span>, 
+        color: "text-zinc-400", 
+        bg: "hover:bg-zinc-800/50 border-transparent" 
+      };
+    }
   };
 
   const LeaderboardRow = ({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) => {
     const style = getRankStyles(entry.rank);
     
-    // CHANGE: Wrapped in Link
     return (
+      // ✅ LINK WRAPPER: Makes the entire row clickable to visit profile
       <Link href={`/profile/${entry.userId}`} className="block">
         <div className={cn(
-          "group relative grid grid-cols-12 gap-4 p-4 items-center rounded-xl border transition-all duration-200 cursor-pointer", // Added cursor-pointer
+          "group relative grid grid-cols-12 gap-4 p-4 items-center rounded-xl border transition-all duration-200 cursor-pointer",
           isMe ? "bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_-5px_rgba(16,185,129,0.2)]" : style.bg
         )}>
           {/* Rank Column */}
@@ -144,12 +147,18 @@ export default function LeaderboardPage() {
 
           {/* User Info Column */}
           <div className="col-span-7 flex items-center gap-4">
-            <div className={cn(
-              "h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ring-2 ring-offset-2 ring-offset-zinc-950 transition-transform group-hover:scale-105",
-              isMe ? "bg-emerald-500 ring-emerald-500/30 text-white" : "bg-zinc-800 ring-zinc-800 text-zinc-400"
+            
+            {/* ✅ AVATAR COMPONENT: Shows image if available, else initials */}
+            <Avatar className={cn(
+                "h-10 w-10 ring-2 ring-offset-2 ring-offset-zinc-950 transition-transform group-hover:scale-105",
+                isMe ? "ring-emerald-500/30" : "ring-zinc-800"
             )}>
-              {(entry.displayName || '??').slice(0, 2).toUpperCase()}
-            </div>
+                <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
+                <AvatarFallback className={cn("font-bold text-sm flex items-center justify-center h-full w-full rounded-full", isMe ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
+                    {(entry.displayName || '??').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+            </Avatar>
+
             <div className="flex flex-col">
               <span className={cn(
                 "font-medium truncate",
@@ -176,7 +185,6 @@ export default function LeaderboardPage() {
     );
   };
 
-  // ... (Keep existing loading/rendering logic)
   if (!initialized || loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4">
@@ -337,6 +345,8 @@ export default function LeaderboardPage() {
                         entry={{ 
                           userId: user.id, 
                           displayName: user.displayName || 'You', 
+                          // ✅ Cast to allow avatarUrl if your auth store type isn't fully updated yet, though it should be
+                          avatarUrl: (user as any).avatarUrl,
                           score: myStats.score, 
                           rank: myStats.rank 
                         }} 

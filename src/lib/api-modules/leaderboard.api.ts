@@ -3,6 +3,8 @@ import { api } from '@/lib/api';
 export interface LeaderboardEntry {
   userId: string;
   displayName: string;
+  // ✅ ADD THIS: Optional string for the avatar
+  avatarUrl?: string; 
   score: number;
   rank: number;
 }
