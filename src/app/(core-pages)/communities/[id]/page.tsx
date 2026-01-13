@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link"; // ✅ 1. Import Link
 import { useAuthStore } from "@/store/auth-store";
 import { communityApi, Community, CommunityMember } from "@/lib/api-modules";
 import MainLayout from "@/components/layouts/main-layout";
@@ -79,21 +80,16 @@ export default function CommunityDetailsPage() {
     try {
       setLoading(true);
       const communityData = await communityApi.getCommunityById(communityId);
-      console.log("communityData", communityData);
       setCommunity(communityData.community);
       setEditForm({ 
         name: communityData.community.name, 
         description: communityData.community.description 
       });
       setIsMember(communityData.isMember);
-      
-      // FIX: Handle undefined userRole by defaulting to null
       setMyRole(communityData.userRole || null);
 
       try {
         const membersList = await communityApi.getMembers(communityId);
-        // FIX: Ensure we are setting an array
-        console.log("membersList", membersList);
         setMembers(Array.isArray(membersList) ? membersList : []);
       } catch (e) {
         setMembers([]); 
@@ -329,32 +325,40 @@ export default function CommunityDetailsPage() {
 
                     return (
                        <div key={member._id} className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors group">
-                          <div className="flex items-center gap-4">
-                             <div className={cn("h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold border",
+                          
+                          {/* ✅ 1. USER PROFILE LINK (Left Side) */}
+                          {/* We wrap ONLY the user info in the Link, not the whole row */}
+                          <Link 
+                            href={`/profile/${userData._id}`} 
+                            className="flex-1 flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity min-w-0"
+                          >
+                             <div className={cn("h-10 w-10 rounded-full flex shrink-0 items-center justify-center text-sm font-bold border",
                                 isUserOwner ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
                                 isUserAdmin ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
                                 "bg-zinc-800 text-zinc-400 border-zinc-700"
                              )}>
                                 {(userData?.displayName?.[0] || userData?.email?.[0] || '?').toUpperCase()}
                              </div>
-                             <div>
+                             <div className="min-w-0">
                                 <div className="flex items-center gap-2">
-                                   <p className="text-zinc-200 font-medium truncate max-w-[150px]">{userData?.displayName || "Unknown"}</p>
-                                   {isUserOwner && <Crown className="w-3 h-3 text-amber-500" />}
-                                   {isUserAdmin && <Shield className="w-3 h-3 text-purple-500" />}
+                                   <p className="text-zinc-200 font-medium truncate">{userData?.displayName || "Unknown"}</p>
+                                   {isUserOwner && <Crown className="w-3 h-3 text-amber-500 shrink-0" />}
+                                   {isUserAdmin && <Shield className="w-3 h-3 text-purple-500 shrink-0" />}
                                 </div>
                                 <p className="text-xs text-zinc-500 capitalize">{member.role}</p>
                              </div>
-                          </div>
+                          </Link>
 
+                          {/* ✅ 2. ADMIN ACTIONS (Right Side) */}
+                          {/* This Dropdown is OUTSIDE the Link component, so clicking it doesn't redirect */}
                           {canManage && (
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white shrink-0 ml-2">
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-zinc-950 border-zinc-800 text-zinc-200">
+                                <DropdownMenuContent align="end" className="bg-zinc-950 border-zinc-800 text-zinc-200 z-50">
                                   <DropdownMenuLabel>Manage Member</DropdownMenuLabel>
                                   <DropdownMenuSeparator className="bg-zinc-800" />
                                   

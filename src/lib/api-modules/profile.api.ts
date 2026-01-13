@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 export const profileApi = {
   getMyProfile: () => api<{ profile: any }>("/users/profile/me"),
   getProfileById: (userId: string) =>
-    api<{ profile: any }>(`/users/profile/${userId}`),
+    api<{ profile: any }>(`/users/profile/${userId}`) ,
 
   updateProfile: (data: {
     displayName?: string;

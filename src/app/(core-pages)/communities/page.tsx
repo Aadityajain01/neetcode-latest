@@ -37,6 +37,7 @@ import {
   Plus,
   Building2,
   ArrowRight,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,9 +103,7 @@ export default function CommunitiesPage() {
     try {
       setLoading(true);
 
-      const list = await communityApi.getCommunities(); // ✅ always array
-      console.log("communities-list", list);
-
+      const list = await communityApi.getCommunities(); 
       setAllCommunities(list);
       setCommunities(list);
     } catch (err) {
@@ -298,16 +297,19 @@ export default function CommunitiesPage() {
         </div>
 
         {/* -------------------- GRID -------------------- */}
-        {/* -------------------- GRID -------------------- */}
         {loading ? (
           <div className="py-20 flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
           </div>
         ) : communities.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {communities.map((c) => (
+            {communities.map((c) => {
+              // Helper to check if owner is an object (populated)
+              const owner = typeof c.ownerId === 'object' ? c.ownerId : null;
+
+              return (
               <Link key={c._id} href={`/communities/${c._id}`}>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/30 transition">
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/30 transition h-full flex flex-col">
                   <div className="flex justify-between mb-4">
                     <div
                       className={cn(
@@ -335,22 +337,37 @@ export default function CommunitiesPage() {
                     {c.name}
                   </h3>
 
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-6">
+                  <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
                     {c.description}
                   </p>
+                  
+                  {/* NEW: Created By Section */}
+                  {owner && (
+                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-4 border-t border-zinc-800/50 pt-3">
+                      <span>Created by</span>
+                      <Link 
+                        href={`/profile/${owner._id}`} 
+                        onClick={(e) => e.stopPropagation()} // Prevents clicking the whole card
+                        className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
+                      >
+                         <User className="w-3 h-3" />
+                         {owner.displayName || 'User'}
+                      </Link>
+                    </div>
+                  )}
 
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm mt-auto pt-2">
                     <div className="flex items-center gap-2 text-zinc-400">
                       <Users className="h-4 w-4" />
                       {c.memberCount} Members
                     </div>
-                    <span className="text-emerald-500 flex items-center gap-1">
-                      View <ArrowRight className="h-4 w-4" />
+                    <span className="text-emerald-500 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
+                      View <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
                 </div>
               </Link>
-            ))}
+            )})}
           </div>
         ) : (
           <div className="py-20 text-center border border-dashed border-zinc-800 rounded-xl">
