@@ -22,13 +22,18 @@ function MCQSessionContent() {
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
-    if (lang && difficulty) fetchNextMCQ();
+    if (lang) fetchNextMCQ();
   }, []);
 
   const fetchNextMCQ = async () => {
     try {
       setLoading(true);
-      const data = await mcqApi.getMCQs({ language: lang!, difficulty: difficulty!, limit: 20 });
+      // Conditionally add difficulty
+      const reqparams: any = { language: lang!, limit: 20 };
+      if (difficulty && difficulty !== 'all') {
+        reqparams.difficulty = difficulty;
+      }
+      const data = await mcqApi.getMCQs(reqparams);
       const available = (data.mcqs || []).filter((q: MCQ) => !seenIds.includes(q._id));
 
       if (available.length === 0) {
@@ -77,8 +82,8 @@ function MCQSessionContent() {
         <div className="flex gap-2">
           <span className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs font-bold uppercase">{lang}</span>
           <span className={cn("px-3 py-1 rounded-full bg-zinc-800 text-xs font-bold uppercase", 
-            difficulty === 'easy' ? 'text-emerald-400' : difficulty === 'medium' ? 'text-yellow-400' : 'text-red-400'
-          )}>{difficulty}</span>
+            difficulty === 'easy' ? 'text-emerald-400' : difficulty === 'medium' ? 'text-yellow-400' : difficulty === 'hard' ? 'text-red-400' : 'text-blue-400'
+          )}>{difficulty || 'Mixed'}</span>
         </div>
         <span className="text-zinc-500 text-sm font-mono">Q.{seenIds.length}</span>
       </div>

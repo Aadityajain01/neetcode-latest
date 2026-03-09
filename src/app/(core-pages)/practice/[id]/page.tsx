@@ -13,6 +13,12 @@ import remarkGfm from "remark-gfm";
 // ✅ Import the Reusable Component
 import { CodeExecutor } from "@/components/code-execution";
 
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
 function shuffleArray(arr: string[]) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -71,7 +77,7 @@ export default function PracticeDetailPage() {
       const parsed = JSON.parse(stored);
       setSessionProblems(parsed.list);
       
-      const idx = parsed.list.indexOf(problemId);
+      const idx = parsed.list.indexOf(problemId as string);
       if (idx !== -1) {
         setCurrentIndex(idx);
       } else {
@@ -92,7 +98,7 @@ export default function PracticeDetailPage() {
     if (!problemId) return;
     try {
       setLoading(true);
-      const data = await problemApi.getProblemById(problemId);
+      const data = await problemApi.getProblemById(problemId as string);
       
       const prob = data?.problem;
       if (!prob) throw new Error("Problem data is missing");
@@ -142,53 +148,57 @@ export default function PracticeDetailPage() {
 
   return (
     <MainLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-[calc(100vh-80px)] gap-4 max-w-[1920px] mx-auto p-4">
-        
-        {/* --- LEFT PANEL: DESCRIPTION --- */}
-        <div className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
           
-          {/* Header */}
-          <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-              <BackButton href="/practice" label="Back to List" className="mb-2" />
-              
-              <div className="flex items-center justify-between mb-2">
-                <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>
-                <div className="flex gap-2 shrink-0">
-                  <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide", 
-                    problem.difficulty === 'easy' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-                    problem.difficulty === 'medium' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
-                    "bg-red-500/10 text-red-500 border border-red-500/20"
-                  )}>
-                    {problem.difficulty}
-                  </span>
+          {/* --- LEFT PANEL: DESCRIPTION --- */}
+          <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            
+            {/* Header */}
+            <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
+                <BackButton href="/practice" label="Back to List" className="mb-2" />
+                
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>
+                  <div className="flex gap-2 shrink-0">
+                    <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide", 
+                      problem.difficulty === 'easy' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
+                      problem.difficulty === 'medium' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                      "bg-red-500/10 text-red-500 border border-red-500/20"
+                    )}>
+                      {problem.difficulty}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
-                <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {problem.timeLimit}s</span>
-                <span className="flex items-center gap-1.5"><Database className="h-3.5 w-3.5" /> {problem.memoryLimit}MB</span>
-              </div>
-          </div>
-
-          {/* Description Content */}
-          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            <div className="prose prose-invert prose-sm max-w-none text-zinc-300">
-              {/* Use ReactMarkdown for proper formatting */}
-               <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
+                
+                <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
+                  <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {problem.timeLimit}s</span>
+                  <span className="flex items-center gap-1.5"><Database className="h-3.5 w-3.5" /> {problem.memoryLimit}MB</span>
+                </div>
             </div>
-          </div>
-        </div>
 
-        {/* --- RIGHT PANEL: THE REUSABLE CODE EXECUTOR --- */}
-        <div className="h-full">
-          {/* ✅ THE MAGIC HAPPENS HERE */}
-          <CodeExecutor 
-            problem={problem}
-            problemType="practice" // Pass "practice" so it calls the correct API endpoint
-            sampleTestCases={sampleTestCases}
-            onNextProblem={goToNextProblem}
-          />
-        </div>
+            {/* Description Content */}
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="prose prose-invert prose-sm max-w-none text-zinc-300">
+                {/* Use ReactMarkdown for proper formatting */}
+                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
+              </div>
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle className="bg-transparent" />
+
+          {/* --- RIGHT PANEL: THE REUSABLE CODE EXECUTOR --- */}
+          <ResizablePanel defaultSize={60} minSize={40} className="h-full">
+            {/* ✅ THE MAGIC HAPPENS HERE */}
+            <CodeExecutor 
+              problem={problem}
+              problemType="practice" // Pass "practice" so it calls the correct API endpoint
+              sampleTestCases={sampleTestCases}
+              onNextProblem={goToNextProblem}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </MainLayout>
   );

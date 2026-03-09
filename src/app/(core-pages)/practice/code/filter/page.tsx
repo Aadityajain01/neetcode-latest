@@ -28,7 +28,8 @@ function ProblemListContent() {
   const [visibleProblems, setVisibleProblems] = useState<Problem[]>([]);
   
   const [search, setSearch] = useState("");
-  const [difficulty, setDifficulty] = useState<string>("all");
+  const initialDiff = params.get("difficulty") || "all";
+  const [difficulty, setDifficulty] = useState<string>(initialDiff);
   
   // Pagination
   const [page, setPage] = useState(1);

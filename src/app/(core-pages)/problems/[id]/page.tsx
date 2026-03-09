@@ -11,7 +11,13 @@ import { BackButton } from "@/components/BackButton";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 // ✅ Import the new component
+// ✅ Import the new component
 import { CodeExecutor } from "@/components/code-execution";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 function shuffleArray(arr: string[]) {
   const a = [...arr];
@@ -103,46 +109,50 @@ export default function ProblemDetailPage() {
 
   return (
     <MainLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-[calc(100vh-80px)] gap-4 max-w-[1920px] mx-auto p-4">
-        
-        {/* LEFT PANEL: Description */}
-        <div className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
-           <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-             <BackButton href="/problems" label="Back to List" className="mb-2" />
-             <div className="flex items-center justify-between mb-2">
-                <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>
-                <div className="flex gap-2 shrink-0">
-                  <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide", 
-                    problem.difficulty === 'easy' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-                    problem.difficulty === 'medium' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
-                    "bg-red-500/10 text-red-500 border border-red-500/20"
-                  )}>
-                    {problem.difficulty}
-                  </span>
-                </div>
-             </div>
-             <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
-                <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {problem.timeLimit}s</span>
-                <span className="flex items-center gap-1.5"><Database className="h-3.5 w-3.5" /> {problem.memoryLimit}MB</span>
-             </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            <div className="prose prose-invert prose-sm max-w-none text-zinc-300 prose-headings:text-white prose-p:leading-relaxed prose-pre:bg-zinc-950 prose-pre:border prose-pre:border-zinc-800">
-               <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
+      <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
+          
+          {/* LEFT PANEL: Description */}
+          <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+             <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
+               <BackButton href="/problems" label="Back to List" className="mb-2" />
+               <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>
+                  <div className="flex gap-2 shrink-0">
+                    <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide", 
+                      problem.difficulty === 'easy' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
+                      problem.difficulty === 'medium' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                      "bg-red-500/10 text-red-500 border border-red-500/20"
+                    )}>
+                      {problem.difficulty}
+                    </span>
+                  </div>
+               </div>
+               <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
+                  <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {problem.timeLimit}s</span>
+                  <span className="flex items-center gap-1.5"><Database className="h-3.5 w-3.5" /> {problem.memoryLimit}MB</span>
+               </div>
             </div>
-          </div>
-        </div>
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="prose prose-invert prose-sm max-w-none text-zinc-300 prose-headings:text-white prose-p:leading-relaxed prose-pre:bg-zinc-950 prose-pre:border prose-pre:border-zinc-800">
+                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
+              </div>
+            </div>
+          </ResizablePanel>
 
-        {/* RIGHT PANEL: The Reusable Code Executor */}
-        <div className="h-full">
-          {/* ✅ THE MAGIC HAPPENS HERE */}
-          <CodeExecutor 
-            problem={problem}
-            problemType="dsa"
-            sampleTestCases={sampleTestCases}
-            onNextProblem={goToNextProblem}
-          />
-        </div>
+          <ResizableHandle withHandle className="bg-transparent" />
+
+          {/* RIGHT PANEL: The Reusable Code Executor */}
+          <ResizablePanel defaultSize={60} minSize={40} className="h-full">
+            {/* ✅ THE MAGIC HAPPENS HERE */}
+            <CodeExecutor 
+              problem={problem}
+              problemType="dsa"
+              sampleTestCases={sampleTestCases}
+              onNextProblem={goToNextProblem}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </MainLayout>
   );

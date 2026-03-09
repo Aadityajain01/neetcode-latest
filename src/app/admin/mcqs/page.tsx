@@ -176,7 +176,7 @@ useEffect(() => {
       question: mcq.question,
       language: mcq.language,
       options: [...mcq.options],
-      correctAnswer: mcq.correctAnswer ?? 0,
+      correctAnswer: mcq.correctOption ?? 0,
       explanation: mcq.explanation || '',
       difficulty: mcq.difficulty || 'easy',
       tags: mcq.tags.join(', '),

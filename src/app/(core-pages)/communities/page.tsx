@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { communityApi, Community } from "@/lib/api-modules";
-import MainLayout from "@/components/layouts/main-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -158,8 +157,7 @@ export default function CommunitiesPage() {
   if (!initialized) return null;
 
   return (
-    <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 ">
         {/* -------------------- HERO -------------------- */}
         <div className="relative rounded-3xl bg-zinc-900/50 border border-zinc-800 p-8 overflow-hidden">
           <div className="absolute right-0 top-0 opacity-5 p-6">
@@ -380,7 +378,6 @@ export default function CommunitiesPage() {
             <p className="text-zinc-500">No communities found for "{search}"</p>
           </div>
         )}
-      </div>
-    </MainLayout>
+    </div>
   );
 }

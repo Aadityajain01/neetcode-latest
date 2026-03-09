@@ -205,12 +205,22 @@ interface CodeExecutorProps {
   problemType: 'dsa' | 'practice';
   sampleTestCases: TestCase[];
   onNextProblem?: () => void;
+  initialCode?: string;
+  onCodeChange?: (code: string) => void;
+  initialLanguage?: string;
+  onLanguageChange?: (lang: string) => void;
 }
 
-export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProblem }: CodeExecutorProps) {
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProblem, initialCode, onCodeChange, initialLanguage, onLanguageChange }: CodeExecutorProps) {
   // --- STATE ---
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("javascript");
+  const [code, setCode] = useState(initialCode || "");
+  const [language, setLanguage] = useState(initialLanguage || "javascript");
   const [customInput, setCustomInput] = useState("");
   const [activeTab, setActiveTab] = useState<'custom_input' | 'output'>('custom_input');
   const [isRunning, setIsRunning] = useState(false);
@@ -226,17 +236,36 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     triggerTutorial();
 
     if (problem.languages && problem.languages.length > 0) {
-      const firstLang = problem.languages[0].toLowerCase();
+      const firstLang = initialLanguage || problem.languages[0].toLowerCase();
       setLanguage(firstLang);
-      // Set the helpful template
-      setCode(LANGUAGE_TEMPLATES[firstLang] || "");
+      
+      const defaultCode = initialCode || LANGUAGE_TEMPLATES[firstLang] || "";
+      setCode(defaultCode);
+      
+      // Update parent immediately on mount
+      if (!initialCode) onCodeChange?.(defaultCode);
+      if (!initialLanguage) onLanguageChange?.(firstLang);
     }
     
     // Set default custom input from sample
     if (sampleTestCases?.[0]?.input) {
         setCustomInput(sampleTestCases[0].input);
     }
-  }, [problem, sampleTestCases, triggerTutorial]);
+  }, [problem.languages, sampleTestCases]);
+
+  // Sync from props if they change externally
+  useEffect(() => {
+    if (initialCode !== undefined && initialCode !== code) {
+      setCode(initialCode);
+    }
+  }, [initialCode]);
+
+  useEffect(() => {
+    if (initialLanguage !== undefined && initialLanguage !== language) {
+      setLanguage(initialLanguage);
+    }
+  }, [initialLanguage]);
+
 
   // --- POLLING SUBMISSION ---
   useEffect(() => {
@@ -260,7 +289,16 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
   // --- HANDLERS ---
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    setCode(LANGUAGE_TEMPLATES[newLanguage] || code);
+    onLanguageChange?.(newLanguage);
+    const newCode = LANGUAGE_TEMPLATES[newLanguage] || code;
+    setCode(newCode);
+    onCodeChange?.(newCode);
+  };
+  
+  const handleCodeChange = (v: string | undefined) => {
+    const newVal = v || "";
+    setCode(newVal);
+    onCodeChange?.(newVal);
   };
 
   // Helper: Combines User Code + Hidden Driver
@@ -349,133 +387,137 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
 
   // --- RENDER ---
   return (
-    <div className="flex flex-col gap-3 h-full">
-      {/* EDITOR */}
-      <div className="flex-1 flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden relative shadow-sm">
-          <div className="h-12 flex items-center justify-between px-4 border-b border-zinc-800 bg-zinc-950">
-            
-            {/* Title with Help Tooltip */}
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-wider">
-                <Code2 className="h-4 w-4 text-emerald-500" /> Code Editor
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-4 w-4 text-zinc-600 hover:text-zinc-400 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-zinc-900 border-zinc-700 text-zinc-300 max-w-xs p-3">
-                      <p className="font-semibold text-emerald-400 mb-1">How inputs work:</p>
-                      <p className="text-xs">
-                        For Python/JS, we use a hidden wrapper.<br/>
-                        Use the <code>args</code> variable to access inputs.<br/>
-                        Do NOT read standard input manually.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+    <div className="h-full w-full">
+      <ResizablePanelGroup direction="vertical" className="h-full w-full gap-2">
+        {/* EDITOR */}
+        <ResizablePanel defaultSize={65} minSize={30} className="flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="h-12 flex items-center justify-between px-4 border-b border-zinc-800 bg-zinc-950 flex-none">
+              
+              {/* Title with Help Tooltip */}
+              <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-wider">
+                  <Code2 className="h-4 w-4 text-emerald-500" /> Code Editor
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircle className="h-4 w-4 text-zinc-600 hover:text-zinc-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-zinc-900 border-zinc-700 text-zinc-300 max-w-xs p-3">
+                        <p className="font-semibold text-emerald-400 mb-1">How inputs work:</p>
+                        <p className="text-xs">
+                          For Python/JS, we use a hidden wrapper.<br/>
+                          Use the <code>args</code> variable to access inputs.<br/>
+                          Do NOT read standard input manually.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+              </div>
+
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="w-36 h-7 bg-zinc-900 border-zinc-700 text-zinc-300 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-300">
+                  {problem.languages.map(l => (
+                    <SelectItem key={l} value={l.toLowerCase()} className="text-xs">{LANGUAGE_NAMES[l.toLowerCase()] || l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-36 h-7 bg-zinc-900 border-zinc-700 text-zinc-300 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-300">
-                {problem.languages.map(l => (
-                  <SelectItem key={l} value={l.toLowerCase()} className="text-xs">{LANGUAGE_NAMES[l.toLowerCase()] || l}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1 relative bg-[#1e1e1e]">
-            <Editor
-              height="100%"
-              language={language}
-              value={code}
-              onChange={(v) => setCode(v || "")}
-              theme="vs-dark"
-              options={{ minimap: { enabled: false }, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", padding: { top: 16 } }}
-            />
-            
-            {/* Action Buttons */}
-            <div className="absolute bottom-4 right-6 flex gap-2 z-10">
-              <Button onClick={handleRunCode} disabled={isRunning || isSubmitting} size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 shadow-lg backdrop-blur-md">
-                {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />} Run
-              </Button>
-              <Button onClick={handleSubmitCode} disabled={isRunning || isSubmitting} size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border border-emerald-500/50">
-                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />} Submit
-              </Button>
-              {currentSubmission?.status === 'accepted' && outputMode === 'submit' && onNextProblem && (
-                <Button onClick={onNextProblem} size="sm" className="bg-purple-600 hover:bg-purple-500 text-white animate-in fade-in zoom-in duration-300 shadow-lg border border-purple-500/50">
-                  Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            <div className="flex-1 relative bg-[#1e1e1e] min-h-0">
+              <Editor
+                height="100%"
+                language={language}
+                value={code}
+                onChange={handleCodeChange}
+                theme="vs-dark"
+                options={{ minimap: { enabled: false }, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", padding: { top: 16 } }}
+              />
+              
+              {/* Action Buttons */}
+              <div className="absolute bottom-4 right-6 flex gap-2 z-10">
+                <Button onClick={handleRunCode} disabled={isRunning || isSubmitting} size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 shadow-lg backdrop-blur-md">
+                  {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />} Run
                 </Button>
+                <Button onClick={handleSubmitCode} disabled={isRunning || isSubmitting} size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border border-emerald-500/50">
+                  {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />} Submit
+                </Button>
+                {currentSubmission?.status === 'accepted' && outputMode === 'submit' && onNextProblem && (
+                  <Button onClick={onNextProblem} size="sm" className="bg-purple-600 hover:bg-purple-500 text-white animate-in fade-in zoom-in duration-300 shadow-lg border border-purple-500/50">
+                    Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                )}
+              </div>
+            </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle className="bg-transparent" />
+
+        {/* TERMINAL / OUTPUT */}
+        <ResizablePanel defaultSize={35} minSize={20} className="flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-inner">
+            <div className="flex border-b border-zinc-800 bg-zinc-900/50 flex-none">
+              <button onClick={() => setActiveTab('custom_input')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'custom_input' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Input (Stdin)</button>
+              <button onClick={() => setActiveTab('output')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'output' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Output / Verdict</button>
+            </div>
+
+            <div className="flex-1 p-0 overflow-hidden relative min-h-0">
+              {activeTab === 'custom_input' ? (
+                <Textarea 
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    placeholder="Enter custom input here..."
+                    className="w-full h-full bg-transparent border-none resize-none p-4 font-mono text-sm text-zinc-300 focus-visible:ring-0"
+                />
+              ) : (
+                <div className="w-full h-full p-4 font-mono text-sm overflow-auto text-zinc-300 custom-scrollbar relative">
+                    
+                    {outputMode === 'submit' && currentSubmission ? (
+                      // SUBMISSION RESULTS
+                      <div className="space-y-4 animate-in slide-in-from-bottom-2">
+                          <div className="flex items-center gap-3">
+                            <div className={cn("p-2 rounded-lg", currentSubmission.status === 'accepted' ? "bg-emerald-500/10" : (currentSubmission.status === 'pending' || currentSubmission.status === 'running') ? "bg-blue-500/10" : "bg-red-500/10")}>
+                                {currentSubmission.status === 'accepted' ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> :
+                                (currentSubmission.status === 'pending' || currentSubmission.status === 'running') ? <Loader2 className="h-6 w-6 text-blue-500 animate-spin" /> :
+                                <XCircle className="h-6 w-6 text-red-500" />
+                                }
+                            </div>
+                            <div>
+                                <h3 className={cn("text-lg font-bold capitalize", currentSubmission.status === 'accepted' ? "text-emerald-500" : "text-red-500")}>
+                                  {currentSubmission.status === 'pending' || currentSubmission.status === 'running' ? 'Judging...' : currentSubmission.status}
+                                </h3>
+                                <div className="flex gap-4 mt-1 text-xs text-zinc-500">
+                                  {currentSubmission.testCasesPassed !== undefined && <span>Cases: {currentSubmission.testCasesPassed}/{currentSubmission.totalTestCases}</span>}
+                                  {currentSubmission.score !== undefined && <span>Score: {currentSubmission.score}</span>}
+                                </div>
+                            </div>
+                          </div>
+                          
+                          {(currentSubmission as any)?.failureDetails && (
+                            <div className="bg-zinc-900 rounded-lg p-3 border border-red-900/30 text-xs space-y-2">
+                                <div className="text-red-400 font-bold flex items-center gap-2"><AlertTriangle className="h-3 w-3" /> Failed Case</div>
+                                <div className="grid grid-cols-1 gap-2">
+                                  <div><span className="text-zinc-500 block mb-1">Input:</span> <pre className="text-zinc-300 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.input}</pre></div>
+                                  <div><span className="text-zinc-500 block mb-1">Expected:</span> <pre className="text-emerald-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.expected}</pre></div>
+                                  <div><span className="text-zinc-500 block mb-1">Your Output:</span> <pre className="text-red-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.output}</pre></div>
+                                </div>
+                            </div>
+                          )}
+                      </div>
+                    ) : (
+                      // RUN OUTPUT
+                      <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">Run code to see output...</span>}</pre>
+                    )}
+                    
+                    {/* Clear Button */}
+                    {(output || (currentSubmission && outputMode === 'submit')) && (
+                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-zinc-600 hover:text-white" onClick={() => { setOutput(""); setCurrentSubmission(null); setOutputMode(null); }}>
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                </div>
               )}
             </div>
-          </div>
-      </div>
-
-      {/* TERMINAL / OUTPUT */}
-      <div className="h-[35%] flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-inner">
-          <div className="flex border-b border-zinc-800 bg-zinc-900/50">
-            <button onClick={() => setActiveTab('custom_input')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'custom_input' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Input (Stdin)</button>
-            <button onClick={() => setActiveTab('output')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'output' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Output / Verdict</button>
-          </div>
-
-          <div className="flex-1 p-0 overflow-hidden relative">
-            {activeTab === 'custom_input' ? (
-              <Textarea 
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  placeholder="Enter custom input here..."
-                  className="w-full h-full bg-transparent border-none resize-none p-4 font-mono text-sm text-zinc-300 focus-visible:ring-0"
-              />
-            ) : (
-              <div className="w-full h-full p-4 font-mono text-sm overflow-auto text-zinc-300 custom-scrollbar relative">
-                  
-                  {outputMode === 'submit' && currentSubmission ? (
-                    // SUBMISSION RESULTS
-                    <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("p-2 rounded-lg", currentSubmission.status === 'accepted' ? "bg-emerald-500/10" : (currentSubmission.status === 'pending' || currentSubmission.status === 'running') ? "bg-blue-500/10" : "bg-red-500/10")}>
-                              {currentSubmission.status === 'accepted' ? <CheckCircle2 className="h-6 w-6 text-emerald-500" /> :
-                              (currentSubmission.status === 'pending' || currentSubmission.status === 'running') ? <Loader2 className="h-6 w-6 text-blue-500 animate-spin" /> :
-                              <XCircle className="h-6 w-6 text-red-500" />
-                              }
-                          </div>
-                          <div>
-                              <h3 className={cn("text-lg font-bold capitalize", currentSubmission.status === 'accepted' ? "text-emerald-500" : "text-red-500")}>
-                                {currentSubmission.status === 'pending' || currentSubmission.status === 'running' ? 'Judging...' : currentSubmission.status}
-                              </h3>
-                              <div className="flex gap-4 mt-1 text-xs text-zinc-500">
-                                {currentSubmission.testCasesPassed !== undefined && <span>Cases: {currentSubmission.testCasesPassed}/{currentSubmission.totalTestCases}</span>}
-                                {currentSubmission.score !== undefined && <span>Score: {currentSubmission.score}</span>}
-                              </div>
-                          </div>
-                        </div>
-                        
-                        {(currentSubmission as any)?.failureDetails && (
-                          <div className="bg-zinc-900 rounded-lg p-3 border border-red-900/30 text-xs space-y-2">
-                              <div className="text-red-400 font-bold flex items-center gap-2"><AlertTriangle className="h-3 w-3" /> Failed Case</div>
-                              <div className="grid grid-cols-1 gap-2">
-                                <div><span className="text-zinc-500 block mb-1">Input:</span> <pre className="text-zinc-300 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.input}</pre></div>
-                                <div><span className="text-zinc-500 block mb-1">Expected:</span> <pre className="text-emerald-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.expected}</pre></div>
-                                <div><span className="text-zinc-500 block mb-1">Your Output:</span> <pre className="text-red-400/80 bg-black/30 p-2 rounded whitespace-pre-wrap">{(currentSubmission as any ).failureDetails.output}</pre></div>
-                              </div>
-                          </div>
-                        )}
-                    </div>
-                  ) : (
-                    // RUN OUTPUT
-                    <pre className="text-zinc-300 whitespace-pre-wrap">{output || <span className="text-zinc-600 italic">Run code to see output...</span>}</pre>
-                  )}
-                  
-                  {/* Clear Button */}
-                  {(output || (currentSubmission && outputMode === 'submit')) && (
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-zinc-600 hover:text-white" onClick={() => { setOutput(""); setCurrentSubmission(null); setOutputMode(null); }}>
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-              </div>
-            )}
-          </div>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

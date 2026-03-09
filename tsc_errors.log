@@ -1,0 +1,14 @@
+﻿src/app/(core-pages)/communities/[id]/analytics/page.tsx(5,24): error TS2724: '"@/lib/api-modules"' has no exported member named 'CommunityTest'. Did you mean 'Community'?
+src/app/(core-pages)/communities/[id]/tests/[testId]/page.tsx(6,24): error TS2724: '"@/lib/api-modules"' has no exported member named 'CommunityTest'. Did you mean 'Community'?
+src/app/(core-pages)/communities/[id]/tests/[testId]/page.tsx(6,39): error TS2305: Module '"@/lib/api-modules"' has no exported member 'TestQuestion'.
+src/app/(core-pages)/communities/[id]/tests/[testId]/page.tsx(6,53): error TS2305: Module '"@/lib/api-modules"' has no exported member 'TestResult'.
+src/app/(core-pages)/communities/[id]/tests/page.tsx(6,24): error TS2724: '"@/lib/api-modules"' has no exported member named 'CommunityTest'. Did you mean 'Community'?
+src/app/(core-pages)/communities/[id]/tests/page.tsx(115,45): error TS18047: 'community' is possibly 'null'.
+src/app/(core-pages)/dashboard/page.tsx(68,32): error TS2339: Property 'total' does not exist on type '{ problems: Problem[]; pagination: { total: number; offset: number; limit: number; }; }'.
+src/app/(core-pages)/dashboard/page.tsx(69,40): error TS2339: Property 'total' does not exist on type '{ problems: Problem[]; pagination: { total: number; offset: number; limit: number; }; }'.
+src/app/admin/mcqs/page.tsx(179,26): error TS2339: Property 'correctAnswer' does not exist on type 'MCQ'.
+src/components/BackButton.tsx(6,20): error TS2307: Cannot find module '../../skills/frontend-design/examples/typescript/utils' or its corresponding type declarations.
+src/components/communities/TestBuilder.tsx(5,24): error TS2724: '"@/lib/api-modules"' has no exported member named 'CommunityTest'. Did you mean 'Community'?
+src/components/communities/TestBuilder.tsx(5,39): error TS2305: Module '"@/lib/api-modules"' has no exported member 'TestQuestion'.
+src/components/communities/TestBuilder.tsx(304,47): error TS2322: Type '{ size: string; checked: any; onCheckedChange: (v: boolean) => void; }' is not assignable to type 'IntrinsicAttributes & SwitchProps & RefAttributes<HTMLButtonElement>'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & SwitchProps & RefAttributes<HTMLButtonElement>'.

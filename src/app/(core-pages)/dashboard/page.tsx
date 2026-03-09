@@ -65,8 +65,8 @@ export default function DashboardPage() {
       // 3. Try .problems array length (if nested)
       // 4. Default to 0 (never 150)
       let calculatedTotal = 0;
-      if (typeof problemsData?.total === 'number') {
-        calculatedTotal = problemsData.total;
+      if (typeof (problemsData as any)?.pagination?.total === 'number') {
+        calculatedTotal = (problemsData as any).pagination.total;
       } else if (Array.isArray(problemsData)) {
         calculatedTotal = problemsData.length;
       } else if (problemsData?.problems && Array.isArray(problemsData.problems)) {

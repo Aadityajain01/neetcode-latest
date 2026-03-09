@@ -8,6 +8,8 @@ export interface Community {
   type: "open" | "domain_restricted";
   domain?: string;
   memberCount: number;
+  allowUsersToChat?: boolean;
+  allowTestCreation?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,7 +19,55 @@ export interface CommunityMember {
   communityId: string;
   userId: string | { _id: string; displayName: string; email: string; avatarUrl?: string };
   role: "owner" | "admin" | "member";
+  isMuted?: boolean;
   joinedAt: string;
+}
+
+export interface CommunityTest {
+  _id: string;
+  title: string;
+  description: string;
+  communityId: string;
+  createdBy: string;
+  type: "mcq" | "programming" | "mixed";
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  isResultVisible: boolean;
+  totalMarks: number;
+  questionIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestQuestion {
+  _id: string;
+  testId: string;
+  type: "mcq" | "programming";
+  marks: number;
+  question?: string;
+  options?: string[];
+  correctOption?: number;
+  problemId?: string;
+  title?: string;
+  description?: string;
+  constraints?: string;
+  inputFormat?: string;
+  outputFormat?: string;
+  languages?: string[];
+  customTestcases?: { input: string; output: string; isHidden: boolean }[];
+}
+
+export interface TestResult {
+  _id: string;
+  testId: string;
+  userId: string;
+  communityId: string;
+  submissionId: string;
+  totalScore: number;
+  mcqScore: number;
+  programmingScore: number;
+  evaluatedAt: string;
 }
 
 export const communityApi = {
@@ -83,6 +133,36 @@ export const communityApi = {
 
   transferOwnership: async (communityId: string, newOwnerId: string) => {
     const response = await api.post(`/communities/${communityId}/transfer-owner`, { newOwnerId });
+    return response.data;
+  },
+
+  muteMember: async (communityId: string, userId: string, isMuted: boolean) => {
+    const response = await api.post(`/communities/${communityId}/members/${userId}/mute`, { isMuted });
+    return response.data;
+  },
+
+  getTests: async (communityId: string): Promise<CommunityTest[]> => {
+    const response = await api.get<{ tests: CommunityTest[] }>(`/communities/${communityId}/tests`);
+    return response.data.tests ?? [];
+  },
+
+  getTestById: async (communityId: string, testId: string) => {
+    const response = await api.get<{ test: CommunityTest, questions: TestQuestion[], hasSubmitted: boolean, result: TestResult | null }>(`/communities/${communityId}/tests/${testId}`);
+    return response.data;
+  },
+
+  createTest: async (communityId: string, data: Partial<CommunityTest> & { questions: Partial<TestQuestion>[] }) => {
+    const response = await api.post<{ test: CommunityTest }>(`/communities/${communityId}/tests`, data);
+    return response.data.test;
+  },
+
+  submitTest: async (communityId: string, testId: string, data: { answers: any[], codeSubmissions: any[] }) => {
+    const response = await api.post(`/communities/${communityId}/tests/${testId}/submit`, data);
+    return response.data;
+  },
+
+  getTestAnalytics: async (communityId: string, testId: string) => {
+    const response = await api.get(`/communities/${communityId}/tests/${testId}/analytics`);
     return response.data;
   },
 };

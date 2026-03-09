@@ -6,10 +6,11 @@ export { communityApi } from './community.api';
 export { mcqApi } from './mcq.api';
 export { authApi } from './auth.api';
 export { adminApi } from './admin.api';
+export { messageApi } from './message.api';
 
 export type { User, UserStats } from './user.api';
 export type { Problem, TestCase } from './problem.api';
 export type { Submission } from './submission.api';
 export type { LeaderboardEntry } from './leaderboard.api';
-export type { Community, CommunityMember } from './community.api';
+export type { Community, CommunityMember, CommunityTest, TestQuestion, TestResult } from './community.api';
 export type { MCQ } from './mcq.api';

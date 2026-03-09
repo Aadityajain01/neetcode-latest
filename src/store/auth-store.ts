@@ -67,11 +67,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 // --------------------------------------------------
 // 🔐 GLOBAL AUTH LISTENER (Stable & Race-Safe)
+// Track hydration to prevent calling login() multiple times
+let isHydrating = false;
+
 onAuthStateChanged(auth, async (firebaseUser) => {
   const store = useAuthStore.getState();
 
   // User logged out
   if (!firebaseUser) {
+    isHydrating = false;
     store.setFirebaseUser(null);
     store.setUser(null);
     store.setToken(null);
@@ -81,6 +85,7 @@ onAuthStateChanged(auth, async (firebaseUser) => {
 
   // Block unverified users
   if (!firebaseUser.emailVerified) {
+    isHydrating = false;
     store.setFirebaseUser(null);
     store.setUser(null);
     store.setToken(null);
@@ -89,11 +94,26 @@ onAuthStateChanged(auth, async (firebaseUser) => {
   }
 
   try {
-    const token = await firebaseUser.getIdToken(true);
+    // Only force-refresh token if we don't already have one
+    const token = await firebaseUser.getIdToken(false);
 
-    // ✅ ONLY store Firebase state
+    // ✅ Store Firebase state
     store.setToken(token);
     store.setFirebaseUser(firebaseUser);
+
+    // ✅ Hydrate MongoDB user only once (not on every token refresh event)
+    if (!store.user && !isHydrating) {
+      isHydrating = true;
+      try {
+        const { authApi } = await import("@/lib/api-modules");
+        const res = await authApi.login(token);
+        store.setUser(res.user);
+      } catch (err) {
+        console.error("Failed to hydrate user from backend:", err);
+      } finally {
+        isHydrating = false;
+      }
+    }
 
   } catch (err) {
     console.error("Auth state sync failed:", err);

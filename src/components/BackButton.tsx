@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { cn } from '../../skills/frontend-design/examples/typescript/utils';
+import { cn } from '@/lib/utils';
 
 
 interface BackButtonProps {
