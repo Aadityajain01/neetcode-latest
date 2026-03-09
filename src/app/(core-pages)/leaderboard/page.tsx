@@ -20,7 +20,7 @@ interface CommunityOption {
 
 export default function LeaderboardPage() {
   const router = useRouter();
-  const { user, initialized, isAuthenticated } = useAuthStore();
+  const { user, initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<string>('global');
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
@@ -30,13 +30,13 @@ export default function LeaderboardPage() {
   const [myStats, setMyStats] = useState<{ rank: number; score: number } | null>(null);
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || authLoading) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     initPage();
-  }, [initialized, isAuthenticated, router]);
+  }, [initialized, isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     if (initialized && isAuthenticated) {

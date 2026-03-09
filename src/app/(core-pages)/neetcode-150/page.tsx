@@ -17,14 +17,14 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function Neetcode150Page() {
-  const { isAuthenticated, initialized } = useAuthStore();
+  const { isAuthenticated, initialized, isLoading: authLoading } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [roadmap, setRoadmap] = useState<any[]>([]);
   const [totalProgress, setTotalProgress] = useState({ solved: 0, total: 0 });
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || authLoading) return;
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -52,7 +52,7 @@ export default function Neetcode150Page() {
     };
 
     fetchData();
-  }, [initialized, isAuthenticated, router]);
+  }, [initialized, isAuthenticated, authLoading, router]);
 
   if (loading || !initialized) {
     return (

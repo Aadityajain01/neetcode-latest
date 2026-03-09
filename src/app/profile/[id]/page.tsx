@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { useRouter, useParams } from "next/navigation"; // 1. Import useParams
 import { profileApi } from "@/lib/api-modules/profile.api";
 import MainLayout from "@/components/layouts/main-layout"; 
+import { useAuthStore } from "@/store/auth-store";
 
 // --- TYPES (Same as your main profile) ---
 interface SocialLinks {
@@ -69,6 +70,7 @@ interface ProfileResponse {
 export default function PublicProfilePage() {
   const router = useRouter();
   const params = useParams(); // 2. Get the ID from the URL
+  const { initialized, isLoading: authLoading, isAuthenticated } = useAuthStore();
   
   // params.id might be an array or string, force it to string
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -79,6 +81,11 @@ export default function PublicProfilePage() {
   // Fetch Data using ID
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!initialized || authLoading) return;
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
+      }
       if (!userId) return;
 
       try {
@@ -106,7 +113,7 @@ export default function PublicProfilePage() {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, initialized, authLoading, isAuthenticated, router]);
 
   // --- DERIVED STATE ---
   const myCommunities = data?.communities.filter(c => 

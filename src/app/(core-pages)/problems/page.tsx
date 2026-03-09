@@ -30,7 +30,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function ProblemsPage() {
   const router = useRouter();
-  const { initialized, isAuthenticated } = useAuthStore();
+  const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
 
   const [problems, setProblems] = useState<Problem[]>([]);
   const [totalProblems, setTotalProblems] = useState(0);
@@ -48,7 +48,7 @@ export default function ProblemsPage() {
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || authLoading) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -61,7 +61,7 @@ export default function ProblemsPage() {
     };
 
     initData();
-  }, [initialized, isAuthenticated, router, currentPage, filters.type, filters.difficulty]); 
+  }, [initialized, isAuthenticated, authLoading, router, currentPage, filters.type, filters.difficulty]); 
 
   const fetchProblems = async () => {
     try {

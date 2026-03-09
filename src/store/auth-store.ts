@@ -3,15 +3,16 @@ import {
   User as FirebaseUser,
   onAuthStateChanged,
   signOut as firebaseSignOut,
+  reload,
 } from "firebase/auth";
 
 import { auth } from "@/lib/firebase";
-import { api } from "@/lib/api";
 
 interface User {
   id: string;
   email: string;
   displayName?: string;
+  avatarUrl?: string;
   role: "admin" | "user";
 }
 
@@ -38,8 +39,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   initialized: false,
 
-
-  
   setInitialized: (value: boolean) => set({ initialized: value }),
   setToken: (token) => set({ token }),
   setUser: (user) => set({ user, isAuthenticated: !!user }),
@@ -49,14 +48,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     set({ isLoading: true });
     try {
-      await firebaseSignOut(auth);
+      console.info("[AUTH_CHECKPOINT] MANUAL_LOGOUT: started");
+      // Tell the backend to destroy the Redis session and clear the cookie
+      const { authApi } = await import("@/lib/api-modules");
+      await authApi.logout().catch(() => {/* non-fatal */});
 
+      await firebaseSignOut(auth);
       set({
         user: null,
         firebaseUser: null,
         token: null,
         isAuthenticated: false,
       });
+      console.info("[AUTH_CHECKPOINT] MANUAL_LOGOUT: completed");
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
@@ -66,16 +70,29 @@ export const useAuthStore = create<AuthState>((set) => ({
 }));
 
 // --------------------------------------------------
-// 🔐 GLOBAL AUTH LISTENER (Stable & Race-Safe)
-// Track hydration to prevent calling login() multiple times
-let isHydrating = false;
-
+// 🔐 GLOBAL AUTH LISTENER
+// Firebase persists its own session in IndexedDB and fires onAuthStateChanged
+// on every page load when a session exists.
+//
+// Restore flow (in priority order):
+//   1. Session cookie (Redis) → instant restore, no Firebase Admin roundtrip
+//   2. Firebase token → full backend verification + new session created
 onAuthStateChanged(auth, async (firebaseUser) => {
   const store = useAuthStore.getState();
+  store.setLoading(true);
+  console.info("[AUTH_CHECKPOINT] AUTH_STATE_CHANGED", { hasFirebaseUser: !!firebaseUser });
 
-  // User logged out
-  if (!firebaseUser) {
-    isHydrating = false;
+  let activeUser = firebaseUser;
+
+  // Firebase can transiently emit null during hydration on refresh.
+  // Give it a brief window before treating the session as signed out.
+  if (!activeUser) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    activeUser = auth.currentUser;
+  }
+
+  if (!activeUser) {
+    console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: firebase_user_null_after_grace");
     store.setFirebaseUser(null);
     store.setUser(null);
     store.setToken(null);
@@ -83,40 +100,86 @@ onAuthStateChanged(auth, async (firebaseUser) => {
     return;
   }
 
-  // Block unverified users
-  if (!firebaseUser.emailVerified) {
-    isHydrating = false;
+  // Force-reload the Firebase user to get the latest emailVerified flag
+  try {
+    await reload(activeUser);
+  } catch (err) {
+    console.error("Firebase user reload failed:", err);
+  }
+
+  // Email verification required.  Gmail users are auto-verified by Firebase.
+  if (!activeUser.emailVerified) {
+    console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: email_not_verified");
     store.setFirebaseUser(null);
     store.setUser(null);
     store.setToken(null);
     store.setLoading(false);
     return;
   }
+
+  // Get the Firebase ID token (used as Bearer token for other API calls)
+  let token: string;
+  try {
+    token = await activeUser.getIdToken(false);
+  } catch (err) {
+    console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: failed_to_get_id_token");
+    console.error("Failed to get Firebase ID token:", err);
+    store.setFirebaseUser(null);
+    store.setUser(null);
+    store.setToken(null);
+    store.setLoading(false);
+    return;
+  }
+
+  store.setToken(token);
+  store.setFirebaseUser(activeUser);
 
   try {
-    // Only force-refresh token if we don't already have one
-    const token = await firebaseUser.getIdToken(false);
+    const { authApi } = await import("@/lib/api-modules");
 
-    // ✅ Store Firebase state
-    store.setToken(token);
-    store.setFirebaseUser(firebaseUser);
-
-    // ✅ Hydrate MongoDB user only once (not on every token refresh event)
-    if (!store.user && !isHydrating) {
-      isHydrating = true;
-      try {
-        const { authApi } = await import("@/lib/api-modules");
-        const res = await authApi.login(token);
-        store.setUser(res.user);
-      } catch (err) {
-        console.error("Failed to hydrate user from backend:", err);
-      } finally {
-        isHydrating = false;
+    // ── Fast path: restore from server-side session cookie ─────────────────
+    // The session was created at login time and survives page refreshes.
+    // No Firebase Admin SDK roundtrip needed.
+    try {
+      const sessionRes = await authApi.getSession();
+      if (sessionRes?.user) {
+        console.info("[AUTH_CHECKPOINT] LOGIN_SUCCESS: source=session_restore", {
+          userId: sessionRes.user.id,
+          email: sessionRes.user.email,
+        });
+        store.setUser(sessionRes.user);
+        store.setLoading(false);
+        return;
       }
+    } catch {
+      // Session expired or not found — fall through to full verification
     }
 
+    // ── Fallback: verify Firebase token and create a new session ───────────
+    try {
+      const res = await authApi.login(token);
+      console.info("[AUTH_CHECKPOINT] LOGIN_SUCCESS: source=token_login", {
+        userId: res.user.id,
+        email: res.user.email,
+      });
+      store.setUser(res.user);
+    } catch {
+      // Retry once with a fresh token in case the cached token just expired.
+      const freshToken = await activeUser.getIdToken(true);
+      store.setToken(freshToken);
+      const res = await authApi.login(freshToken);
+      console.info("[AUTH_CHECKPOINT] LOGIN_SUCCESS: source=token_login_retry", {
+        userId: res.user.id,
+        email: res.user.email,
+      });
+      store.setUser(res.user);
+    }
   } catch (err) {
+    console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: auth_state_sync_failed");
     console.error("Auth state sync failed:", err);
+    store.setUser(null);
+    store.setFirebaseUser(null);
+    store.setToken(null);
   } finally {
     store.setLoading(false);
   }

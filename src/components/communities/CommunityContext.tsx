@@ -26,7 +26,7 @@ const CommunityContext = createContext<CommunityContextType>({
 export const useCommunity = () => useContext(CommunityContext);
 
 export function CommunityProvider({ children, communityId }: { children: ReactNode; communityId: string }) {
-  const { initialized, isAuthenticated } = useAuthStore();
+  const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [community, setCommunity] = useState<Community | null>(null);
   const [isMember, setIsMember] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -49,13 +49,13 @@ export function CommunityProvider({ children, communityId }: { children: ReactNo
   };
 
   useEffect(() => {
-    if (!initialized || !communityId) return;
+    if (!initialized || authLoading || !communityId) return;
     if (isAuthenticated) {
       fetchCommunityData();
     } else {
       router.push("/login");
     }
-  }, [initialized, isAuthenticated, communityId]);
+  }, [initialized, authLoading, isAuthenticated, communityId, router]);
 
   if (loading) {
     return (

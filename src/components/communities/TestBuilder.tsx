@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Plus, Trash2, Code, ListTodo, Layers, Loader2, Search } from "lucide-react";
-import { messageApi } from "@/lib/api-modules";
 
 export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
   const { community } = useCommunity();
@@ -136,16 +135,6 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
 
       toast.success("Test created successfully");
       setOpen(false);
-
-      // Send announcement message in the community chat
-      try {
-        await messageApi.sendMessage(
-          community._id,
-          `📝 New test created: "${form.title}"`
-        );
-      } catch {
-        // Don't block test creation if announcement fails
-      }
 
       
       // Reset

@@ -40,7 +40,7 @@ export default function AdminSubmissionsPage() {
   const [isRejudging, setIsRejudging] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || isLoading) return;
 
     if (!isAuthenticated) {
       router.push('/login');

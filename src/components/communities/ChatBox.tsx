@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, FormEvent, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useCommunity } from "./CommunityContext";
 import { useAuthStore } from "@/store/auth-store";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,12 @@ interface Message {
   text: string;
   timestamp: string;
   isSystem?: boolean;
+  action?: {
+    type?: "take_test";
+    label?: string;
+    href?: string;
+    testId?: string;
+  };
 }
 
 // Generate a consistent color from a string (sender name)
@@ -72,6 +79,7 @@ function shouldShowDateSeparator(
 }
 
 export function ChatBox() {
+  const router = useRouter();
   const { community, userRole } = useCommunity();
   const { user, firebaseUser } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -80,6 +88,7 @@ export function ChatBox() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef(true);
+  const latestTimestampRef = useRef<string | null>(null);
 
   const currentUserId =
     user?.id || (user as any)?._id || firebaseUser?.uid || "";
@@ -103,6 +112,8 @@ export function ChatBox() {
       const data = await messageApi.getMessages(community._id, 100);
       const fetched: Message[] = data.messages || [];
       setMessages(fetched);
+      latestTimestampRef.current =
+        fetched.length > 0 ? fetched[fetched.length - 1].timestamp : null;
       if (isFirstLoad.current) {
         isFirstLoad.current = false;
         scrollToBottom(false);
@@ -112,17 +123,52 @@ export function ChatBox() {
     }
   }, [community?._id, scrollToBottom]);
 
-  // Initial fetch + polling
+  const fetchNewMessages = useCallback(async () => {
+    if (!community?._id || !latestTimestampRef.current) return;
+    try {
+      const data = await messageApi.getMessages(
+        community._id,
+        100,
+        latestTimestampRef.current
+      );
+      const incoming: Message[] = data.messages || [];
+      if (incoming.length === 0) return;
+
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m._id));
+        const uniqueIncoming = incoming.filter((m) => !seen.has(m._id));
+        if (uniqueIncoming.length === 0) return prev;
+        return [...prev, ...uniqueIncoming];
+      });
+
+      latestTimestampRef.current = incoming[incoming.length - 1].timestamp;
+      scrollToBottom();
+    } catch (err) {
+      console.error("Failed to fetch incremental messages:", err);
+    }
+  }, [community?._id, scrollToBottom]);
+
+  // Initial fetch + fast polling for near-realtime chat updates
   useEffect(() => {
     if (!community?._id) {
       setMessages([]);
+      latestTimestampRef.current = null;
       return;
     }
+
     isFirstLoad.current = true;
     fetchMessages();
-    const interval = setInterval(fetchMessages, 30000);
+
+    const interval = setInterval(() => {
+      if (isFirstLoad.current) {
+        fetchMessages();
+      } else {
+        fetchNewMessages();
+      }
+    }, 2500);
+
     return () => clearInterval(interval);
-  }, [community?._id, fetchMessages]);
+  }, [community?._id, fetchMessages, fetchNewMessages]);
 
   const handleSend = async (e?: FormEvent) => {
     e?.preventDefault();
@@ -234,8 +280,27 @@ export function ChatBox() {
                 {/* System message */}
                 {msg.isSystem ? (
                   <div className="flex justify-center my-3">
-                    <div className="bg-emerald-500/10 text-emerald-400 text-xs px-4 py-1.5 rounded-lg text-center border border-emerald-500/15 max-w-sm backdrop-blur-sm">
-                      {msg.text}
+                    <div className="bg-zinc-900/85 text-zinc-100 text-xs px-4 py-3 rounded-xl text-center border border-zinc-700/70 max-w-sm backdrop-blur-sm shadow-md w-full sm:w-auto">
+                      <div className="text-emerald-400 font-semibold mb-1 tracking-wide text-[11px] uppercase">
+                        Community Update
+                      </div>
+                      <div className="text-sm text-zinc-200">{msg.text}</div>
+
+                      {msg.action?.type === "take_test" && (msg.action.href || msg.action.testId) && (
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4"
+                            onClick={() => {
+                              const href = msg.action?.href || `/communities/${community?._id}/tests/${msg.action?.testId}`;
+                              router.push(href);
+                            }}
+                          >
+                            {msg.action.label || "Take Test"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (

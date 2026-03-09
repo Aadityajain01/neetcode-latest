@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, initialized, isAuthenticated } = useAuthStore();
+  const { user, initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   
   const [stats, setStats] = useState<UserStats | null>(null);
   const [topLeaderboard, setTopLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -33,13 +33,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || authLoading) return;
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     fetchData();
-  }, [initialized, isAuthenticated]);
+  }, [initialized, isAuthenticated, authLoading, router]);
 
   const fetchData = async () => {
     try {
@@ -113,7 +113,7 @@ export default function DashboardPage() {
     );
   };
 
-  if (!initialized || loading) {
+  if (!initialized || authLoading || loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />

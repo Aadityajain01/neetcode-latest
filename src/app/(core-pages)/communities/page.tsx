@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 
 export default function CommunitiesPage() {
   const router = useRouter();
-  const { initialized, isAuthenticated } = useAuthStore();
+  const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
 
   /* -------------------- DATA STATE -------------------- */
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
@@ -73,7 +73,7 @@ export default function CommunitiesPage() {
 
   /* -------------------- AUTH GUARD -------------------- */
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || authLoading) return;
 
     if (!isAuthenticated) {
       router.push("/login");
@@ -81,7 +81,7 @@ export default function CommunitiesPage() {
     }
 
     fetchCommunities();
-  }, [initialized, isAuthenticated]);
+  }, [initialized, isAuthenticated, authLoading, router]);
 
   /* -------------------- LOCAL SEARCH FILTER -------------------- */
   useEffect(() => {
