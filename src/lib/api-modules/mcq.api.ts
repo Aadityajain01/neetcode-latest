@@ -22,6 +22,9 @@ export interface SubmissionResult {
 
 // --- API Client ---
 export const mcqApi = {
+  getMeta: async () => {
+    return api.get<{ languages: string[]; difficulties: string[] }>("/mcqs/meta");
+  },
   // Fetch list of MCQs with pagination
   getMCQs: async (params?: {
     language?: string;

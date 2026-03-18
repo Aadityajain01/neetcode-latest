@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ShieldAlert, MessageSquare } from "lucide-react";
-import { TestBuilder } from "./TestBuilder";
 import { toast } from "sonner";
 import { messageApi } from "@/lib/api-modules";
+import { format } from "date-fns";
+import { TestBuilder } from "./TestBuilder";
 
 interface Message {
   _id: string;
@@ -215,16 +216,14 @@ export function ChatBox() {
 
   const isAdmin = userRole === "admin" || userRole === "owner";
   const chatDisabled = !community?.allowUsersToChat && !isAdmin;
+  const canCreateTest = isAdmin || community?.allowTestCreation;
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#0b0f0f] overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-transparent">
       {/* Chat Background */}
       <ScrollArea
         ref={scrollAreaRef}
-        className="flex-1 h-full w-full"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
+        className="h-full w-full flex-1"
       >
         <div className="p-4 space-y-1 flex flex-col min-h-full">
           {/* Admin-only chat notice */}
@@ -304,16 +303,16 @@ export function ChatBox() {
                     </div>
                   </div>
                 ) : (
-                  /* User message — WhatsApp style */
+                  /* User message — Minimal style */
                   <div
                     className={`flex items-end gap-2 ${
-                      isSameSenderAsPrev ? "mt-0.5" : "mt-3"
+                      isSameSenderAsPrev ? "mt-1" : "mt-4"
                     } ${isMe ? "flex-row-reverse" : "flex-row"}`}
                   >
                     {/* Avatar */}
-                    {!isSameSenderAsPrev ? (
+                    {!isSameSenderAsPrev && !isMe ? (
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-md"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
                         style={{
                           backgroundColor: getAvatarColor(msg.senderName),
                         }}
@@ -321,46 +320,33 @@ export function ChatBox() {
                         {msg.senderName.charAt(0).toUpperCase()}
                       </div>
                     ) : (
-                      <div className="w-8 shrink-0" />
+                      !isMe && <div className="w-8 shrink-0" />
                     )}
 
                     {/* Bubble */}
                     <div
-                      className={`max-w-[75%] ${
+                      className={`max-w-[75%] flex flex-col ${
                         isMe ? "items-end" : "items-start"
                       }`}
                     >
                       {/* Sender name — only for other users on first message in group */}
                       {!isMe && !isSameSenderAsPrev && (
-                        <p
-                          className="text-[11px] font-semibold mb-0.5 ml-1"
-                          style={{
-                            color: getAvatarColor(msg.senderName),
-                          }}
-                        >
+                        <p className="text-[11px] font-medium text-zinc-400 mb-1 ml-1">
                           {msg.senderName}
                         </p>
                       )}
 
                       <div
-                        className={`relative px-3 py-1.5 text-sm leading-relaxed shadow-sm ${
+                        className={`relative px-4 py-2.5 text-sm leading-relaxed shadow-sm rounded-2xl ${
                           isMe
-                            ? `bg-[#005c4b] text-white ${
-                                !isSameSenderAsPrev
-                                  ? "rounded-2xl rounded-tr-md"
-                                  : "rounded-2xl"
-                              }`
-                            : `bg-[#1a2a32] text-zinc-100 ${
-                                !isSameSenderAsPrev
-                                  ? "rounded-2xl rounded-tl-md"
-                                  : "rounded-2xl"
-                              }`
+                            ? "bg-zinc-800 text-white"
+                            : "bg-zinc-900 border border-zinc-800 text-zinc-100"
                         }`}
                       >
                         <span>{msg.text}</span>
                         <span
-                          className={`text-[10px] ml-2 inline-block align-bottom translate-y-[1px] ${
-                            isMe ? "text-emerald-300/60" : "text-zinc-500"
+                          className={`text-[10px] ml-3 inline-block align-bottom translate-y-[2px] ${
+                            isMe ? "text-zinc-400" : "text-zinc-500"
                           }`}
                         >
                           {formatTime(msg.timestamp)}
@@ -377,17 +363,14 @@ export function ChatBox() {
       </ScrollArea>
 
       {/* Input area */}
-      <div className="p-3 border-t border-zinc-800/50 bg-[#0b0f0f] shrink-0 w-full relative z-20">
-        <form onSubmit={handleSend} className="flex gap-2 items-center">
-          {isAdmin && (
-            <TestBuilder
-              onTestCreated={async () => {
-                // After test creation, send an announcement and refetch messages
-                await fetchMessages();
-                scrollToBottom();
-              }}
-            />
+      <div className="relative z-20 w-full shrink-0 bg-transparent p-4 sm:px-6 mb-2">
+        <div className="flex items-center gap-3 relative w-full h-full">
+          {canCreateTest && (
+            <div className="shrink-0">
+              <TestBuilder onTestCreated={() => {}} />
+            </div>
           )}
+          <form onSubmit={handleSend} className="flex-1 flex items-center relative h-12">
           <Input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -397,7 +380,7 @@ export function ChatBox() {
                 ? "Chat is disabled for members"
                 : "Type a message..."
             }
-            className="bg-[#1a2a32] border-zinc-700/50 focus-visible:ring-emerald-500/50 flex-1 text-sm h-11 rounded-xl placeholder:text-zinc-600"
+            className="bg-zinc-900/40 border-zinc-800/80 focus-visible:ring-emerald-500/30 w-full text-base h-full rounded-full pl-5 pr-14 placeholder:text-zinc-500 transition-colors shadow-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -408,11 +391,12 @@ export function ChatBox() {
           <Button
             type="submit"
             disabled={chatDisabled || !inputText.trim() || sending}
-            className="bg-emerald-600 hover:bg-emerald-700 w-11 h-11 shrink-0 rounded-full transition-all duration-200 hover:scale-105 active:scale-95"
+            className="absolute right-1 top-1 h-10 w-10 shrink-0 rounded-full bg-emerald-600/20 text-emerald-500 hover:bg-emerald-600 hover:text-white transition-all shadow-none"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4 ml-0.5" />
           </Button>
         </form>
+        </div>
       </div>
     </div>
   );

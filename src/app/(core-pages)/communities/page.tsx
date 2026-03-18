@@ -49,9 +49,11 @@ export default function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* -------------------- SEARCH -------------------- */
+  /* -------------------- PAGINATION & SEARCH -------------------- */
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   /* -------------------- CREATE -------------------- */
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -87,6 +89,7 @@ export default function CommunitiesPage() {
   useEffect(() => {
     if (!debouncedSearch) {
       setCommunities(allCommunities);
+      setCurrentPage(1);
       return;
     }
 
@@ -95,7 +98,15 @@ export default function CommunitiesPage() {
     );
 
     setCommunities(filtered);
+    setCurrentPage(1);
   }, [debouncedSearch, allCommunities]);
+
+  /* -------------------- DERIVED PAGINATION -------------------- */
+  const totalPages = Math.ceil(communities.length / itemsPerPage);
+  const paginatedCommunities = communities.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   /* -------------------- FETCH ONCE -------------------- */
   const fetchCommunities = async () => {
@@ -157,227 +168,234 @@ export default function CommunitiesPage() {
   if (!initialized) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 ">
-        {/* -------------------- HERO -------------------- */}
-        <div className="relative rounded-3xl bg-zinc-900/50 border border-zinc-800 p-8 overflow-hidden">
-          <div className="absolute right-0 top-0 opacity-5 p-6">
-            <Building2 className="w-60 h-60 text-emerald-500" />
+    <div className="w-full mx-auto p-4 md:p-8 space-y-6">
+      {/* -------------------- HEADER -------------------- */}
+      <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <h1 className="text-xl font-bold text-white">Communities</h1>
+
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+          {/* SEARCH */}
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search communities..."
+              className="pl-9 h-10 bg-zinc-900/50 border-zinc-800 text-sm"
+            />
           </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row justify-between gap-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Communities
-              </h1>
-              <p className="text-zinc-400 max-w-xl">
-                Join developers from your university or organization and grow
-                together.
-              </p>
-            </div>
+          {/* CREATE COMMUNITY */}
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 h-10 w-full md:w-auto">
+                <Plus className="mr-2 h-4 w-4" /> Create Community
+              </Button>
+            </DialogTrigger>
 
-            <Dialog
-              open={isCreateDialogOpen}
-              onOpenChange={setIsCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                  <Plus className="mr-2 h-5 w-5" /> Create Community
-                </Button>
-              </DialogTrigger>
+            <DialogContent className="bg-zinc-950 border-zinc-800">
+              <DialogHeader>
+                <DialogTitle>Create Community</DialogTitle>
+                <DialogDescription>
+                  Create a new developer community
+                </DialogDescription>
+              </DialogHeader>
 
-              <DialogContent className="bg-zinc-950 border-zinc-800">
-                <DialogHeader>
-                  <DialogTitle>Create Community</DialogTitle>
-                  <DialogDescription>
-                    Create a new developer community
-                  </DialogDescription>
-                </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label>Name</Label>
+                  <Input
+                    value={newCommunity.name}
+                    onChange={(e) =>
+                      setNewCommunity({
+                        ...newCommunity,
+                        name: e.target.value,
+                      })
+                    }
+                    className="bg-zinc-900 border-zinc-800"
+                  />
+                </div>
 
-                <div className="space-y-4 py-4">
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    value={newCommunity.description}
+                    onChange={(e) =>
+                      setNewCommunity({
+                        ...newCommunity,
+                        description: e.target.value,
+                      })
+                    }
+                    className="bg-zinc-900 border-zinc-800 h-24"
+                  />
+                </div>
+
+                <div>
+                  <Label>Access Type</Label>
+                  <Select
+                    value={newCommunity.type}
+                    onValueChange={(v: any) =>
+                      setNewCommunity({ ...newCommunity, type: v })
+                    }
+                  >
+                    <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="domain_restricted">
+                        Domain Restricted
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {newCommunity.type === "domain_restricted" && (
                   <div>
-                    <Label>Name</Label>
+                    <Label>Domain</Label>
                     <Input
-                      value={newCommunity.name}
+                      value={newCommunity.domain}
                       onChange={(e) =>
                         setNewCommunity({
                           ...newCommunity,
-                          name: e.target.value,
+                          domain: e.target.value,
                         })
                       }
                       className="bg-zinc-900 border-zinc-800"
                     />
                   </div>
+                )}
+              </div>
 
-                  <div>
-                    <Label>Description</Label>
-                    <Textarea
-                      value={newCommunity.description}
-                      onChange={(e) =>
-                        setNewCommunity({
-                          ...newCommunity,
-                          description: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-900 border-zinc-800 h-24"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Access Type</Label>
-                    <Select
-                      value={newCommunity.type}
-                      onValueChange={(v: any) =>
-                        setNewCommunity({ ...newCommunity, type: v })
-                      }
-                    >
-                      <SelectTrigger className="bg-zinc-900 border-zinc-800">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="domain_restricted">
-                          Domain Restricted
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {newCommunity.type === "domain_restricted" && (
-                    <div>
-                      <Label>Domain</Label>
-                      <Input
-                        value={newCommunity.domain}
-                        onChange={(e) =>
-                          setNewCommunity({
-                            ...newCommunity,
-                            domain: e.target.value,
-                          })
-                        }
-                        className="bg-zinc-900 border-zinc-800"
-                      />
-                    </div>
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateCommunity}
+                  disabled={createLoading}
+                  className="bg-emerald-500 text-white"
+                >
+                  {createLoading ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    "Create"
                   )}
-                </div>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-                <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsCreateDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateCommunity}
-                    disabled={createLoading}
-                    className="bg-emerald-500 text-white"
-                  >
-                    {createLoading ? (
-                      <Loader2 className="animate-spin h-4 w-4" />
-                    ) : (
-                      "Create"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+      {/* -------------------- LIST/TABLE -------------------- */}
+      <div className="bg-zinc-950/50 border border-zinc-800 rounded-2xl overflow-hidden">
+        {/* Table Header */}
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-zinc-800 text-sm font-semibold text-zinc-400 capitalize">
+          <div className="col-span-5">Community Name</div>
+          <div className="col-span-3">Type</div>
+          <div className="col-span-2">Member count</div>
+          <div className="col-span-2 text-right pr-4">View</div>
         </div>
 
-        {/* -------------------- SEARCH -------------------- */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search communities..."
-            className="pl-12 h-12 bg-zinc-900 border-zinc-800"
-          />
-        </div>
-
-        {/* -------------------- GRID -------------------- */}
+        {/* List */}
         {loading ? (
-          <div className="py-20 flex justify-center">
+          <div className="py-20 flex justify-center border-b border-zinc-800">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
           </div>
-        ) : communities.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {communities.map((c) => {
-              // Helper to check if owner is an object (populated)
-              const owner = typeof c.ownerId === 'object' ? c.ownerId : null;
-
+        ) : paginatedCommunities.length > 0 ? (
+          <div className="flex flex-col">
+            {paginatedCommunities.map((c) => {
+              const owner = typeof c.ownerId === "object" ? c.ownerId : null;
               return (
-                <Link key={c._id} href={`/communities/${c._id}`}>
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/30 transition h-full flex flex-col">
-                    <div className="flex justify-between mb-4">
-                      <div
-                        className={cn(
-                          "h-12 w-12 rounded-lg flex items-center justify-center",
-                          c.type === "domain_restricted"
-                            ? "bg-amber-500/10 text-amber-500"
-                            : "bg-emerald-500/10 text-emerald-500"
-                        )}
-                      >
-                        {c.type === "domain_restricted" ? (
-                          <Lock className="h-6 w-6" />
-                        ) : (
-                          <Globe className="h-6 w-6" />
-                        )}
-                      </div>
-
-                      {c.type === "domain_restricted" && (
-                        <Badge className="bg-amber-500/10 text-amber-500">
-                          {c.domain}
-                        </Badge>
+                <div key={c._id} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-zinc-800/50 hover:bg-zinc-800/20 transition items-center">
+                  {/* Community Name Column */}
+                  <div className="col-span-12 md:col-span-5 flex items-center gap-4 min-w-0">
+                    <div
+                      className={cn(
+                        "h-10 w-10 shrink-0 rounded-lg flex flex-col items-center justify-center",
+                        c.type === "domain_restricted"
+                          ? "bg-amber-500/10 text-amber-500"
+                          : "bg-emerald-500/10 text-emerald-500"
                       )}
+                    >
+                      {c.type === "domain_restricted" ? <Lock className="h-5 w-5" /> : <Globe className="h-5 w-5" />}
                     </div>
-
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {c.name}
-                    </h3>
-
-                    <p className="text-sm text-zinc-400 line-clamp-2 mb-4 flex-1">
-                      {c.description}
-                    </p>
-
-                    {/* NEW: Created By Section */}
-                    {owner && (
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 mb-4 border-t border-zinc-800/50 pt-3">
-                        <span>Created by</span>
-                        <div
-                          key={c._id}
-                          onClick={(e) => {
-                            router.push(`/communities/${c._id}`)
-                            e.stopPropagation()
-                          }}
-                          // onClick={(e) => e.stopPropagation()} // Prevents clicking the whole card
-                          className="flex items-center gap-1 text-zinc-300 hover:text-emerald-400 transition-colors font-medium"
-                        >
-                          <User className="w-3 h-3" />
-                          {owner.displayName || 'User'}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-white truncate">{c.name}</h3>
+                      <p className="text-xs text-zinc-500 truncate mt-0.5">{c.description}</p>
+                      {/* {owner && (
+                        <div className="flex items-center gap-1 text-[10px] text-zinc-500 mt-1">
+                          <span>By {owner.displayName || 'User'}</span>
                         </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between text-sm mt-auto pt-2">
-                      <div className="flex items-center gap-2 text-zinc-400">
-                        <Users className="h-4 w-4" />
-                        {c.memberCount} Members
-                      </div>
-                      <span className="text-emerald-500 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
-                        View <ArrowRight className="h-3 w-3" />
-                      </span>
+                      )} */}
                     </div>
                   </div>
-                </Link>
-              )
+
+                  {/* Type Column */}
+                  <div className="col-span-12 md:col-span-3 flex items-center">
+                    <span className="text-sm text-zinc-300">
+                      {c.type === "domain_restricted" ? "Locked" : "Public"}
+                    </span>
+                  </div>
+
+                  {/* Member Count Column */}
+                  <div className="col-span-12 md:col-span-2 flex items-center text-sm text-zinc-300 gap-2">
+                    <Users className="h-4 w-4 text-zinc-500" />
+                    {c.memberCount}
+                  </div>
+
+                  {/* View Column */}
+                  <div className="col-span-12 md:col-span-2 flex md:justify-end items-center mt-2 md:mt-0">
+                    <Button 
+                      variant="outline" 
+                      className="border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white w-full md:w-24 h-9 shadow-none bg-transparent"
+                      onClick={() => router.push(`/communities/${c._id}`)}
+                    >
+                      View <ArrowRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
             })}
           </div>
         ) : (
-          <div className="py-20 text-center border border-dashed border-zinc-800 rounded-xl">
+          <div className="py-20 text-center border-b border-zinc-800 bg-zinc-900/10">
             <Users className="h-10 w-10 mx-auto text-zinc-600 mb-2" />
             <p className="text-zinc-500">No communities found for "{search}"</p>
           </div>
         )}
+
+        {/* Pagination Footer */}
+        {!loading && (
+          <div className="flex items-center justify-between px-6 py-4 bg-zinc-950/30">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="border-zinc-800 bg-transparent text-white hover:bg-zinc-800 px-6 disabled:opacity-50"
+            >
+              Prev
+            </Button>
+            <span className="text-sm text-zinc-500">
+              {currentPage} of {Math.max(1, totalPages)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="border-zinc-800 bg-transparent text-white hover:bg-zinc-800 px-6 disabled:opacity-50"
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

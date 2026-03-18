@@ -130,3 +130,37 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;     /* Firefox */
 }
+
+/* Community scroll styling: hide vertical, show thin horizontal in emerald */
+.scrollbar-emerald {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.7) transparent;
+}
+
+.scrollbar-emerald::-webkit-scrollbar {
+  width: 0;
+  height: 6px;
+}
+
+.scrollbar-emerald::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-emerald::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.6);
+  border-radius: 999px;
+}
+
+.scrollbar-emerald [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
+  width: 0;
+  display: none;
+}
+
+.scrollbar-emerald [data-slot="scroll-area-scrollbar"][data-orientation="horizontal"] {
+  height: 6px;
+}
+
+.scrollbar-emerald [data-slot="scroll-area-thumb"] {
+  background: rgba(16, 185, 129, 0.6);
+  border-radius: 999px;
+}
