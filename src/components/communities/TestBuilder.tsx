@@ -280,6 +280,26 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
 
     setLoading(true);
     try {
+      const mcqQuestions = questions.filter((question) => question.type === "mcq");
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[MCQ_DEBUG][FE][CREATE_TEST] Sending test payload", {
+          communityId: community._id,
+          title: form.title,
+          selectedTestType,
+          derivedType,
+          totalQuestions: questions.length,
+          mcqCount: mcqQuestions.length,
+          mcqQuestions: mcqQuestions.map((question, index) => ({
+            index,
+            sourceMcqId: (question as any).sourceMcqId,
+            question: question.type === "mcq" ? (question.question || "").slice(0, 140) : "",
+            optionsCount: question.type === "mcq" ? (question.options?.length || 0) : 0,
+            correctOption: question.type === "mcq" ? question.correctOption : undefined,
+            marks: question.marks,
+          })),
+        });
+      }
+
       await communityApi.createTest(community._id, {
         ...form,
         type: selectedTestType,

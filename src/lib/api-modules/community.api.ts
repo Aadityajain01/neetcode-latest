@@ -169,11 +169,39 @@ export const communityApi = {
   },
 
   createTest: async (communityId: string, data: Partial<CommunityTest> & { questions: Partial<TestQuestion>[] }) => {
+    if (process.env.NODE_ENV !== 'production') {
+      const mcqQuestions = (data.questions || []).filter((question) => question.type === 'mcq');
+      console.info('[MCQ_DEBUG][FE][API][CREATE_TEST] Request payload', {
+        communityId,
+        title: data.title,
+        type: data.type,
+        totalQuestions: data.questions?.length || 0,
+        mcqCount: mcqQuestions.length,
+        mcqQuestions: mcqQuestions.map((question, index) => ({
+          index,
+          sourceMcqId: (question as any).sourceMcqId,
+          question: (question.question || '').slice(0, 140),
+          optionsCount: question.options?.length || 0,
+          correctOption: question.correctOption,
+          marks: question.marks,
+        })),
+      });
+    }
+
     const response = await api.post<{ test: CommunityTest }>(`/communities/${communityId}/tests`, data);
     return response.data.test;
   },
 
   submitTest: async (communityId: string, testId: string, data: { answers: any[], codeSubmissions: any[] }) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[MCQ_DEBUG][FE][API][SUBMIT_TEST] Request payload', {
+        communityId,
+        testId,
+        answersCount: data.answers?.length || 0,
+        answers: data.answers,
+      });
+    }
+
     const response = await api.post(`/communities/${communityId}/tests/${testId}/submit`, data);
     return response.data;
   },

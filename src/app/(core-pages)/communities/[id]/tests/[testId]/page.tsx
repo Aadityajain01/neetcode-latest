@@ -93,6 +93,31 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           language: codes[qId].language,
         }));
 
+      if (process.env.NODE_ENV !== "production") {
+        const mcqQuestionMap = new Map(
+          questions
+            .filter((question) => question.type === "mcq")
+            .map((question) => [question._id, question])
+        );
+
+        console.info("[MCQ_DEBUG][FE][SUBMIT_TEST] Submitting MCQ answers", {
+          communityId,
+          testId,
+          totalAnswers: answersArr.length,
+          mcqAnswers: answersArr
+            .filter((answer) => mcqQuestionMap.has(answer.questionId))
+            .map((answer) => {
+              const question = mcqQuestionMap.get(answer.questionId);
+              return {
+                questionId: answer.questionId,
+                selectedOption: answer.selectedOption,
+                question: (question?.question || "").slice(0, 140),
+                optionsCount: question?.options?.length || 0,
+              };
+            }),
+        });
+      }
+
       await communityApi.submitTest(communityId, testId, {
         answers: answersArr,
         codeSubmissions: codesArr,
@@ -101,6 +126,16 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       setHasSubmitted(true);
       const data = await communityApi.getTestById(communityId, testId);
       setResult(data.result);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[MCQ_DEBUG][FE][SUBMIT_TEST_RESULT] Received evaluated MCQ results", {
+          communityId,
+          testId,
+          mcqScore: data.result?.mcqScore,
+          totalScore: data.result?.totalScore,
+          mcqResults: data.result?.mcqResults,
+        });
+      }
     } catch {
       toast.error("Failed to submit test");
     } finally {
