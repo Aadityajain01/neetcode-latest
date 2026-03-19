@@ -37,7 +37,7 @@ export function formatDateTimeLabel(value: string, fallback: string) {
   if (!value) return fallback;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return fallback;
-  return format(date, "dd MMM yyyy, HH:mm");
+  return format(date, "dd MMM yy, HH:mm");
 }
 
 export function formatTimeValue(date: Date) {

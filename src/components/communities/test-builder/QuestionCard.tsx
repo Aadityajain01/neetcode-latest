@@ -15,10 +15,12 @@ export function QuestionCard({
   onRemove: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_100px_100px_80px] gap-4 p-3 items-center hover:bg-zinc-900/30 transition-colors">
+    <div className="grid grid-cols-[minmax(0,1fr)_100px_100px_80px] gap-4 p-3 items-center hover:bg-zinc-900/30 transition-colors">
       <div className="flex items-center gap-2 pl-2 overflow-hidden">
         <span className="text-zinc-200 text-sm whitespace-nowrap">{index + 1}.</span>
-        <span className="text-zinc-300 text-sm truncate">{questionPrimaryText(question) || "Untitled Question"}</span>
+        <div className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <span className="text-zinc-300 text-sm">{questionPrimaryText(question) || "Untitled Question"}</span>
+        </div>
       </div>
       
       <div className="text-center">

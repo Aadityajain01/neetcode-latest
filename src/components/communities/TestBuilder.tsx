@@ -20,15 +20,11 @@ import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateMcqModal } from "./test-builder/CreateMcqModal";
 import { LibraryMcqModal } from "./test-builder/LibraryMcqModal";
+import { CreateProgrammingModal } from "./test-builder/CreateProgrammingModal";
+import { LibraryProgrammingModal } from "./test-builder/LibraryProgrammingModal";
 import { DateTimePopoverField } from "./test-builder/DateTimePopoverField";
 import { QuestionCard } from "./test-builder/QuestionCard";
-import {
-  buildMcqQuestionText,
-  createEmptyMcqDraft,
-  createEmptyProgrammingDraft,
-  getDateFromValue,
-  parseMcqQuestionText,
-} from "./test-builder/helpers";
+import { createEmptyMcqDraft, createEmptyProgrammingDraft } from "./test-builder/helpers";
 import {
   Popover,
   PopoverContent,
@@ -52,8 +48,10 @@ import {
 } from "./test-builder/types";
 
 export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
+  const QUESTIONS_PER_PAGE = 8;
   const { community } = useCommunity();
   const [open, setOpen] = useState(false);
+  const [selectedTestType, setSelectedTestType] = useState<"mcq" | "programming" | "mixed">("mcq");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -68,6 +66,8 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
   const [addPopoverOpen, setAddPopoverOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [libraryModalOpen, setLibraryModalOpen] = useState(false);
+  const [createProgrammingModalOpen, setCreateProgrammingModalOpen] = useState(false);
+  const [libraryProgrammingModalOpen, setLibraryProgrammingModalOpen] = useState(false);
   const [addPopoverView, setAddPopoverView] = useState<AddPopoverView>("menu");
   const [customMode, setCustomMode] = useState<CustomQuestionMode>("mcq");
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(
@@ -85,6 +85,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
   const [librarySearch, setLibrarySearch] = useState("");
   const [libraryLanguage, setLibraryLanguage] = useState("all");
   const [libraryDifficulty, setLibraryDifficulty] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const totalMarks = useMemo(
     () => questions.reduce((sum, question) => sum + Number(question.marks || 0), 0),
@@ -101,6 +102,37 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
     if (hasProgramming) return "programming";
     return "mcq";
   }, [questions]);
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE)),
+    [questions.length, QUESTIONS_PER_PAGE]
+  );
+
+  const paginatedQuestions = useMemo(() => {
+    const start = (currentPage - 1) * QUESTIONS_PER_PAGE;
+    const end = start + QUESTIONS_PER_PAGE;
+    return questions.slice(start, end);
+  }, [questions, currentPage, QUESTIONS_PER_PAGE]);
+
+  const editingMcqQuestion = useMemo(() => {
+    if (editingQuestionIndex === null) return null;
+    const target = questions[editingQuestionIndex];
+    if (!target || target.type !== "mcq") return null;
+    return target;
+  }, [editingQuestionIndex, questions]);
+
+  const editingProgrammingQuestion = useMemo(() => {
+    if (editingQuestionIndex === null) return null;
+    const target = questions[editingQuestionIndex];
+    if (!target || target.type !== "programming") return null;
+    return target;
+  }, [editingQuestionIndex, questions]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   useEffect(() => {
     if (
@@ -145,6 +177,10 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
   const resetPopoverState = () => {
     setAddPopoverOpen(false);
     setAddPopoverView("menu");
+    setCreateModalOpen(false);
+    setLibraryModalOpen(false);
+    setCreateProgrammingModalOpen(false);
+    setLibraryProgrammingModalOpen(false);
     resetCustomDrafts();
     resetLibraryState();
   };
@@ -159,8 +195,15 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
       isResultVisible: false,
     });
     setQuestions([]);
+    setSelectedTestType("mcq");
+    setCurrentPage(1);
     setLoading(false);
     resetPopoverState();
+  };
+
+  const openBuilderForType = (type: "mcq" | "programming" | "mixed") => {
+    setSelectedTestType(type);
+    setOpen(true);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -200,114 +243,21 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
 
   const openCustomBuilder = (mode: CustomQuestionMode, index?: number) => {
     setAddPopoverOpen(false);
+    setEditingQuestionIndex(null);
+    if (mode === "programming") {
+      setCreateProgrammingModalOpen(true);
+      return;
+    }
     setCreateModalOpen(true);
   };
 
-  const openLibraryBuilder = () => {
+  const openLibraryBuilder = (mode: LibraryType) => {
     setAddPopoverOpen(false);
+    if (mode === "programming") {
+      setLibraryProgrammingModalOpen(true);
+      return;
+    }
     setLibraryModalOpen(true);
-  };
-
-  const upsertQuestion = (nextQuestion: DraftQuestion) => {
-    setQuestions((prev) => {
-      if (editingQuestionIndex === null) {
-        return [...prev, nextQuestion];
-      }
-
-      const next = [...prev];
-      next[editingQuestionIndex] = nextQuestion;
-      return next;
-    });
-  };
-
-  const saveCustomQuestion = () => {
-    if (customMode === "mcq") {
-      const questionText = buildMcqQuestionText(mcqDraft.headline, mcqDraft.details);
-      if (!questionText.trim()) {
-        toast.error("Add the MCQ prompt before saving");
-        return;
-      }
-
-      if (mcqDraft.options.some((option) => !option.trim())) {
-        toast.error("All MCQ options must be filled");
-        return;
-      }
-
-      upsertQuestion({
-        type: "mcq",
-        question: questionText,
-        options: mcqDraft.options.map((option) => option.trim()),
-        correctOption: mcqDraft.correctOption,
-        marks: mcqDraft.marks,
-      });
-
-      toast.success(
-        editingQuestionIndex === null ? "MCQ added to test" : "MCQ updated"
-      );
-      resetPopoverState();
-      return;
-    }
-
-    if (!programmingDraft.title.trim() || !programmingDraft.description.trim()) {
-      toast.error("Add the programming question title and description");
-      return;
-    }
-
-    upsertQuestion({
-      type: "programming",
-      problemId: programmingDraft.problemId,
-      title: programmingDraft.title.trim(),
-      description: programmingDraft.description.trim(),
-      constraints: programmingDraft.constraints.trim(),
-      inputFormat: programmingDraft.inputFormat.trim(),
-      outputFormat: programmingDraft.outputFormat.trim(),
-      languages: programmingDraft.languages.length
-        ? programmingDraft.languages
-        : PROGRAMMING_LANGUAGES,
-      customTestcases: programmingDraft.customTestcases.length
-        ? programmingDraft.customTestcases
-        : [{ input: "", output: "", isHidden: false }],
-      marks: programmingDraft.marks,
-    });
-
-    toast.success(
-      editingQuestionIndex === null
-        ? "Programming question added"
-        : "Programming question updated"
-    );
-    resetPopoverState();
-  };
-
-  const addFromLibrary = (item: LibraryItem) => {
-    if (libraryType === "mcq" && "question" in item) {
-      upsertQuestion({
-        type: "mcq",
-        question: item.question,
-        options: item.options,
-        correctOption: item.correctOption || 0,
-        marks: 5,
-      });
-      toast.success("Question added from library");
-      resetPopoverState();
-      return;
-    }
-
-    if (libraryType === "programming" && "title" in item) {
-      upsertQuestion({
-        type: "programming",
-        problemId: item._id,
-        title: item.title,
-        description: item.description,
-        constraints: "",
-        inputFormat: "",
-        outputFormat: "",
-        languages: item.languages?.length ? item.languages : PROGRAMMING_LANGUAGES,
-        customTestcases: [{ input: "", output: "", isHidden: false }],
-        marks: 20,
-      });
-      toast.success("Question added from library");
-      resetPopoverState();
-    }
   };
 
   const handleCreate = async () => {
@@ -332,7 +282,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
     try {
       await communityApi.createTest(community._id, {
         ...form,
-        type: derivedType,
+        type: selectedTestType,
         questions,
       });
 
@@ -358,53 +308,72 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-800 text-zinc-200 shadow-xl">
-          <DropdownMenuItem onClick={() => setOpen(true)} className="cursor-pointer focus:bg-zinc-900 focus:text-zinc-100 focus:bg-zinc-900 focus:text-zinc-100 font-medium">
+          <DropdownMenuItem onClick={() => openBuilderForType("mcq")} className="cursor-pointer font-medium focus:bg-zinc-900 focus:text-zinc-100">
             MCQ
           </DropdownMenuItem>
-          <DropdownMenuItem disabled className="opacity-50">
+          <DropdownMenuItem onClick={() => openBuilderForType("programming")} className="cursor-pointer font-medium focus:bg-zinc-900 focus:text-zinc-100">
             Programming
           </DropdownMenuItem>
-          <DropdownMenuItem disabled className="opacity-50">
+          <DropdownMenuItem onClick={() => openBuilderForType("mixed")} className="cursor-pointer font-medium focus:bg-zinc-900 focus:text-zinc-100">
             Mixed
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="h-[90vh] w-[calc(100vw-2rem)] max-w-5xl gap-0 overflow-hidden border-zinc-800 bg-zinc-950 p-0 text-zinc-200 flex flex-col">
+      <DialogContent className="h-[90vh] w-[95vw] min-w-[700px] max-w-[980px] gap-0 overflow-hidden border-zinc-800 bg-zinc-950 p-0 text-zinc-200 flex flex-col max-md:min-w-0">
         <DialogHeader className="border-b border-zinc-800 bg-zinc-950 px-6 py-4">
-          <DialogTitle className="flex gap-4 text-zinc-200 items-center justify-between font-normal text-sm w-full pr-6">
-            <div className="flex items-center gap-4 flex-1">
+          <DialogTitle className="w-full pr-6">
+            <div className="mb-3">
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Test name"
-                className="max-w-[200px] h-9 bg-zinc-900 border-zinc-800 focus:border-zinc-700 px-3"
+                className="h-9 w-full bg-zinc-900 border-zinc-800 focus:border-zinc-700 px-3"
               />
-              <DateTimePopoverField
-                label="Start date"
-                value={form.startTime}
-                onChange={(val) => setForm({ ...form, startTime: val })}
-              />
-              <DateTimePopoverField
-                label="End date"
-                value={form.endTime}
-                onChange={(val) => setForm({ ...form, endTime: val })}
-              />
-              <div className="flex items-center gap-2">
-                <span className="text-zinc-400 whitespace-nowrap">Duration (min):</span>
-                <Input
-                   type="number"
-                   className="w-20 h-9 bg-zinc-900 border-zinc-800 focus:border-zinc-700"
-                   value={form.durationMinutes}
-                   onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })}
-                />
-              </div>
             </div>
-            
-            <Button onClick={handleCreate} disabled={loading} className="w-28 bg-zinc-100 text-zinc-900 hover:bg-zinc-200 h-9 shrink-0">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish"}
-            </Button>
+            <div className="flex flex-col gap-3 text-zinc-200 font-normal text-sm w-full xl:flex-row xl:items-end">
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:flex-1">
+                <DateTimePopoverField
+                  label="Start date"
+                  value={form.startTime}
+                  onChange={(val) => setForm({ ...form, startTime: val })}
+                />
+
+                <DateTimePopoverField
+                  label="End date"
+                  value={form.endTime}
+                  onChange={(val) => setForm({ ...form, endTime: val })}
+                />
+
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <span className="text-zinc-400 whitespace-nowrap text-xs ml-1">Duration (min)</span>
+                  <Input
+                    type="number"
+                    className="w-full h-8 bg-zinc-900 border-zinc-800 focus:border-zinc-700"
+                    value={form.durationMinutes}
+                    onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })}
+                  />
+                </div>
+
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <span className="text-zinc-400 whitespace-nowrap text-xs ml-1">Show results to students</span>
+                  <div className="flex h-8 w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3">
+                    <Switch
+                      checked={form.isResultVisible}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({ ...prev, isResultVisible: checked }))
+                      }
+                    />
+                    <span className="text-xs text-zinc-300">{form.isResultVisible ? "Visible" : "Hidden"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleCreate} disabled={loading} className="w-full xl:w-28 bg-zinc-100 text-zinc-900 hover:bg-zinc-200 h-9 shrink-0">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Publish"}
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
         <div className="flex h-full flex-col overflow-hidden">
@@ -419,62 +388,182 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
                    </PopoverTrigger>
                    <PopoverContent align="end" className="w-48 bg-zinc-950 border-zinc-800 text-zinc-200">
                       <div className="flex flex-col gap-1">
-                        <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openCustomBuilder("mcq")}>Create new</Button>
-                        <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openLibraryBuilder()}>Select from library</Button>
+                        {(selectedTestType === "mcq" || selectedTestType === "mixed") && (
+                          <>
+                            <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openCustomBuilder("mcq")}>Create MCQ</Button>
+                            <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openLibraryBuilder("mcq")}>MCQ from library</Button>
+                          </>
+                        )}
+                        {(selectedTestType === "programming" || selectedTestType === "mixed") && (
+                          <>
+                            <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openCustomBuilder("programming")}>Create Programming</Button>
+                            <Button variant="ghost" className="justify-start w-full hover:bg-zinc-900" onClick={() => openLibraryBuilder("programming")}>Programming from library</Button>
+                          </>
+                        )}
                       </div>
                    </PopoverContent>
                  </Popover>
                </div>
                <CreateMcqModal 
                  open={createModalOpen} 
-                 onOpenChange={setCreateModalOpen} 
-                 onFinish={(newQs) => setQuestions(prev => [...prev, ...newQs])} 
+                 onOpenChange={(nextOpen) => {
+                   setCreateModalOpen(nextOpen);
+                   if (!nextOpen) {
+                    setEditingQuestionIndex(null);
+                   }
+                 }}
+                 editingQuestion={editingMcqQuestion}
+                 onSaveEdit={(updatedQuestion) => {
+                   if (editingQuestionIndex === null) return;
+                   setQuestions((prev) => {
+                     const next = [...prev];
+                     next[editingQuestionIndex] = updatedQuestion;
+                     return next;
+                   });
+                   toast.success("Question updated");
+                   setEditingQuestionIndex(null);
+                 }}
+                 onFinish={(newQs) => {
+                   setQuestions((prev) => [...prev, ...newQs]);
+                   if (newQs.length > 0) {
+                     const nextTotal = questions.length + newQs.length;
+                     setCurrentPage(Math.ceil(nextTotal / QUESTIONS_PER_PAGE));
+                   }
+                 }} 
                />
                <LibraryMcqModal 
                  open={libraryModalOpen} 
                  onOpenChange={setLibraryModalOpen} 
-                 onFinish={(newQs) => setQuestions(prev => [...prev, ...newQs])} 
+                 onFinish={(newQs) => {
+                   setQuestions((prev) => [...prev, ...newQs]);
+                   if (newQs.length > 0) {
+                     const nextTotal = questions.length + newQs.length;
+                     setCurrentPage(Math.ceil(nextTotal / QUESTIONS_PER_PAGE));
+                   }
+                 }} 
+               />
+               <CreateProgrammingModal
+                 open={createProgrammingModalOpen}
+                 onOpenChange={(nextOpen) => {
+                   setCreateProgrammingModalOpen(nextOpen);
+                   if (!nextOpen) {
+                     setEditingQuestionIndex(null);
+                   }
+                 }}
+                 editingQuestion={editingProgrammingQuestion}
+                 onSaveEdit={(updatedQuestion) => {
+                   if (editingQuestionIndex === null) return;
+                   setQuestions((prev) => {
+                     const next = [...prev];
+                     next[editingQuestionIndex] = updatedQuestion;
+                     return next;
+                   });
+                   toast.success("Programming question updated");
+                   setEditingQuestionIndex(null);
+                 }}
+                 onFinish={(newQs) => {
+                   setQuestions((prev) => [...prev, ...newQs]);
+                   if (newQs.length > 0) {
+                     const nextTotal = questions.length + newQs.length;
+                     setCurrentPage(Math.ceil(nextTotal / QUESTIONS_PER_PAGE));
+                   }
+                 }}
+               />
+               <LibraryProgrammingModal
+                 open={libraryProgrammingModalOpen}
+                 onOpenChange={setLibraryProgrammingModalOpen}
+                 onFinish={(newQs) => {
+                   setQuestions((prev) => [...prev, ...newQs]);
+                   if (newQs.length > 0) {
+                     const nextTotal = questions.length + newQs.length;
+                     setCurrentPage(Math.ceil(nextTotal / QUESTIONS_PER_PAGE));
+                   }
+                 }}
                />
             </div>
             
             {/* Table structure as per wireframe */}
-            <div className="flex-1 border border-zinc-800 rounded-lg flex flex-col overflow-hidden">
-              <div className="grid grid-cols-[1fr_100px_100px_80px] gap-4 p-3 border-b border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400 sticky top-0 z-10">
-                <div className="pl-2">Sr no</div>
-                <div className="text-center">Type</div>
-                <div className="text-center">Marks</div>
-                <div></div>
-              </div>
-              
-              <ScrollArea className="flex-1">
-                {questions.length === 0 ? (
-                  <div className="flex h-full min-h-[300px] items-center justify-center text-zinc-500">
-                     No questions added yet
-                  </div>
-                ) : (
-                  <div className="divide-y divide-zinc-800/50">
-                    {questions.map((q, i) => (
-                      <QuestionCard
-                        key={i}
-                        question={q}
-                        index={i}
-                        onEdit={() => { /* Edit logic */ }}
-                        onRemove={() => setQuestions((prev) => prev.filter((_, idx) => idx !== i))}
-                      />
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-              
+            <div className="flex-1 border border-zinc-800 rounded-lg overflow-hidden flex flex-col bg-zinc-950/20">
+                <div className="grid grid-cols-[minmax(0,1fr)_96px_88px_72px] gap-3 p-3 border-b border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400 shrink-0">
+                  <div className="pl-2">Sr no</div>
+                  <div className="text-center">Type</div>
+                  <div className="text-center">Marks</div>
+                  <div></div>
+                </div>
+
+                  {questions.length === 0 ? (
+                    <div className="flex-1 min-h-[300px] items-center justify-center text-zinc-500 flex">
+                       No questions added yet
+                    </div>
+                    
+                  ) : (
+                    <div className="flex-1 min-h-0 divide-y divide-zinc-800/50 overflow-y-auto overflow-x-hidden scrollbar-emerald">
+                      {paginatedQuestions.map((q, i) => {
+                        const absoluteIndex = (currentPage - 1) * QUESTIONS_PER_PAGE + i;
+
+                        return (
+                        <QuestionCard
+                          key={absoluteIndex}
+                          question={q}
+                          index={absoluteIndex}
+                          onEdit={() => {
+                            if (q.type === "programming") {
+                              setEditingQuestionIndex(absoluteIndex);
+                              setCreateProgrammingModalOpen(true);
+                              return;
+                            }
+
+                            setEditingQuestionIndex(absoluteIndex);
+                            setCreateModalOpen(true);
+                          }}
+                          onRemove={() =>
+                            setQuestions((prev) =>
+                              prev.filter((_, idx) => idx !== absoluteIndex)
+                            )
+                          }
+                        />
+                        );
+                      })}
+                    </div>
+                  )}
+
               {questions.length > 0 && (
-                <div className="p-2 border-t border-zinc-800 bg-zinc-900/30 flex items-center justify-between text-sm">
-                  <Button variant="outline" size="sm" className="h-7 px-3 border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200">Prev</Button>
+                <div className="p-2 border-t border-zinc-800 bg-zinc-900/30 flex items-center justify-between text-sm shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    className="h-7 px-3 border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 disabled:opacity-40"
+                  >
+                    Prev
+                  </Button>
                   <div className="flex items-center gap-2 text-zinc-500">
-                    <span className="text-zinc-200">1</span>
-                    <span>2</span>
-                    <span>...</span>
+                    {Array.from({ length: totalPages }).map((_, idx) => {
+                      const page = idx + 1;
+                      const isActive = page === currentPage;
+
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={isActive ? "text-zinc-100 font-semibold" : "hover:text-zinc-300"}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <Button variant="outline" size="sm" className="h-7 px-3 border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200">Next</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    className="h-7 px-3 border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 disabled:opacity-40"
+                  >
+                    Next
+                  </Button>
                 </div>
               )}
             </div>

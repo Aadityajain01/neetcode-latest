@@ -36,6 +36,7 @@ export function DateTimePopoverField({
   minDate?: Date;
 }) {
   const selectedDate = getDateFromValue(value);
+  const [defaultHours, defaultMinutes] = DEFAULT_TIME.split(":");
 
   const handleDateSelect = (nextDate?: Date) => {
     if (!nextDate) return;
@@ -55,49 +56,60 @@ export function DateTimePopoverField({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 min-w-0">
       <Label className="text-xs text-zinc-400 ml-1">{label}</Label>
       <Popover>
         <PopoverTrigger asChild>
           <Button
             type="button"
             variant="outline"
-            className="h-8 w-full justify-start rounded-md border-zinc-800 bg-zinc-950 px-3 text-left text-zinc-200 hover:bg-muted/50"
+            className="h-8 w-full justify-start rounded-md border-zinc-800 bg-zinc-950 px-3 text-left text-zinc-200 hover:bg-zinc-900 min-w-0"
           >
-            <CalendarDays className="mr-2 h-4 w-4 text-primary" />
-            <span className={cn(!value && "text-zinc-400", "text-sm font-normal")}>
+            <CalendarDays className="mr-2 h-4 w-4 text-primary shrink-0" />
+            <span className={cn(!value && "text-zinc-400", "text-sm font-normal truncate")}>
               {formatDateTimeLabel(value, label)}
             </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-auto rounded-xl border-zinc-800 bg-popover p-3 text-popover-foreground shadow-xl"
+          sideOffset={8}
+          className="w-[320px] rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-200 shadow-xl"
         >
-          <Calendar
-                mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            disabled={minDate ? { before: minDate } : undefined}
-            className="rounded-lg border border-zinc-800 bg-zinc-950"
-            classNames={{
-              day_button:
-                "text-zinc-200 hover:bg-muted hover:text-zinc-200 aria-selected:bg-primary aria-selected:text-primary-foreground",
-              caption_label: "text-zinc-200",
-              weekday: "text-zinc-400",
-            }}
-          />
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              disabled={minDate ? { before: minDate } : undefined}
+              className="w-full"
+              classNames={{
+                months: "w-full",
+                month: "w-full",
+                table: "w-full border-collapse",
+                head_row: "grid grid-cols-7",
+                row: "grid grid-cols-7 mt-1",
+                head_cell: "text-zinc-400 text-[11px] font-medium",
+                day: "flex items-center justify-center",
+                day_button:
+                  "h-9 w-9 rounded-md text-zinc-200 hover:bg-zinc-900 hover:text-zinc-100 aria-selected:bg-emerald-600 aria-selected:text-white",
+                caption_label: "text-zinc-200",
+                button_previous: "text-zinc-300 hover:text-zinc-100",
+                button_next: "text-zinc-300 hover:text-zinc-100",
+              }}
+            />
+          </div>
 
-          <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-950 p-3 flex flex-col gap-2">
-            <Label className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-zinc-400">
+          <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
+            <Label className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-zinc-400">
               <Clock3 className="h-3.5 w-3.5" />
               Time
             </Label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
               <Select
-                value={selectedDate ? formatTimeValue(selectedDate).split(":")[0] : "00"}
+                value={selectedDate ? formatTimeValue(selectedDate).split(":")[0] : defaultHours}
                 onValueChange={(hours) => {
-                  const currentMins = selectedDate ? formatTimeValue(selectedDate).split(":")[1] : "00";
+                  const currentMins = selectedDate ? formatTimeValue(selectedDate).split(":")[1] : defaultMinutes;
                   handleTimeChange(`${hours}:${currentMins}`);
                 }}
               >
@@ -111,10 +123,11 @@ export function DateTimePopoverField({
                   })}
                 </SelectContent>
               </Select>
+              <span className="text-zinc-500 text-sm">:</span>
               <Select
-                value={selectedDate ? formatTimeValue(selectedDate).split(":")[1] : "00"}
+                value={selectedDate ? formatTimeValue(selectedDate).split(":")[1] : defaultMinutes}
                 onValueChange={(minutes) => {
-                  const currentHours = selectedDate ? formatTimeValue(selectedDate).split(":")[0] : "00";
+                  const currentHours = selectedDate ? formatTimeValue(selectedDate).split(":")[0] : defaultHours;
                   handleTimeChange(`${currentHours}:${minutes}`);
                 }}
               >

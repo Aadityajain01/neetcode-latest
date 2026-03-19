@@ -45,6 +45,7 @@ export interface TestQuestion {
   testId: string;
   type: "mcq" | "programming";
   marks: number;
+  sourceMcqId?: string;
   question?: string;
   options?: string[];
   correctOption?: number;
@@ -67,6 +68,22 @@ export interface TestResult {
   totalScore: number;
   mcqScore: number;
   programmingScore: number;
+  mcqResults?: {
+    questionId: string;
+    question: string;
+    options: string[];
+    selectedOption: number | null;
+    correctOption: number;
+    isCorrect: boolean;
+    marksAwarded: number;
+  }[];
+  programmingResults?: {
+    questionId: string;
+    passedCases: number;
+    totalCases: number;
+    marksAwarded: number;
+    status: string;
+  }[];
   evaluatedAt: string;
 }
 

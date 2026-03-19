@@ -135,7 +135,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     questions.length > 0 &&
     questions.every((question) => {
       if (question.type === "mcq") {
-        return !!lockedAnswers[question._id];
+        return answers[question._id] !== undefined;
       }
       const code = codes[question._id]?.code || "";
       return code.trim().length > 0;
@@ -161,23 +161,106 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     }
 
     return (
-      <div className="max-w-5xl mx-auto pt-8 pb-16 animate-in fade-in">
-        <BackButton href={`/communities/${communityId}/tests`} className="mb-6" />
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-lg text-center mb-8">
-          <h2 className="text-3xl font-black text-white mb-2">{test.title} - Results</h2>
-          <div className="text-5xl font-black text-emerald-500 my-6">
-            {result.totalScore} <span className="text-2xl text-zinc-500">/ {test.totalMarks}</span>
+      <div className="max-w-5xl mx-auto h-full min-h-0 py-3 animate-in fade-in flex flex-col">
+        <BackButton href={`/communities/${communityId}/tests`} className="mb-3" />
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center shrink-0">
+          <h2 className="text-2xl font-bold text-white">{test.title} - Results</h2>
+          <div className="text-4xl font-black text-emerald-500 mt-2">
+            {result.totalScore} <span className="text-xl text-zinc-500">/ {test.totalMarks}</span>
           </div>
-          <div className="flex gap-4 justify-center text-sm font-semibold">
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2">
-              <span className="text-zinc-500 uppercase tracking-wider text-xs block mb-1">MCQ Score</span>
-              <span className="text-white text-lg">{result.mcqScore}</span>
+          <div className="mt-3 grid grid-cols-2 gap-2 max-w-[280px] mx-auto text-sm font-semibold">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
+              <span className="text-zinc-500 uppercase tracking-wide text-[10px] block">MCQ</span>
+              <span className="text-white text-base">{result.mcqScore}</span>
             </div>
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2">
-              <span className="text-zinc-500 uppercase tracking-wider text-xs block mb-1">Code Score</span>
-              <span className="text-white text-lg">{result.programmingScore}</span>
+            <div className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
+              <span className="text-zinc-500 uppercase tracking-wide text-[10px] block">Code</span>
+              <span className="text-white text-base">{result.programmingScore}</span>
             </div>
           </div>
+        </div>
+
+        <div className="mt-3 flex-1 min-h-0 rounded-xl border border-zinc-800 bg-zinc-900/80 overflow-hidden">
+          <ScrollArea className="h-full p-3 md:p-4 scrollbar-emerald">
+            {result.mcqResults && result.mcqResults.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-white mb-3">MCQ Review</h3>
+                <div className="space-y-2.5">
+                  {result.mcqResults.map((item, index) => {
+                        const fallbackQuestion = questions.find((question) => question._id === item.questionId);
+                        const options = Array.isArray(item.options) && item.options.length > 0
+                          ? item.options
+                          : Array.isArray(fallbackQuestion?.options)
+                            ? fallbackQuestion.options
+                            : [];
+                    const selectedIndex = typeof item.selectedOption === "number" ? item.selectedOption : null;
+                    const correctIndex = typeof item.correctOption === "number" ? item.correctOption : null;
+                    const selectedText =
+                      selectedIndex !== null && options[selectedIndex] !== undefined
+                        ? options[selectedIndex]
+                        : ((item as any).selectedOptionText || "Not answered");
+                    const correctText =
+                      (correctIndex !== null && options[correctIndex] !== undefined
+                        ? options[correctIndex]
+                        : ((item as any).correctOptionText || "N/A"));
+
+                    return (
+                      <div key={item.questionId} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Question {index + 1}</p>
+                            <p className="text-sm text-zinc-100 leading-relaxed">{item.question || fallbackQuestion?.question || "N/A"}</p>
+                          </div>
+                          <Badge
+                            className={cn(
+                              "border text-xs px-2 py-0.5",
+                              item.isCorrect
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                                : "border-rose-500/30 bg-rose-500/10 text-rose-400"
+                            )}
+                          >
+                            {item.isCorrect ? "Correct" : "Incorrect"}
+                          </Badge>
+                        </div>
+
+                        <div className="mt-2 grid gap-1.5 text-sm">
+                          <div className="rounded-md border border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-zinc-300">
+                            <span className="text-zinc-500">Your answer:</span> {selectedText}
+                          </div>
+                          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-emerald-300">
+                            <span className="text-emerald-500/80">Correct answer:</span> {correctText}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {result.programmingResults && result.programmingResults.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Programming Review</h3>
+                <div className="space-y-2.5">
+                  {result.programmingResults.map((item, index) => (
+                    <div key={item.questionId} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <p className="text-sm font-semibold text-zinc-200">Problem {index + 1}</p>
+                        <Badge variant="outline" className="border-zinc-700 text-zinc-300 text-xs px-2 py-0.5">
+                          {item.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-zinc-400">
+                        Passed {item.passedCases}/{item.totalCases} test cases
+                      </p>
+                      <p className="text-sm text-emerald-400 font-semibold mt-0.5">Marks: {item.marksAwarded}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ScrollArea>
         </div>
       </div>
     );
@@ -186,8 +269,8 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   const isLocked = q?.type === "mcq" ? !!lockedAnswers[q._id] : false;
 
   return (
-    <div className="flex-1 flex flex-col bg-zinc-950 w-full h-full relative overflow-hidden">
-      <div className="h-16 border-b border-zinc-800 bg-zinc-900/80 flex items-center justify-between px-4 sm:px-6 shrink-0 relative">
+    <div className="flex-1 flex flex-col bg-zinc-950 w-full h-full min-h-0 relative overflow-hidden">
+      <div className="h-16 border-b border-zinc-800 bg-zinc-900/80 flex items-center justify-between px-4 sm:px-6 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-bold text-white text-base sm:text-lg truncate">{test.title}</h1>
@@ -218,12 +301,12 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 relative p-2 md:p-4 max-w-[1920px] mx-auto w-full">
+      <div className="flex-1 min-h-0 p-2 md:p-4 max-w-[1920px] mx-auto w-full">
         {!q ? (
           <div className="flex items-center justify-center h-full text-zinc-500">Select a question</div>
         ) : q.type === "mcq" ? (
-          <div className="h-full flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden relative">
-            <ScrollArea className="flex-1 p-6 lg:p-10 mb-20 scrollbar-emerald">
+          <div className="h-full flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+            <ScrollArea className="flex-1 min-h-0 p-6 lg:p-10 scrollbar-emerald">
               <div className="max-w-4xl mx-auto w-full">
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -235,7 +318,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                   <h2 className="text-xl md:text-2xl text-zinc-100 font-medium leading-relaxed">{q.question}</h2>
                 </div>
 
-                <div className="max-h-[360px] overflow-y-auto pr-1 scrollbar-emerald">
+                <div className="pr-1">
                   <RadioGroup
                     value={answers[q._id]?.toString()}
                     onValueChange={(val) =>
@@ -285,7 +368,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
               </div>
             </ScrollArea>
 
-            <div className="absolute bottom-0 inset-x-0 h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-6 shrink-0">
+            <div className="h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-wide">
@@ -329,7 +412,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 </PopoverContent>
               </Popover>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3 ml-auto">
                 <Button
                   variant="outline"
                   className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
@@ -351,13 +434,22 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
+
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting || !allQuestionsCompleted}
+                  className="bg-emerald-600 hover:bg-emerald-700 h-9"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Submit
+                </Button>
               </div>
             </div>
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
-            <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm relative">
-              <ScrollArea className="flex-1 p-6 space-y-6 mb-16 scrollbar-emerald">
+            <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+              <ScrollArea className="flex-1 min-h-0 p-6 space-y-6 scrollbar-emerald">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <span className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
@@ -389,7 +481,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 </div>
               </ScrollArea>
 
-              <div className="absolute bottom-0 inset-x-0 h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-6 shrink-0 z-20">
+              <div className="h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-4 md:px-6 shrink-0 z-20 gap-3">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-wide">
@@ -433,7 +525,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                   </PopoverContent>
                 </Popover>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3 ml-auto">
                   <Button
                     variant="outline"
                     className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
@@ -454,6 +546,15 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                     onClick={() => setActiveIndex((a) => a + 1)}
                   >
                     <ChevronRight className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting || !allQuestionsCompleted}
+                    className="bg-emerald-600 hover:bg-emerald-700 h-9"
+                  >
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Submit
                   </Button>
                 </div>
               </div>
