@@ -18,6 +18,11 @@ export interface SubmissionResult {
   id: string;
   status: string;
   isCorrect: boolean;
+  score?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  correctAnswer?: number;
+  explanation?: string;
+  alreadySolved?: boolean;
 }
 
 // --- API Client ---
@@ -25,6 +30,15 @@ export const mcqApi = {
   getMeta: async () => {
     return api.get<{ languages: string[]; difficulties: string[] }>("/mcqs/meta");
   },
+
+  // Fetch total MCQ counts by difficulty
+  getCounts: async (params?: { language?: string }) => {
+    const response = await api.get<{
+      counts: { easy: number; medium: number; hard: number; total: number };
+    }>('/mcqs/counts', { params });
+    return response.data.counts;
+  },
+
   // Fetch list of MCQs with pagination
   getMCQs: async (params?: {
     language?: string;
@@ -32,6 +46,7 @@ export const mcqApi = {
     search?: string;
     limit?: number;
     offset?: number;
+    excludeSolved?: string;
   }) => {
     // Expecting backend to return: { mcqs: [], pagination: {} }
     const response = await api.get<{

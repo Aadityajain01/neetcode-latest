@@ -15,6 +15,18 @@ export interface UserStats {
   practiceSubmissions: number;
   mcqAttempts: number;
   problemsSolved: number;
+  dsaSolvedBreakdown?: {
+    easy: number;
+    medium: number;
+    hard: number;
+    total: number;
+  };
+  mcqSolvedBreakdown?: {
+    easy: number;
+    medium: number;
+    hard: number;
+    total: number;
+  };
   score: number;
   rank: number;
 }

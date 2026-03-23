@@ -27,6 +27,12 @@ export interface ProfileStats {
     hard: number;
     total: number;
   };
+  mcqSolvedBreakdown?: {
+    easy: number;
+    medium: number;
+    hard: number;
+    total: number;
+  };
 }
 
 export interface ActivityData {

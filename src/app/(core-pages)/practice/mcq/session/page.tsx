@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import MainLayout from "@/components/layouts/main-layout";
 import { mcqApi, MCQ } from "@/lib/api-modules";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, ArrowRight, HelpCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, ArrowRight, HelpCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 function MCQSessionContent() {
+  const router = useRouter();
   const params = useSearchParams();
   const lang = params.get("lang");
   const difficulty = params.get("difficulty");
@@ -19,7 +21,10 @@ function MCQSessionContent() {
   const [seenIds, setSeenIds] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [attemptedCount, setAttemptedCount] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
 
   useEffect(() => {
     if (lang) fetchNextMCQ();
@@ -29,7 +34,7 @@ function MCQSessionContent() {
     try {
       setLoading(true);
       // Conditionally add difficulty
-      const reqparams: any = { language: lang!, limit: 20 };
+      const reqparams: any = { language: lang!, limit: 20, excludeSolved: 'true' };
       if (difficulty && difficulty !== 'all') {
         reqparams.difficulty = difficulty;
       }
@@ -54,14 +59,22 @@ function MCQSessionContent() {
   };
 
   const handleSubmit = async () => {
-    if (selectedAnswer === null || !mcq) return;
+    if (selectedAnswer === null || !mcq || submitting || submitted) return;
     try {
+      setSubmitting(true);
       const res = await mcqApi.submitAnswer({ mcqId: mcq._id, answer: selectedAnswer });
       setSubmitted(true);
       setResult(res);
-      if(res.isCorrect) toast.success("Correct Answer!");
+      setAttemptedCount((prev) => prev + 1);
+      if (res.isCorrect && !res.alreadySolved) {
+        setCorrectCount((prev) => prev + 1);
+        toast.success("Correct Answer! +1");
+      } else if (res.alreadySolved) {
+        toast.info("Already solved — no extra score");
+      }
       else toast.error("Incorrect Answer");
     } catch (e) { toast.error("Submission failed"); }
+    finally { setSubmitting(false); }
   };
 
   if (loading) return <div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
@@ -71,7 +84,10 @@ function MCQSessionContent() {
       <div className="p-6 bg-zinc-900 rounded-full border border-zinc-800"><CheckCircle2 className="h-12 w-12 text-emerald-500" /></div>
       <h2 className="text-2xl font-bold text-white">Session Complete!</h2>
       <p className="text-zinc-400">You've answered all available questions.</p>
-      <Button onClick={() => window.location.href = '/practice'} variant="outline">Back to Practice</Button>
+      <div className="text-sm text-zinc-300">
+        Score: <span className="font-bold text-emerald-400">{correctCount}</span> / {attemptedCount}
+      </div>
+      <Button onClick={() => router.push('/practice')} variant="outline">Back to Practice</Button>
     </div>
   );
 
@@ -85,7 +101,18 @@ function MCQSessionContent() {
             difficulty === 'easy' ? 'text-emerald-400' : difficulty === 'medium' ? 'text-yellow-400' : difficulty === 'hard' ? 'text-red-400' : 'text-blue-400'
           )}>{difficulty || 'Mixed'}</span>
         </div>
-        <span className="text-zinc-500 text-sm font-mono">Q.{seenIds.length}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-zinc-500 text-sm font-mono">Q.{seenIds.length}</span>
+          <span className="text-sm text-zinc-400">Score: <span className="font-semibold text-emerald-400">{correctCount}</span></span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          >
+            <LogOut className="h-4 w-4 mr-1" /> Exit
+          </Button>
+        </div>
       </div>
 
       {/* Question Card */}
@@ -139,9 +166,10 @@ function MCQSessionContent() {
         {!submitted ? (
           <Button 
             onClick={handleSubmit} 
-            disabled={selectedAnswer === null}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white h-12 px-8 text-base rounded-xl font-bold shadow-[0_0_20px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-105"
+            disabled={selectedAnswer === null || submitting}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white h-12 px-8 text-base rounded-xl font-bold shadow-[0_0_20px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Check Answer
           </Button>
         ) : (

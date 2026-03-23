@@ -82,7 +82,7 @@ export interface TestResult {
     passedCases: number;
     totalCases: number;
     marksAwarded: number;
-    status: string;
+    status: "Accepted" | "Wrong Answer" | "Runtime Error" | "Compile Error" | "Time Limit Exceeded" | "Memory Limit Exceeded" | "Locked" | "Not Attempted" | "No Testcases" | "Language Not Supported" | string;
   }[];
   evaluatedAt: string;
 }
@@ -192,7 +192,20 @@ export const communityApi = {
     return response.data.test;
   },
 
-  submitTest: async (communityId: string, testId: string, data: { answers: any[], codeSubmissions: any[] }) => {
+  submitTest: async (
+    communityId: string,
+    testId: string,
+    data: {
+      answers: { questionId: string; selectedOption: number }[];
+      codeSubmissions: {
+        questionId: string;
+        code?: string;
+        language?: string;
+        languageId?: number;
+        isLocked?: boolean;
+      }[];
+    }
+  ) => {
     if (process.env.NODE_ENV !== 'production') {
       console.info('[MCQ_DEBUG][FE][API][SUBMIT_TEST] Request payload', {
         communityId,

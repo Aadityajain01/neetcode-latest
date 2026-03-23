@@ -41,6 +41,12 @@ interface ProfileStats {
     hard: number;
     total: number;
   };
+  mcqSolvedBreakdown?: {
+    easy: number;
+    medium: number;
+    hard: number;
+    total: number;
+  };
 }
 
 interface ActivityData {
@@ -297,6 +303,15 @@ export default function PublicProfilePage() {
                     <DifficultyBar label="Easy" count={data.stats.solvedBreakdown.easy} total={data.stats.solvedBreakdown.total} color="bg-emerald-500" bg="bg-emerald-500/10" />
                     <DifficultyBar label="Medium" count={data.stats.solvedBreakdown.medium} total={data.stats.solvedBreakdown.total} color="bg-yellow-500" bg="bg-yellow-500/10" />
                     <DifficultyBar label="Hard" count={data.stats.solvedBreakdown.hard} total={data.stats.solvedBreakdown.total} color="bg-red-500" bg="bg-red-500/10" />
+                  </div>
+                </div>
+
+                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-6">MCQ Solving Stats</h3>
+                  <div className="space-y-5">
+                    <DifficultyBar label="Easy" count={data.stats.mcqSolvedBreakdown?.easy || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-emerald-500" bg="bg-emerald-500/10" />
+                    <DifficultyBar label="Medium" count={data.stats.mcqSolvedBreakdown?.medium || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-yellow-500" bg="bg-yellow-500/10" />
+                    <DifficultyBar label="Hard" count={data.stats.mcqSolvedBreakdown?.hard || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-red-500" bg="bg-red-500/10" />
                   </div>
                 </div>
 

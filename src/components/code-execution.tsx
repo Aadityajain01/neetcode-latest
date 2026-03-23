@@ -209,6 +209,7 @@ interface CodeExecutorProps {
   onCodeChange?: (code: string) => void;
   initialLanguage?: string;
   onLanguageChange?: (lang: string) => void;
+  isReadOnly?: boolean;
 }
 
 import {
@@ -217,7 +218,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProblem, initialCode, onCodeChange, initialLanguage, onLanguageChange }: CodeExecutorProps) {
+export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProblem, initialCode, onCodeChange, initialLanguage, onLanguageChange, isReadOnly = false }: CodeExecutorProps) {
   // --- STATE ---
   const [code, setCode] = useState(initialCode || "");
   const [language, setLanguage] = useState(initialLanguage || "javascript");
@@ -413,7 +414,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                   </TooltipProvider>
               </div>
 
-              <Select value={language} onValueChange={handleLanguageChange}>
+              <Select value={language} onValueChange={handleLanguageChange} disabled={isReadOnly}>
                 <SelectTrigger className="w-36 h-7 bg-zinc-900 border-zinc-700 text-zinc-300 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-300">
                   {problem.languages.map(l => (
@@ -430,15 +431,15 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                 value={code}
                 onChange={handleCodeChange}
                 theme="vs-dark"
-                options={{ minimap: { enabled: false }, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", padding: { top: 16 } }}
+                options={{ minimap: { enabled: false }, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", padding: { top: 16 }, readOnly: isReadOnly }}
               />
               
               {/* Action Buttons */}
               <div className="absolute bottom-4 right-6 flex gap-2 z-10">
-                <Button onClick={handleRunCode} disabled={isRunning || isSubmitting} size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 shadow-lg backdrop-blur-md">
+                <Button onClick={handleRunCode} disabled={isReadOnly || isRunning || isSubmitting} size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 shadow-lg backdrop-blur-md">
                   {isRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />} Run
                 </Button>
-                <Button onClick={handleSubmitCode} disabled={isRunning || isSubmitting} size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border border-emerald-500/50">
+                <Button onClick={handleSubmitCode} disabled={isReadOnly || isRunning || isSubmitting} size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg border border-emerald-500/50">
                   {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />} Submit
                 </Button>
                 {currentSubmission?.status === 'accepted' && outputMode === 'submit' && onNextProblem && (
@@ -465,6 +466,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
                     placeholder="Enter custom input here..."
+                  disabled={isReadOnly}
                     className="w-full h-full bg-transparent border-none resize-none p-4 font-mono text-sm text-zinc-300 focus-visible:ring-0"
                 />
               ) : (

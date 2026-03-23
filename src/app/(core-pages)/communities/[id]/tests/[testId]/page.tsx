@@ -34,6 +34,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [codes, setCodes] = useState<Record<string, { language: string; code: string }>>({});
   const [lockedAnswers, setLockedAnswers] = useState<Record<string, boolean>>({});
+  const [lockedProgramming, setLockedProgramming] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -85,13 +86,38 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         questionId: qId,
         selectedOption: answers[qId],
       }));
-      const codesArr = Object.keys(codes)
-        .filter((qId) => codes[qId].code)
-        .map((qId) => ({
-          questionId: qId,
-          code: codes[qId].code,
-          language: codes[qId].language,
-        }));
+      const programmingQuestionIds = questions
+        .filter((question) => question.type === "programming")
+        .map((question) => question._id);
+
+      const codesArr = programmingQuestionIds
+        .map((qId) => {
+          const payload: {
+            questionId: string;
+            code?: string;
+            language?: string;
+            isLocked?: boolean;
+          } = {
+            questionId: qId,
+          };
+
+          if (lockedProgramming[qId]) {
+            payload.isLocked = true;
+            payload.language = codes[qId]?.language;
+            payload.code = "";
+            return payload;
+          }
+
+          const code = codes[qId]?.code || "";
+          if (code.trim().length > 0) {
+            payload.code = code;
+            payload.language = codes[qId]?.language;
+            return payload;
+          }
+
+          return null;
+        })
+        .filter((item): item is { questionId: string; code?: string; language?: string; isLocked?: boolean } => !!item);
 
       if (process.env.NODE_ENV !== "production") {
         const mcqQuestionMap = new Map(
@@ -166,15 +192,18 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     return `${min}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const allQuestionsCompleted =
-    questions.length > 0 &&
-    questions.every((question) => {
-      if (question.type === "mcq") {
-        return answers[question._id] !== undefined;
-      }
-      const code = codes[question._id]?.code || "";
-      return code.trim().length > 0;
-    });
+  const getQuestionState = (question: TestQuestion): "locked" | "solved" | "attempted" | "unattempted" => {
+    if (question.type === "mcq") {
+      if (lockedAnswers[question._id]) return "locked";
+      if (answers[question._id] !== undefined) return "attempted";
+      return "unattempted";
+    }
+
+    if (lockedProgramming[question._id]) return "locked";
+    const code = (codes[question._id]?.code || "").trim();
+    if (code.length > 0) return "attempted";
+    return "unattempted";
+  };
 
   if (hasSubmitted || isEnded) {
     if (!result) {
@@ -301,7 +330,13 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     );
   }
 
-  const isLocked = q?.type === "mcq" ? !!lockedAnswers[q._id] : false;
+  const isLocked = q?.type === "mcq" ? !!lockedAnswers[q._id] : !!lockedProgramming[q?._id || ""];
+
+  const lockCurrentProgrammingQuestion = () => {
+    if (!q || q.type !== "programming") return;
+    setLockedProgramming((prev) => ({ ...prev, [q._id]: true }));
+    toast.success("Question locked. It will be scored as 0 if not accepted.");
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-zinc-950 w-full h-full min-h-0 relative overflow-hidden">
@@ -327,7 +362,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           </div>
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !allQuestionsCompleted}
+            disabled={submitting}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -437,7 +472,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                               {question.type === "mcq" ? "Multiple Choice" : question.title}
                             </span>
                           </div>
-                          {(question.type === "mcq" ? lockedAnswers[question._id] : !!codes[question._id]?.code) && (
+                          {getQuestionState(question) !== "unattempted" && (
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                           )}
                         </button>
@@ -472,7 +507,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
 
                 <Button
                   onClick={handleSubmit}
-                  disabled={submitting || !allQuestionsCompleted}
+                  disabled={submitting}
                   className="bg-emerald-600 hover:bg-emerald-700 h-9"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -487,7 +522,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
               <ScrollArea className="flex-1 min-h-0 p-6 space-y-6 scrollbar-emerald">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
+                    <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
                       Question {activeIndex + 1}
                     </span>
                     <span className="text-zinc-500 text-sm font-medium">{q.marks} Marks</span>
@@ -550,7 +585,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                                 {question.type === "mcq" ? "Multiple Choice" : question.title}
                               </span>
                             </div>
-                            {(question.type === "mcq" ? lockedAnswers[question._id] : !!codes[question._id]?.code) && (
+                            {getQuestionState(question) !== "unattempted" && (
                               <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             )}
                           </button>
@@ -584,12 +619,16 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                   </Button>
 
                   <Button
-                    onClick={handleSubmit}
-                    disabled={submitting || !allQuestionsCompleted}
-                    className="bg-emerald-600 hover:bg-emerald-700 h-9"
+                    onClick={lockCurrentProgrammingQuestion}
+                    disabled={!!lockedProgramming[q._id]}
+                    className={cn(
+                      "h-9",
+                      lockedProgramming[q._id]
+                        ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                        : "bg-emerald-600 hover:bg-emerald-700"
+                    )}
                   >
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                    Submit
+                    {lockedProgramming[q._id] ? "Question Locked" : "Lock Question"}
                   </Button>
                 </div>
               </div>
@@ -626,6 +665,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 onLanguageChange={(val) =>
                   setCodes((prev) => ({ ...prev, [q._id]: { ...prev[q._id], language: val } }))
                 }
+                isReadOnly={!!lockedProgramming[q._id]}
               />
             </ResizablePanel>
           </ResizablePanelGroup>

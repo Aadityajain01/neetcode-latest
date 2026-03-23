@@ -33,6 +33,14 @@ export interface Submission {
 
 // --- Problem API ---
 export const problemApi = {
+  // Fetch DSA problem counts by difficulty
+  getCounts: async (params?: { type?: string }) => {
+    const response = await api.get<{
+      counts: { easy: number; medium: number; hard: number; total: number };
+    }>('/problems/counts', { params });
+    return response.data.counts;
+  },
+
   getProblems: async (params?: {
     type?: string;
     difficulty?: string;
