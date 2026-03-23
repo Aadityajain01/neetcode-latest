@@ -79,6 +79,45 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     }
   }, [timeLeft, hasSubmitted]);
 
+  useEffect(() => {
+    if (!communityId || !testId || !hasSubmitted || result) return;
+
+    let isCancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
+    const maxAttempts = 40; // ~80s at 2s interval
+
+    const pollResult = async () => {
+      if (isCancelled) return;
+
+      try {
+        const data = await communityApi.getTestById(communityId, testId);
+        if (isCancelled) return;
+
+        setHasSubmitted(data.hasSubmitted);
+        if (data.result) {
+          setResult(data.result);
+          toast.success("Results are ready");
+          return;
+        }
+      } catch {
+        // Keep polling silently; transient failures are expected on slow networks.
+      }
+
+      attempts += 1;
+      if (!isCancelled && attempts < maxAttempts) {
+        timer = setTimeout(pollResult, 2000);
+      }
+    };
+
+    timer = setTimeout(pollResult, 2000);
+
+    return () => {
+      isCancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [communityId, testId, hasSubmitted, result]);
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -213,7 +252,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 shadow-lg">
             <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-3xl font-black text-white mb-2">Test Submitted</h2>
-            <p className="text-zinc-400">Your submission has been received.</p>
+            <p className="text-zinc-400">Your submission has been received and is being evaluated.</p>
             {test.isResultVisible === false && (
               <div className="mt-6 text-amber-500 bg-amber-500/10 p-4 rounded-xl text-sm border border-amber-500/20">
                 Results are hidden by the instructor. You will be able to see your score when results are published.

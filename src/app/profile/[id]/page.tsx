@@ -9,6 +9,7 @@ import {
 import { format } from "date-fns";
 import { useRouter, useParams } from "next/navigation"; // 1. Import useParams
 import { profileApi } from "@/lib/api-modules/profile.api";
+import { problemApi } from "@/lib/api-modules";
 import MainLayout from "@/components/layouts/main-layout"; 
 import { useAuthStore } from "@/store/auth-store";
 
@@ -82,6 +83,7 @@ export default function PublicProfilePage() {
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [data, setData] = useState<ProfileResponse | null>(null);
+  const [dsaCounts, setDsaCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
   // Fetch Data using ID
@@ -97,7 +99,10 @@ export default function PublicProfilePage() {
       try {
         setLoading(true);
         // 3. THIS IS THE KEY FIX: Use getProfileById(userId) instead of getMyProfile()
-        const res = await profileApi.getProfileById(userId);
+        const [res, dsaCountsRes] = await Promise.all([
+          profileApi.getProfileById(userId),
+          problemApi.getCounts({ type: "dsa" }),
+        ]);
         
         // Note: Check your API response structure. 
         // If your backend returns { profile: ... }, use res.data.profile
@@ -110,6 +115,7 @@ export default function PublicProfilePage() {
            // Fallback if structure is different
            setData(json as unknown as ProfileResponse); 
         }
+        setDsaCounts(dsaCountsRes);
 
       } catch (error) {
         console.error("Failed to load profile", error);
@@ -300,9 +306,9 @@ export default function PublicProfilePage() {
                 <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-6">Solving Stats</h3>
                   <div className="space-y-5">
-                    <DifficultyBar label="Easy" count={data.stats.solvedBreakdown.easy} total={data.stats.solvedBreakdown.total} color="bg-emerald-500" bg="bg-emerald-500/10" />
-                    <DifficultyBar label="Medium" count={data.stats.solvedBreakdown.medium} total={data.stats.solvedBreakdown.total} color="bg-yellow-500" bg="bg-yellow-500/10" />
-                    <DifficultyBar label="Hard" count={data.stats.solvedBreakdown.hard} total={data.stats.solvedBreakdown.total} color="bg-red-500" bg="bg-red-500/10" />
+                    <DifficultyBar label="Easy" count={data.stats.solvedBreakdown.easy} total={dsaCounts.easy} color="bg-emerald-500" bg="bg-emerald-500/10" />
+                    <DifficultyBar label="Medium" count={data.stats.solvedBreakdown.medium} total={dsaCounts.medium} color="bg-yellow-500" bg="bg-yellow-500/10" />
+                    <DifficultyBar label="Hard" count={data.stats.solvedBreakdown.hard} total={dsaCounts.hard} color="bg-red-500" bg="bg-red-500/10" />
                   </div>
                 </div>
 

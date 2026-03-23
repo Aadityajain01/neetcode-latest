@@ -75,11 +75,11 @@ export default function AnalyticsPage() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1100px] flex-col px-3 py-3 sm:px-5 sm:py-5">
-      <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-zinc-800 bg-black">
-        <div className="flex flex-col gap-4 border-b border-zinc-800 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-zinc-800/80 bg-zinc-950/70 backdrop-blur">
+        <div className="flex flex-col gap-4 border-b border-zinc-800/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <h2 className="text-xl font-semibold text-white">{community?.name}</h2>
-            <p className="text-sm text-zinc-500">Community analytics</p>
+            <h2 className="text-xl font-semibold text-white">Test Analytics</h2>
+            <p className="text-sm text-zinc-500">Performance overview for selected assessment</p>
           </div>
 
           {tests.length > 0 && (
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-3 border-b border-zinc-800 px-4 py-4 sm:grid-cols-4 sm:px-6">
+            <div className="grid gap-3 border-b border-zinc-800/80 px-4 py-4 sm:grid-cols-4 sm:px-6">
               <StatCard label="Attempts" value={data.analytics.studentsAttempted} />
               <StatCard label="Avg Score" value={Math.round(data.analytics.averageScore * 10) / 10} />
               <StatCard label="Highest" value={data.analytics.highestScore} />
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[18px] border border-zinc-800 bg-zinc-950 p-4">
+    <div className="rounded-[18px] border border-zinc-800/80 bg-black/50 p-4">
       <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">{label}</div>
       <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
     </div>

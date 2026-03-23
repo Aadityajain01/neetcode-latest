@@ -57,12 +57,12 @@ export default function TestsPage() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1100px] flex-col px-3 py-3 sm:px-5 sm:py-5">
-      <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-zinc-800 bg-black">
-        <div className="border-b border-zinc-800 px-4 py-4 sm:px-6">
+      <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-zinc-800/80 bg-zinc-950/70 backdrop-blur">
+        <div className="border-b border-zinc-800/80 px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-white">{community?.name}</h2>
-              <p className="text-sm text-zinc-500">Classroom tests</p>
+              <h2 className="text-xl font-semibold text-white">Classroom Tests</h2>
+              <p className="text-sm text-zinc-500">Manage and attempt community assessments</p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -118,7 +118,7 @@ export default function TestsPage() {
                 return (
                   <div
                     key={test._id}
-                    className="rounded-[20px] border border-zinc-800 bg-zinc-950 px-4 py-4"
+                    className="rounded-[18px] border border-zinc-800/80 bg-black/50 px-4 py-4 transition-colors hover:border-zinc-700"
                   >
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="space-y-2">

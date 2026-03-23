@@ -10,6 +10,7 @@ import {
 import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
 import { useRouter } from "next/navigation";
 import { profileApi } from "@/lib/api-modules/profile.api";
+import { problemApi } from "@/lib/api-modules";
 import MainLayout from "@/components/layouts/main-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -89,14 +90,19 @@ const generateFullYearData = (backendData: Array<{ _id: string; count: number }>
 export default function ProfilePage() {
   const router = useRouter();
   const [data, setData] = useState<ProfileResponse | null>(null);
+  const [dsaCounts, setDsaCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const fetchProfile = async () => {
     try {
-      const res = profileApi.getMyProfile();
-      const json = (await res).data;
+      const [profileRes, dsaCountsRes] = await Promise.all([
+        profileApi.getMyProfile(),
+        problemApi.getCounts({ type: "dsa" }),
+      ]);
+      const json = profileRes.data;
       if (json.profile) setData(json.profile);
+      setDsaCounts(dsaCountsRes);
     } catch (error) {
       console.error("Failed to load profile", error);
     } finally {
@@ -241,14 +247,14 @@ export default function ProfilePage() {
                       easy={data.stats.solvedBreakdown.easy}
                       medium={data.stats.solvedBreakdown.medium}
                       hard={data.stats.solvedBreakdown.hard}
-                      total={data.stats.solvedBreakdown.total || 1}
+                      total={dsaCounts.total || 1}
                       solved={data.stats.solvedBreakdown.total}
                       size={180} strokeWidth={14}
                     />
                     <div className="flex-1 w-full space-y-3">
-                      <DiffBadge label="Easy" count={data.stats.solvedBreakdown.easy} total={data.stats.solvedBreakdown.total} color="text-emerald-400" dotColor="bg-emerald-500" />
-                      <DiffBadge label="Medium" count={data.stats.solvedBreakdown.medium} total={data.stats.solvedBreakdown.total} color="text-amber-400" dotColor="bg-amber-500" />
-                      <DiffBadge label="Hard" count={data.stats.solvedBreakdown.hard} total={data.stats.solvedBreakdown.total} color="text-red-400" dotColor="bg-red-500" />
+                      <DiffBadge label="Easy" count={data.stats.solvedBreakdown.easy} total={dsaCounts.easy} color="text-emerald-400" dotColor="bg-emerald-500" />
+                      <DiffBadge label="Medium" count={data.stats.solvedBreakdown.medium} total={dsaCounts.medium} color="text-amber-400" dotColor="bg-amber-500" />
+                      <DiffBadge label="Hard" count={data.stats.solvedBreakdown.hard} total={dsaCounts.hard} color="text-red-400" dotColor="bg-red-500" />
                     </div>
                   </div>
                 </div>
