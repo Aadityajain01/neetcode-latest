@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { communityApi, Community, userApi } from "@/lib/api-modules";
@@ -63,6 +63,7 @@ export default function CommunitiesPage() {
   const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [joiningCommunityId, setJoiningCommunityId] = useState<string | null>(null);
+  const joinRequestLockRef = useRef<Set<string>>(new Set());
 
   /* -------------------- PAGINATION & SEARCH -------------------- */
   const [search, setSearch] = useState("");
@@ -203,12 +204,15 @@ export default function CommunitiesPage() {
   };
 
   const handleJoinCommunity = async (communityId: string) => {
-    if (joiningCommunityId) return;
+    if (joinRequestLockRef.current.has(communityId)) return;
 
+    joinRequestLockRef.current.add(communityId);
     setJoiningCommunityId(communityId);
     try {
       await communityApi.joinCommunity(communityId);
-      toast.success("Joined community successfully");
+      toast.success("Joined community successfully", {
+        id: `community-join-success-${communityId}`,
+      });
 
       setJoinedCommunityIds((prev) => new Set(prev).add(communityId));
       setAllCommunities((prev) =>
@@ -226,8 +230,11 @@ export default function CommunitiesPage() {
         )
       );
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || "Failed to join community");
+      toast.error(err?.response?.data?.error || "Failed to join community", {
+        id: `community-join-error-${communityId}`,
+      });
     } finally {
+      joinRequestLockRef.current.delete(communityId);
       setJoiningCommunityId(null);
     }
   };

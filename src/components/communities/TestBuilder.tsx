@@ -60,6 +60,13 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
     endTime: "",
     durationMinutes: 60,
     isResultVisible: false,
+  } as {
+    title: string;
+    description: string;
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+    isResultVisible: boolean;
   });
   const [questions, setQuestions] = useState<DraftQuestion[]>([]);
 
@@ -344,12 +351,19 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
       <DialogContent className="h-[90vh] w-[95vw] min-w-[700px] max-w-[980px] gap-0 overflow-hidden border-zinc-800 bg-zinc-950 p-0 text-zinc-200 flex flex-col max-md:min-w-0">
         <DialogHeader className="border-b border-zinc-800 bg-zinc-950 px-6 py-4">
           <DialogTitle className="w-full pr-6">
-            <div className="mb-3">
+            <div className="mb-3 space-y-2">
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Test name"
                 className="h-9 w-full bg-zinc-900 border-zinc-800 focus:border-zinc-700 px-3"
+              />
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Test description (optional)"
+                className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 min-h-[56px] resize-none text-sm"
+                rows={2}
               />
             </div>
             <div className="flex flex-col gap-3 text-zinc-200 font-normal text-sm w-full xl:flex-row xl:items-end">
@@ -400,7 +414,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden relative p-6">
             <div className="flex items-center justify-between mb-4">
-               <h3 className="font-semibold text-zinc-200">Added Questions ({questions.length})</h3>
+               <h3 className="font-semibold text-zinc-200">Added Questions ({questions.length}) {totalMarks > 0 && <span className="ml-2 text-sm font-normal text-emerald-400">{totalMarks} marks</span>}</h3>
                <div className="flex items-center gap-3">
                  <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
                    <PopoverTrigger asChild>

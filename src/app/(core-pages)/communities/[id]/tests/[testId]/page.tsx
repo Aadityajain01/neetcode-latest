@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, ListTodo, ChevronLeft, ChevronRight, Clock, Lock } from "lucide-react";
+import { Loader2, CheckCircle, ListTodo, ChevronLeft, ChevronRight, Clock, Lock, AlertTriangle, RefreshCw, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isPast, differenceInSeconds } from "date-fns";
 import { BackButton } from "@/components/BackButton";
@@ -15,6 +15,16 @@ import { CodeExecutor } from "@/components/code-execution";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ParamsType = Promise<{ id: string; testId: string }>;
 
@@ -36,6 +46,9 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   const [lockedAnswers, setLockedAnswers] = useState<Record<string, boolean>>({});
   const [lockedProgramming, setLockedProgramming] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const [pollFailed, setPollFailed] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
@@ -105,8 +118,11 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       }
 
       attempts += 1;
+      setPollAttempts(attempts);
       if (!isCancelled && attempts < maxAttempts) {
         timer = setTimeout(pollResult, 2000);
+      } else if (!isCancelled) {
+        setPollFailed(true);
       }
     };
 
@@ -117,6 +133,22 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       if (timer) clearTimeout(timer);
     };
   }, [communityId, testId, hasSubmitted, result]);
+
+  const handleManualRefresh = async () => {
+    try {
+      const data = await communityApi.getTestById(communityId, testId);
+      setHasSubmitted(data.hasSubmitted);
+      if (data.result) {
+        setResult(data.result);
+        toast.success("Results are ready");
+        setPollFailed(false);
+      } else {
+        toast.info("Still evaluating... Try again in a few seconds.");
+      }
+    } catch {
+      toast.error("Failed to fetch results");
+    }
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -158,55 +190,29 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         })
         .filter((item): item is { questionId: string; code?: string; language?: string; isLocked?: boolean } => !!item);
 
-      if (process.env.NODE_ENV !== "production") {
-        const mcqQuestionMap = new Map(
-          questions
-            .filter((question) => question.type === "mcq")
-            .map((question) => [question._id, question])
-        );
-
-        console.info("[MCQ_DEBUG][FE][SUBMIT_TEST] Submitting MCQ answers", {
-          communityId,
-          testId,
-          totalAnswers: answersArr.length,
-          mcqAnswers: answersArr
-            .filter((answer) => mcqQuestionMap.has(answer.questionId))
-            .map((answer) => {
-              const question = mcqQuestionMap.get(answer.questionId);
-              return {
-                questionId: answer.questionId,
-                selectedOption: answer.selectedOption,
-                question: (question?.question || "").slice(0, 140),
-                optionsCount: question?.options?.length || 0,
-              };
-            }),
-        });
-      }
-
       await communityApi.submitTest(communityId, testId, {
         answers: answersArr,
         codeSubmissions: codesArr,
       });
       toast.success("Test submitted successfully!");
       setHasSubmitted(true);
+      setPollAttempts(0);
+      setPollFailed(false);
       const data = await communityApi.getTestById(communityId, testId);
       setResult(data.result);
-
-      if (process.env.NODE_ENV !== "production") {
-        console.info("[MCQ_DEBUG][FE][SUBMIT_TEST_RESULT] Received evaluated MCQ results", {
-          communityId,
-          testId,
-          mcqScore: data.result?.mcqScore,
-          totalScore: data.result?.totalScore,
-          mcqResults: data.result?.mcqResults,
-        });
-      }
     } catch {
       toast.error("Failed to submit test");
     } finally {
       setSubmitting(false);
     }
   };
+
+  // ── Summary counts ──
+  const mcqQuestions = questions.filter((q) => q.type === "mcq");
+  const programmingQuestions = questions.filter((q) => q.type === "programming");
+  const answeredMcqCount = mcqQuestions.filter((q) => answers[q._id] !== undefined).length;
+  const answeredProgCount = programmingQuestions.filter((q) => (codes[q._id]?.code || "").trim().length > 0 || lockedProgramming[q._id]).length;
+  const totalAnswered = answeredMcqCount + answeredProgCount;
 
   if (loading) {
     return (
@@ -244,15 +250,61 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     return "unattempted";
   };
 
+  // ── Submitted / Ended States ──
   if (hasSubmitted || isEnded) {
+    // Evaluating state — show animated loading with progress
     if (!result) {
       return (
-        <div className="max-w-3xl mx-auto pt-12 text-center">
+        <div className="max-w-3xl mx-auto pt-12 text-center px-4">
           <BackButton href={`/communities/${communityId}/tests`} className="mb-6 justify-center" />
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 shadow-lg">
-            <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-black text-white mb-2">Test Submitted</h2>
-            <p className="text-zinc-400">Your submission has been received and is being evaluated.</p>
+            {/* Animated evaluation indicator */}
+            <div className="relative mx-auto mb-6 w-20 h-20">
+              <div className="absolute inset-0 rounded-full border-4 border-zinc-800" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 border-r-emerald-500/30 border-b-transparent border-l-transparent animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {pollFailed ? "Evaluation is taking longer" : "Evaluating Your Answers"}
+            </h2>
+            <p className="text-zinc-400 mb-1">
+              {pollFailed
+                ? "The server is still processing your submission."
+                : "Your submission has been received and is being evaluated."}
+            </p>
+
+            {!pollFailed && (
+              <div className="mt-6 max-w-xs mx-auto">
+                <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${Math.min(95, (pollAttempts / 40) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-zinc-500 mt-2">This usually takes a few seconds...</p>
+              </div>
+            )}
+
+            {pollFailed && (
+              <div className="mt-6 space-y-3">
+                <div className="text-amber-500 bg-amber-500/10 p-3 rounded-xl text-sm border border-amber-500/20 flex items-center gap-2 justify-center">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  Evaluation is taking longer than expected.
+                </div>
+                <Button
+                  onClick={handleManualRefresh}
+                  variant="outline"
+                  className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Check for Results
+                </Button>
+              </div>
+            )}
+
             {test.isResultVisible === false && (
               <div className="mt-6 text-amber-500 bg-amber-500/10 p-4 rounded-xl text-sm border border-amber-500/20">
                 Results are hidden by the instructor. You will be able to see your score when results are published.
@@ -263,12 +315,13 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       );
     }
 
+    // Results View
     return (
-      <div className="max-w-5xl mx-auto h-full min-h-0 py-3 animate-in fade-in flex flex-col">
+      <div className="max-w-5xl mx-auto h-full min-h-0 py-3 animate-in fade-in flex flex-col px-4">
         <BackButton href={`/communities/${communityId}/tests`} className="mb-3" />
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center shrink-0">
-          <h2 className="text-2xl font-bold text-white">{test.title} - Results</h2>
+          <h2 className="text-2xl font-bold text-white">{test.title} — Results</h2>
           <div className="text-4xl font-black text-emerald-500 mt-2">
             {result.totalScore} <span className="text-xl text-zinc-500">/ {test.totalMarks}</span>
           </div>
@@ -291,12 +344,12 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 <h3 className="text-lg font-semibold text-white mb-3">MCQ Review</h3>
                 <div className="space-y-2.5">
                   {result.mcqResults.map((item, index) => {
-                        const fallbackQuestion = questions.find((question) => question._id === item.questionId);
-                        const options = Array.isArray(item.options) && item.options.length > 0
-                          ? item.options
-                          : Array.isArray(fallbackQuestion?.options)
-                            ? fallbackQuestion.options
-                            : [];
+                    const fallbackQuestion = questions.find((question) => question._id === item.questionId);
+                    const options = Array.isArray(item.options) && item.options.length > 0
+                      ? item.options
+                      : Array.isArray(fallbackQuestion?.options)
+                        ? fallbackQuestion.options
+                        : [];
                     const selectedIndex = typeof item.selectedOption === "number" ? item.selectedOption : null;
                     const correctIndex = typeof item.correctOption === "number" ? item.correctOption : null;
                     const selectedText =
@@ -377,8 +430,81 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
     toast.success("Question locked. It will be scored as 0 if not accepted.");
   };
 
+  // ── Question Progress Grid (used in multiple places) ──
+  const QuestionGrid = ({ onSelect }: { onSelect: (idx: number) => void }) => (
+    <div className="grid grid-cols-5 gap-1.5">
+      {questions.map((question, idx) => {
+        const state = getQuestionState(question);
+        return (
+          <button
+            key={question._id}
+            onClick={() => onSelect(idx)}
+            className={cn(
+              "w-9 h-9 rounded-lg text-xs font-bold transition-all border",
+              activeIndex === idx && "ring-2 ring-emerald-500 ring-offset-1 ring-offset-zinc-950",
+              state === "locked" && "bg-amber-500/15 border-amber-500/30 text-amber-400",
+              state === "attempted" && "bg-emerald-500/15 border-emerald-500/30 text-emerald-400",
+              state === "unattempted" && "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400",
+            )}
+          >
+            {idx + 1}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // ── Navigation bar (shared between MCQ and programming views) ──
+  const BottomNavBar = ({ children }: { children?: React.ReactNode }) => (
+    <div className="h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-wide">
+            <ListTodo className="w-4 h-4 mr-2" /> Questions
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="top" align="start" className="w-auto min-w-[220px] bg-zinc-900 border-zinc-800 p-3 shadow-2xl rounded-xl">
+          <p className="text-xs text-zinc-500 mb-2 font-semibold uppercase tracking-wider">Question Map</p>
+          <QuestionGrid onSelect={setActiveIndex} />
+          <div className="mt-2 pt-2 border-t border-zinc-800 flex items-center gap-3 text-[10px] text-zinc-500">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500/40" /> Answered</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-500/40" /> Locked</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-zinc-700" /> Pending</span>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <div className="flex items-center gap-2 md:gap-3 ml-auto">
+        <Button
+          variant="outline"
+          className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+          disabled={activeIndex === 0}
+          onClick={() => setActiveIndex((a) => a - 1)}
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+
+        <span className="text-sm font-medium text-zinc-500 px-2">
+          {activeIndex + 1} of {questions.length}
+        </span>
+
+        <Button
+          variant="outline"
+          className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
+          disabled={activeIndex === questions.length - 1}
+          onClick={() => setActiveIndex((a) => a + 1)}
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+
+        {children}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col bg-zinc-950 w-full h-full min-h-0 relative overflow-hidden">
+      {/* ── Header ── */}
       <div className="h-16 border-b border-zinc-800 bg-zinc-900/80 flex items-center justify-between px-4 sm:px-6 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -389,9 +515,18 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
               </Badge>
             )}
           </div>
-          <p className="text-xs text-zinc-400">
-            {questions.length} Questions | {test.totalMarks} Marks
-          </p>
+          <div className="flex items-center gap-2 text-xs text-zinc-400">
+            <span>{questions.length} Questions</span>
+            <span>•</span>
+            <span>{test.totalMarks} Marks</span>
+            <span>•</span>
+            <span className={cn(
+              "font-semibold",
+              totalAnswered === questions.length ? "text-emerald-400" : "text-zinc-400"
+            )}>
+              {totalAnswered}/{questions.length} answered
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6">
@@ -400,7 +535,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
             {timeLeft !== null ? formatTime(timeLeft) : "--:--"}
           </div>
           <Button
-            onClick={handleSubmit}
+            onClick={() => setConfirmOpen(true)}
             disabled={submitting}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
@@ -410,6 +545,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         </div>
       </div>
 
+      {/* ── Main Content ── */}
       <div className="flex-1 min-h-0 p-2 md:p-4 max-w-[1920px] mx-auto w-full">
         {!q ? (
           <div className="flex items-center justify-center h-full text-zinc-500">Select a question</div>
@@ -477,83 +613,16 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
               </div>
             </ScrollArea>
 
-            <div className="h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-4 md:px-6 shrink-0 gap-3">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-wide">
-                    <ListTodo className="w-4 h-4 mr-2" /> List Questions
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[320px] bg-zinc-900 border-zinc-800 p-2 shadow-2xl rounded-xl">
-                  <ScrollArea className="h-[280px] w-full pr-2 scrollbar-emerald">
-                    <div className="space-y-1">
-                      {questions.map((question, idx) => (
-                        <button
-                          key={question._id}
-                          onClick={() => setActiveIndex(idx)}
-                          className={cn(
-                            "w-full flex items-center justify-between p-2.5 rounded-lg border text-left transition-colors",
-                            activeIndex === idx
-                              ? "bg-zinc-800 border-zinc-700 text-white shadow-sm"
-                              : "bg-zinc-950/50 border-zinc-900 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-300 hover:border-zinc-800"
-                          )}
-                        >
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <span
-                              className={cn(
-                                "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0",
-                                activeIndex === idx ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
-                              )}
-                            >
-                              {idx + 1}
-                            </span>
-                            <span className="truncate text-xs font-medium">
-                              {question.type === "mcq" ? "Multiple Choice" : question.title}
-                            </span>
-                          </div>
-                          {getQuestionState(question) !== "unattempted" && (
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-
-              <div className="flex items-center gap-2 md:gap-3 ml-auto">
-                <Button
-                  variant="outline"
-                  className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                  disabled={activeIndex === 0}
-                  onClick={() => setActiveIndex((a) => a - 1)}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-
-                <span className="text-sm font-medium text-zinc-500 px-2">
-                  {activeIndex + 1} of {questions.length}
-                </span>
-
-                <Button
-                  variant="outline"
-                  className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                  disabled={activeIndex === questions.length - 1}
-                  onClick={() => setActiveIndex((a) => a + 1)}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="bg-emerald-600 hover:bg-emerald-700 h-9"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Submit
-                </Button>
-              </div>
-            </div>
+            <BottomNavBar>
+              <Button
+                onClick={() => setConfirmOpen(true)}
+                disabled={submitting}
+                className="bg-emerald-600 hover:bg-emerald-700 h-9"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Submit
+              </Button>
+            </BottomNavBar>
           </div>
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
@@ -590,87 +659,20 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 </div>
               </ScrollArea>
 
-              <div className="h-16 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur flex items-center justify-between px-4 md:px-6 shrink-0 z-20 gap-3">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-wide">
-                      <ListTodo className="w-4 h-4 mr-2" /> List Questions
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent side="top" align="start" className="w-[320px] bg-zinc-900 border-zinc-800 p-2 shadow-2xl rounded-xl">
-                    <ScrollArea className="h-[280px] w-full pr-2 scrollbar-emerald">
-                      <div className="space-y-1">
-                        {questions.map((question, idx) => (
-                          <button
-                            key={question._id}
-                            onClick={() => setActiveIndex(idx)}
-                            className={cn(
-                              "w-full flex items-center justify-between p-2.5 rounded-lg border text-left transition-colors",
-                              activeIndex === idx
-                                ? "bg-zinc-800 border-zinc-700 text-white shadow-sm"
-                                : "bg-zinc-950/50 border-zinc-900 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-300 hover:border-zinc-800"
-                            )}
-                          >
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <span
-                                className={cn(
-                                  "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0",
-                                  activeIndex === idx ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-500"
-                                )}
-                              >
-                                {idx + 1}
-                              </span>
-                              <span className="truncate text-xs font-medium">
-                                {question.type === "mcq" ? "Multiple Choice" : question.title}
-                              </span>
-                            </div>
-                            {getQuestionState(question) !== "unattempted" && (
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
-
-                <div className="flex items-center gap-2 md:gap-3 ml-auto">
-                  <Button
-                    variant="outline"
-                    className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                    disabled={activeIndex === 0}
-                    onClick={() => setActiveIndex((a) => a - 1)}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-
-                  <span className="text-sm font-medium text-zinc-500 px-2">
-                    {activeIndex + 1} of {questions.length}
-                  </span>
-
-                  <Button
-                    variant="outline"
-                    className="border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700"
-                    disabled={activeIndex === questions.length - 1}
-                    onClick={() => setActiveIndex((a) => a + 1)}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    onClick={lockCurrentProgrammingQuestion}
-                    disabled={!!lockedProgramming[q._id]}
-                    className={cn(
-                      "h-9",
-                      lockedProgramming[q._id]
-                        ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-800"
-                        : "bg-emerald-600 hover:bg-emerald-700"
-                    )}
-                  >
-                    {lockedProgramming[q._id] ? "Question Locked" : "Lock Question"}
-                  </Button>
-                </div>
-              </div>
+              <BottomNavBar>
+                <Button
+                  onClick={lockCurrentProgrammingQuestion}
+                  disabled={!!lockedProgramming[q._id]}
+                  className={cn(
+                    "h-9",
+                    lockedProgramming[q._id]
+                      ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  )}
+                >
+                  {lockedProgramming[q._id] ? "Question Locked" : "Lock Question"}
+                </Button>
+              </BottomNavBar>
             </ResizablePanel>
 
             <ResizableHandle withHandle className="bg-transparent" />
@@ -710,6 +712,40 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           </ResizablePanelGroup>
         )}
       </div>
+
+      {/* ── Submit Confirmation Dialog ── */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800 text-zinc-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Submit Test?</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              You have answered <span className="text-white font-semibold">{totalAnswered}</span> of{" "}
+              <span className="text-white font-semibold">{questions.length}</span> questions.
+              {totalAnswered < questions.length && (
+                <span className="block mt-1 text-amber-400">
+                  <AlertTriangle className="w-3.5 h-3.5 inline mr-1" />
+                  {questions.length - totalAnswered} question(s) are unanswered.
+                </span>
+              )}
+              <span className="block mt-2">This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white">
+              Go Back
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmOpen(false);
+                handleSubmit();
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Confirm Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

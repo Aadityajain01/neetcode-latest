@@ -29,17 +29,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const serverMessage = error.response?.data?.error;
 
-    if (status === 401) {
-      toast.error('Unauthorized request');
-    }
-
-    if (status === 403) {
-      toast.error('Access denied');
-    }
-
-    if (error.response?.data?.error) {
-      toast.error(error.response.data.error);
+    // Avoid duplicate toasts: local pages already surface detailed API errors.
+    // Global interceptor only handles fallbacks (network/unexpected errors).
+    if (!serverMessage) {
+      if (status === 401) {
+        toast.error('Unauthorized request', { id: 'api-error-401' });
+      } else if (status === 403) {
+        toast.error('Access denied', { id: 'api-error-403' });
+      } else if (!status) {
+        toast.error('Network error. Please check your connection.', {
+          id: 'api-error-network',
+        });
+      } else {
+        toast.error('Something went wrong. Please try again.', {
+          id: `api-error-${status}`,
+        });
+      }
     }
 
     return Promise.reject(error);

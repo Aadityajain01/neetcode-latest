@@ -47,7 +47,29 @@ export default function RootLayout({
           </AuthProvider>
         </QueryProvider>
         <Toaster />
-        <SonnerToaster richColors position="top-right" />
+        <SonnerToaster
+          position="top-right"
+          theme="dark"
+          closeButton
+          toastOptions={{
+            classNames: {
+              toast:
+                "group border border-zinc-700/80 bg-zinc-900/92 text-zinc-100 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.45)] rounded-xl",
+              title: "text-sm font-semibold text-zinc-100",
+              description: "text-xs text-zinc-300",
+              actionButton:
+                "bg-emerald-500 text-zinc-950 hover:bg-emerald-400 rounded-md",
+              cancelButton:
+                "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 rounded-md",
+              success:
+                "border-emerald-500/45 bg-emerald-950/40 text-emerald-100",
+              error: "border-red-500/45 bg-red-950/35 text-red-100",
+              warning:
+                "border-amber-500/45 bg-amber-950/35 text-amber-100",
+              info: "border-blue-500/45 bg-blue-950/35 text-blue-100",
+            },
+          }}
+        />
       </body>
     </html>
   );
