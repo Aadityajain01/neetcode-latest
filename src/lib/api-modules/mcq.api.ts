@@ -72,6 +72,31 @@ export const mcqApi = {
     return response.data.submission;
   },
 
+  // Submit all answers as a batch
+  submitBatch: async (data: { answers: { mcqId: string; answer: number }[] }) => {
+    const response = await api.post<{
+      results: Array<{
+        mcqId: string;
+        status: string;
+        isCorrect: boolean;
+        alreadySolved: boolean;
+        score: number;
+        difficulty: string;
+        correctAnswer: number;
+        explanation?: string;
+        error?: string;
+      }>;
+      summary: {
+        total: number;
+        correct: number;
+        newCorrect: number;
+        wrong: number;
+        score: number;
+      };
+    }>('/mcqs/submit-batch', data);
+    return response.data;
+  },
+
   // Get user history
   getMyAttempts: async (params?: { limit?: number; offset?: number }) => {
     const response = await api.get<{

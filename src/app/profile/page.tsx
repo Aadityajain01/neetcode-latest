@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Edit, MapPin, Calendar, Github, Linkedin, Globe, Twitter,
   Flame, Trophy, Target, Zap, X, Save, Loader2, Users, Crown,
-  ChevronRight, Hash, TrendingUp, Award, Send, BarChart3
+  ChevronRight, Hash, TrendingUp, Send, BarChart3, Activity
 } from "lucide-react";
 import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,10 @@ import MainLayout from "@/components/layouts/main-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ResponsiveContainer, Tooltip
+} from 'recharts';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SocialLinks { github?: string; linkedin?: string; website?: string; twitter?: string; }
@@ -24,50 +28,6 @@ interface ProfileStats { score: number; rank: number; totalSubmissions: number; 
 interface ActivityData { heatmap: Array<{ _id: string; count: number }>; recent: Array<{ _id: string; problemId: { title: string; difficulty: string; slug: string }; status: string; createdAt: string; }>; }
 interface Community { id: string; name: string; role: string; }
 interface ProfileResponse { details: UserDetails; stats: ProfileStats; activity: ActivityData; communities: Community[]; }
-
-// ─── Multi-Segment Donut ──────────────────────────────────────────────────────
-function MultiSegmentDonut({ easy, medium, hard, total, solved, size = 180, strokeWidth = 13, label = 'Solved' }: {
-  easy: number; medium: number; hard: number; total: number; solved: number; size?: number; strokeWidth?: number; label?: string;
-}) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const safeTotal = total > 0 ? total : 1;
-  const easyFrac = easy / safeTotal;
-  const medFrac = medium / safeTotal;
-  const hardFrac = hard / safeTotal;
-  const medOffset = easyFrac * circumference;
-  const hardOffset = (easyFrac + medFrac) * circumference;
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-[40px] scale-75 pointer-events-none" />
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="currentColor" strokeWidth={strokeWidth} fill="transparent" className="text-[#ffffff08]" />
-        {easy > 0 && <circle cx={size / 2} cy={size / 2} r={radius} stroke="#22c55e" strokeWidth={strokeWidth} fill="transparent" strokeDasharray={`${easyFrac * circumference} ${circumference - easyFrac * circumference}`} strokeDashoffset={0} strokeLinecap="round" className="transition-all duration-1000 ease-out" />}
-        {medium > 0 && <circle cx={size / 2} cy={size / 2} r={radius} stroke="#eab308" strokeWidth={strokeWidth} fill="transparent" strokeDasharray={`${medFrac * circumference} ${circumference - medFrac * circumference}`} strokeDashoffset={-medOffset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />}
-        {hard > 0 && <circle cx={size / 2} cy={size / 2} r={radius} stroke="#ef4444" strokeWidth={strokeWidth} fill="transparent" strokeDasharray={`${hardFrac * circumference} ${circumference - hardFrac * circumference}`} strokeDashoffset={-hardOffset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />}
-      </svg>
-      <div className="absolute flex flex-col items-center">
-        <span className="text-3xl font-black text-white tracking-tight leading-none">{solved}</span>
-        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mt-1">/{total}</span>
-        <span className="text-[9px] font-medium text-emerald-500 mt-0.5">✓ {label}</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Difficulty Badge ─────────────────────────────────────────────────────────
-function DiffBadge({ label, count, total, color, dotColor }: { label: string; count: number; total: number; color: string; dotColor: string }) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-zinc-900/40 border border-[#ffffff08]">
-      <div className="flex items-center gap-2">
-        <div className={cn("w-2 h-2 rounded-full", dotColor)} />
-        <span className={cn("text-xs font-semibold", color)}>{label}</span>
-      </div>
-      <span className="text-xs text-zinc-300 font-mono"><span className="text-white font-bold">{count}</span><span className="text-zinc-600">/{total}</span></span>
-    </div>
-  );
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const generateFullYearData = (backendData: Array<{ _id: string; count: number }>) => {
@@ -88,6 +48,20 @@ const generateFullYearData = (backendData: Array<{ _id: string; count: number }>
   });
 };
 
+// Custom Chart Tooltip
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs shadow-xl">
+        <p className="font-bold text-zinc-300">{payload[0].payload.subject}</p>
+        <p className="text-emerald-400 font-mono mt-1">DSA Solved: {payload[0].value}</p>
+        {payload[1] && <p className="text-purple-400 font-mono">MCQ Solved: {payload[1].value}</p>}
+      </div>
+    );
+  }
+  return null;
+};
+
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const router = useRouter();
@@ -103,17 +77,12 @@ export default function ProfilePage() {
         profileApi.getMyProfile(),
         problemApi.getCounts({ type: "dsa" }),
       ]);
-
-      return {
-        data: profileRes.data?.profile || null,
-        dsaCounts: dsaCountsRes,
-      };
+      return { data: profileRes.data?.profile || null, dsaCounts: dsaCountsRes };
     },
   });
 
   useEffect(() => {
     if (profileQuery.error) {
-      console.error("Failed to load profile", profileQuery.error);
       toast.error("Failed to load profile");
     }
   }, [profileQuery.error]);
@@ -126,58 +95,68 @@ export default function ProfilePage() {
   const joinedCommunities = data?.communities.filter(c => !['OWNER', 'ADMIN'].includes(c.role.toUpperCase())) || [];
   const calendarData = data ? generateFullYearData(data.activity.heatmap) : [];
 
+  // Graph Data
+  const radarData = data ? [
+    { subject: 'Easy', DSA: data.stats.solvedBreakdown.easy, MCQ: data.stats.mcqSolvedBreakdown?.easy || 0, fullMark: Math.max(dsaCounts.easy, 1) },
+    { subject: 'Medium', DSA: data.stats.solvedBreakdown.medium, MCQ: data.stats.mcqSolvedBreakdown?.medium || 0, fullMark: Math.max(dsaCounts.medium, 1) },
+    { subject: 'Hard', DSA: data.stats.solvedBreakdown.hard, MCQ: data.stats.mcqSolvedBreakdown?.hard || 0, fullMark: Math.max(dsaCounts.hard, 1) },
+  ] : [];
+
   return (
     <MainLayout>
-      <div className="font-sans pb-20">
+      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4">
 
-        {/* Loading */}
         {loading && (
-          <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full" />
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-500 relative" />
-            </div>
+          <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <p className="text-xs text-zinc-500 font-medium tracking-widest uppercase">Fetching Profile</p>
           </div>
         )}
 
         {!loading && !data && (
-          <div className="text-center mt-20 text-zinc-500">User not found</div>
+          <div className="text-center mt-20 text-zinc-500 font-mono">USER NOT FOUND 404</div>
         )}
 
         {!loading && data && (
-          <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             {/* ── Header ──────────────────────────────────────────── */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-[#ffffff08]">
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 p-[3px] shadow-2xl shadow-emerald-500/15">
-                  <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center overflow-hidden">
-                    <Avatar className="w-full h-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-white/5">
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[2px] shadow-lg shadow-emerald-500/10">
+                  <div className="w-full h-full rounded-[14px] bg-zinc-950 flex items-center justify-center overflow-hidden">
+                    <Avatar className="w-full h-full rounded-none">
                       <AvatarImage src={data.details.avatarUrl} className="object-cover" />
-                      <AvatarFallback className="text-3xl font-bold text-white bg-zinc-900 w-full h-full flex items-center justify-center">
+                      <AvatarFallback className="text-3xl font-bold text-emerald-400 bg-zinc-950 w-full h-full flex items-center justify-center">
                         {data.details.displayName?.[0]?.toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
                     {data.details.displayName || "Anonymous User"}
                   </h1>
                   <p className="text-sm text-zinc-500 font-medium">@{data.details.username || data.details.email.split('@')[0]}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-emerald-400">
-                    <Zap size={12} fill="currentColor" />
-                    <span className="font-semibold">Pro Member</span>
+                  <div className="flex items-center gap-1.5 mt-2 px-2 py-0.5 w-fit rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+                    <Zap size={10} fill="currentColor" /> Pro Member
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setIsEditOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900/50 hover:bg-zinc-800/60 border border-[#ffffff08] hover:border-[#ffffff18] rounded-xl transition-all text-sm font-medium text-zinc-300 hover:text-white group"
+                className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 hover:bg-zinc-800/80 border border-white/10 hover:border-white/20 rounded-xl transition-all text-xs font-bold text-zinc-300 hover:text-white uppercase tracking-wider"
               >
-                <Edit size={14} className="text-zinc-500 group-hover:text-emerald-400 transition-colors" />
-                Edit Profile
+                <Edit size={12} className="text-zinc-500" /> Edit Profile
               </button>
+            </div>
+
+            {/* ── Top Core Stats Row ──────────────────────────────────────── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MinimalStatCard icon={<Trophy className="text-yellow-400" size={16} />} label="Global Rank" value={`#${data.stats.rank}`} />
+              <MinimalStatCard icon={<TrendingUp className="text-emerald-400" size={16} />} label="Total Score" value={data.stats.score} />
+              <MinimalStatCard icon={<Target className="text-blue-400" size={16} />} label="Total Solved" value={data.stats.solvedBreakdown.total} />
+              <MinimalStatCard icon={<Flame className="text-orange-400" size={16} />} label="Day Streak" value="0" />
             </div>
 
             {/* ── Bento Grid ──────────────────────────────────────── */}
@@ -187,57 +166,52 @@ export default function ProfilePage() {
               <div className="md:col-span-4 space-y-6">
 
                 {/* Bio Card */}
-                <div className="bg-zinc-900/30 border border-[#ffffff08] rounded-2xl p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                  <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
+                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                     <MapPin size={12} className="text-emerald-500" /> About
                   </h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">
-                    {data.details.bio || "No bio added yet."}
+                  <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    {data.details.bio || "No biography provided."}
                   </p>
-                  <div className="mt-6 pt-5 border-t border-[#ffffff06] space-y-3">
-                    <div className="flex items-center gap-3 text-zinc-500 text-xs">
-                      <Calendar size={13} /> Joined {format(new Date(data.details.createdAt), "MMMM yyyy")}
+                  <div className="mt-5 pt-4 border-t border-zinc-800/50 space-y-2">
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+                      <Calendar size={12} /> Joined {format(new Date(data.details.createdAt), "MMM yyyy")}
                     </div>
                     {data.details.socialLinks?.github && (
-                      <a href={data.details.socialLinks.github} className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors text-xs"><Github size={13} /> GitHub</a>
+                      <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><Github size={12} /> GitHub</a>
                     )}
                     {data.details.socialLinks?.linkedin && (
-                      <a href={data.details.socialLinks.linkedin} className="flex items-center gap-3 text-zinc-400 hover:text-blue-400 transition-colors text-xs"><Linkedin size={13} /> LinkedIn</a>
+                      <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><Linkedin size={12} /> LinkedIn</a>
                     )}
                     {data.details.socialLinks?.twitter && (
-                      <a href={data.details.socialLinks.twitter} className="flex items-center gap-3 text-zinc-400 hover:text-sky-400 transition-colors text-xs"><Twitter size={13} /> Twitter</a>
+                      <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><Twitter size={12} /> Twitter</a>
                     )}
                     {data.details.socialLinks?.website && (
-                      <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-3 text-zinc-400 hover:text-emerald-400 transition-colors text-xs"><Globe size={13} /> Website</a>
+                      <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-colors text-xs font-medium"><Globe size={12} /> Website</a>
                     )}
                   </div>
                 </div>
 
                 {/* Communities Card */}
-                <div className="bg-zinc-900/30 border border-[#ffffff08] rounded-2xl overflow-hidden">
-                  <div className="p-5 border-b border-[#ffffff06]">
-                    <h3 className="text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col">
+                  <div className="p-4 border-b border-zinc-800/50">
+                    <h3 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                       <Crown size={12} /> Created
                     </h3>
                     <div className="space-y-1">
                       {myCommunities.length > 0 ? myCommunities.map((c) => (
-                        <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
-                      )) : (
-                        <div className="text-zinc-600 text-xs py-3 italic text-center border border-dashed border-[#ffffff08] rounded-lg">No communities created.</div>
-                      )}
+                         <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
+                      )) : <div className="text-zinc-600 text-xs py-2 italic text-center">No created communities.</div>}
                     </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <div className="p-4">
+                    <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                       <Users size={12} /> Joined
                     </h3>
                     <div className="space-y-1">
                       {joinedCommunities.length > 0 ? joinedCommunities.map((c) => (
-                        <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
-                      )) : (
-                        <div className="text-zinc-600 text-xs py-3 italic text-center border border-dashed border-[#ffffff08] rounded-lg">No communities joined.</div>
-                      )}
+                         <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
+                      )) : <div className="text-zinc-600 text-xs py-2 italic text-center">No joined communities.</div>}
                     </div>
                   </div>
                 </div>
@@ -246,85 +220,77 @@ export default function ProfilePage() {
               {/* RIGHT COLUMN (8 cols) */}
               <div className="md:col-span-8 space-y-6">
 
-                {/* ── Solving Stats Donut + Cards ───────────────────── */}
-                <div className="bg-zinc-900/30 border border-[#ffffff08] rounded-2xl p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-[60px] rounded-full pointer-events-none" />
-                  <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <Target size={13} className="text-emerald-500" /> Solving Stats
-                  </h3>
-                  <div className="flex flex-col md:flex-row items-center gap-8">
-                    <MultiSegmentDonut
-                      easy={data.stats.solvedBreakdown.easy}
-                      medium={data.stats.solvedBreakdown.medium}
-                      hard={data.stats.solvedBreakdown.hard}
-                      total={dsaCounts.total || 1}
-                      solved={data.stats.solvedBreakdown.total}
-                      size={180} strokeWidth={14}
-                    />
-                    <div className="flex-1 w-full space-y-3">
-                      <DiffBadge label="Easy" count={data.stats.solvedBreakdown.easy} total={dsaCounts.easy} color="text-emerald-400" dotColor="bg-emerald-500" />
-                      <DiffBadge label="Medium" count={data.stats.solvedBreakdown.medium} total={dsaCounts.medium} color="text-amber-400" dotColor="bg-amber-500" />
-                      <DiffBadge label="Hard" count={data.stats.solvedBreakdown.hard} total={dsaCounts.hard} color="text-red-400" dotColor="bg-red-500" />
+                {/* ── Advanced Proficiency Radar ───────────────────── */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 flex flex-col md:flex-row items-center gap-6">
+                  
+                  {/* Chart Container */}
+                  <div className="w-full md:w-1/2 h-56 relative group">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                        <PolarGrid stroke="#27272a" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 700 }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+                        <Radar name="DSA" dataKey="DSA" stroke="#10b981" fill="#10b981" fillOpacity={0.2} strokeWidth={2} />
+                        <Radar name="MCQ" dataKey="MCQ" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Detailed Breakdowns */}
+                  <div className="flex-1 w-full space-y-4">
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                      <Activity size={12} className="text-emerald-500" /> Proficiency Matrix
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                       <CompactDiffCard label="Easy" dsa={data.stats.solvedBreakdown.easy} mcq={data.stats.mcqSolvedBreakdown?.easy || 0} color="text-emerald-400" />
+                       <CompactDiffCard label="Medium" dsa={data.stats.solvedBreakdown.medium} mcq={data.stats.mcqSolvedBreakdown?.medium || 0} color="text-amber-400" />
+                       <CompactDiffCard label="Hard" dsa={data.stats.solvedBreakdown.hard} mcq={data.stats.mcqSolvedBreakdown?.hard || 0} color="text-red-400" />
                     </div>
                   </div>
                 </div>
 
-                {/* Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={<Trophy className="text-yellow-500" size={18} />} label="Global Rank" value={`#${data.stats.rank}`} accent="bg-yellow-500" />
-                  <StatCard icon={<TrendingUp className="text-emerald-500" size={18} />} label="Total Score" value={data.stats.score} accent="bg-emerald-500" />
-                  <StatCard icon={<Target className="text-blue-500" size={18} />} label="Solved" value={data.stats.solvedBreakdown.total} accent="bg-blue-500" />
-                  <StatCard icon={<Flame className="text-orange-500" size={18} />} label="Streak" value="0" accent="bg-orange-500" />
-                </div>
-
                 {/* Activity Heatmap */}
-                <div className="bg-zinc-900/30 border border-[#ffffff08] rounded-2xl p-6 overflow-hidden">
-                  <div className="flex justify-between items-center mb-5">
-                    <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                      <BarChart3 size={13} className="text-emerald-500" /> Activity
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 overflow-hidden">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                      <BarChart3 size={12} className="text-emerald-500" /> Contribution Activity
                     </h3>
-                    <span className="text-xs text-zinc-600 font-mono">{new Date().getFullYear()}</span>
+                    <span className="text-[10px] text-zinc-600 font-mono font-bold bg-zinc-800/50 px-2 py-1 rounded-md">{new Date().getFullYear()}</span>
                   </div>
-                  <div className="w-full overflow-x-auto pb-2 flex justify-center">
+                  <div className="flex justify-center w-full overflow-x-auto scrollbar-emerald pb-1">
                     <ActivityCalendar
                       data={calendarData}
                       theme={{
-                        light: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
-                        dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                        light: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
+                        dark: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
                       }}
-                      blockSize={12} blockMargin={4} fontSize={12}
-                      labels={{
-                        legend: { less: 'Less', more: 'More' },
-                        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                        totalCount: '{{count}} submissions in {{year}}'
-                      }}
-                      showWeekdayLabels={true}
+                      blockSize={11} blockMargin={3} fontSize={10} showWeekdayLabels={true}
                     />
                   </div>
                 </div>
 
                 {/* Recent Solves */}
-                <div className="bg-zinc-900/30 border border-[#ffffff08] rounded-2xl p-6">
-                  <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
+                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                     <Send size={12} className="text-emerald-500" /> Recent Solves
                   </h3>
-                  <div className="space-y-2">
-                    {data.activity.recent.map((sub, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-zinc-900/40 rounded-xl hover:bg-zinc-800/30 transition-colors border border-[#ffffff06]">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("w-2 h-2 rounded-full",
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {data.activity.recent.slice(0, 6).map((sub, idx) => (
+                      <div key={idx} className="flex justify-between items-center px-3 py-2 bg-zinc-800/30 rounded-lg hover:bg-zinc-800/60 transition-colors border border-zinc-800/40">
+                        <div className="flex items-center gap-2 w-[70%]">
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
                             sub.problemId.difficulty === 'Easy' ? 'bg-emerald-500' :
-                            sub.problemId.difficulty === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
+                            sub.problemId.difficulty === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
                           )} />
-                          <span className="text-sm font-medium text-zinc-200">{sub.problemId.title}</span>
+                          <span className="text-[11px] font-semibold text-zinc-300 truncate" title={sub.problemId.title}>{sub.problemId.title}</span>
                         </div>
-                        <span className="text-xs text-zinc-600 font-mono">{format(new Date(sub.createdAt), "MMM d")}</span>
+                        <span className="text-[10px] text-zinc-600 font-mono font-medium">{format(new Date(sub.createdAt), "MMM d")}</span>
                       </div>
                     ))}
-                    {data.activity.recent.length === 0 && <p className="text-zinc-600 text-sm text-center py-4">No recent activity.</p>}
                   </div>
+                  {data.activity.recent.length === 0 && <p className="text-zinc-600 text-xs text-center py-4 font-mono">NO RECENT ACTIVITY.</p>}
                 </div>
+
               </div>
             </div>
           </div>
@@ -332,11 +298,7 @@ export default function ProfilePage() {
 
         {/* Edit Profile Modal */}
         {isEditOpen && data && (
-          <EditProfileModal
-            user={data.details}
-            onClose={() => setIsEditOpen(false)}
-            onUpdate={() => { fetchProfile(); setIsEditOpen(false); }}
-          />
+          <EditProfileModal user={data.details} onClose={() => setIsEditOpen(false)} onUpdate={() => { profileQuery.refetch(); setIsEditOpen(false); }} />
         )}
       </div>
     </MainLayout>
@@ -345,44 +307,52 @@ export default function ProfilePage() {
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-function CommunityItem({ community, onClick }: { community: Community; onClick: () => void }) {
+function MinimalStatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <button onClick={onClick} className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.03] transition-all group text-left">
-      <div className="flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-md bg-zinc-800/50 flex items-center justify-center text-zinc-600 group-hover:text-emerald-500 transition-colors">
-          <Hash size={14} />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors">{community.name}</span>
-          <span className="text-[9px] text-zinc-600 font-mono uppercase">{community.role}</span>
-        </div>
+    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1 transition-all">
+      <div className="flex justify-between items-start mb-1">
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</p>
+        <div className="p-1 rounded bg-zinc-800/50">{icon}</div>
       </div>
-      <ChevronRight size={12} className="text-zinc-700 group-hover:text-zinc-400 transition-colors" />
-    </button>
-  );
-}
-
-function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent: string }) {
-  return (
-    <div className="group relative bg-zinc-900/30 border border-[#ffffff08] p-5 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-[#ffffff18] transition-all duration-300 overflow-hidden">
-      <div className={cn("absolute -top-6 -right-6 w-16 h-16 rounded-full blur-[30px] opacity-0 group-hover:opacity-20 transition-opacity duration-500", accent)} />
-      <div className="p-2 bg-zinc-800/50 rounded-xl mb-1">{icon}</div>
-      <span className="text-xl font-bold text-white tracking-tight">{value}</span>
-      <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">{label}</span>
+      <p className="text-2xl font-black text-white tracking-tighter">{value}</p>
     </div>
   );
 }
 
+function CompactDiffCard({ label, dsa, mcq, color }: { label: string; dsa: number, mcq: number, color: string }) {
+  return (
+    <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+      <span className={cn("text-[10px] font-bold uppercase tracking-widest", color)}>{label}</span>
+      <div className="mt-2 text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
+        <span><span className="text-emerald-400 font-bold">{dsa}</span> <span className="text-[8px] uppercase">DSA</span></span>
+      </div>
+      <div className="text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
+        <span><span className="text-purple-400 font-bold">{mcq}</span> <span className="text-[8px] uppercase">MCQ</span></span>
+      </div>
+    </div>
+  );
+}
+
+function CommunityItem({ community, onClick }: { community: Community; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-zinc-800/50 transition-all group text-left">
+      <div className="flex items-center gap-2">
+        <div className="text-zinc-600 group-hover:text-emerald-500 transition-colors"><Hash size={12} /></div>
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors">{community.name}</span>
+          <span className="text-[8px] text-zinc-600 font-mono uppercase">{community.role}</span>
+        </div>
+      </div>
+      <ChevronRight size={10} className="text-zinc-700 group-hover:text-zinc-400 transition-colors" />
+    </button>
+  );
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
 function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails; onClose: () => void; onUpdate: () => void }) {
   const [formData, setFormData] = useState({
-    displayName: user.displayName || "",
-    bio: user.bio || "",
-    socialLinks: {
-      github: user.socialLinks?.github || "",
-      linkedin: user.socialLinks?.linkedin || "",
-      twitter: user.socialLinks?.twitter || "",
-      website: user.socialLinks?.website || "",
-    }
+    displayName: user.displayName || "", bio: user.bio || "",
+    socialLinks: { github: user.socialLinks?.github || "", linkedin: user.socialLinks?.linkedin || "", twitter: user.socialLinks?.twitter || "", website: user.socialLinks?.website || "" }
   });
   const [saving, setSaving] = useState(false);
 
@@ -391,63 +361,33 @@ function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails; onCl
     setSaving(true);
     try {
       const res = await profileApi.updateProfile(formData);
-      if (res.status === 200) {
-        onUpdate();
-      } else {
-        alert("Failed to update profile");
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
+      if (res.status === 200) onUpdate();
+      else toast.error("Failed to update profile");
+    } catch { toast.error("Error updating profile"); } finally { setSaving(false); }
   };
 
-  const inputClass = "w-full bg-zinc-950 border border-[#ffffff10] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-zinc-600";
+  const inputClass = "w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-zinc-600";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-zinc-900 border border-[#ffffff08] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-[#ffffff08] flex justify-between items-center">
-          <h2 className="text-lg font-bold text-white">Edit Profile</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors"><X size={18} /></button>
+      <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/50">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest">Edit Profile</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors"><X size={16} /></button>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Display Name</label>
-            <input type="text" value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className={inputClass} placeholder="Your Name" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Bio</label>
-            <textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className={cn(inputClass, "min-h-[100px] resize-none")} placeholder="Tell us about yourself..." />
-          </div>
-          <div className="space-y-3 pt-2">
-            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Social Links</label>
-            <div className="flex items-center gap-3">
-              <Github size={16} className="text-zinc-600" />
-              <input type="text" placeholder="GitHub URL" value={formData.socialLinks.github} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, github: e.target.value }})} className={cn(inputClass, "flex-1")} />
-            </div>
-            <div className="flex items-center gap-3">
-              <Linkedin size={16} className="text-zinc-600" />
-              <input type="text" placeholder="LinkedIn URL" value={formData.socialLinks.linkedin} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, linkedin: e.target.value }})} className={cn(inputClass, "flex-1")} />
-            </div>
-            <div className="flex items-center gap-3">
-              <Globe size={16} className="text-zinc-600" />
-              <input type="text" placeholder="Personal Website" value={formData.socialLinks.website} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, website: e.target.value }})} className={cn(inputClass, "flex-1")} />
-            </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="space-y-1.5"><label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Display Name</label><input type="text" value={formData.displayName} onChange={(e) => setFormData({...formData, displayName: e.target.value})} className={inputClass} placeholder="Your Name" /></div>
+          <div className="space-y-1.5"><label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Bio</label><textarea value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} className={cn(inputClass, "min-h-[80px] resize-none")} placeholder="Tell us about yourself..." /></div>
+          <div className="space-y-2 pt-2"><label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Social Links</label>
+            <div className="flex items-center gap-2"><Github size={14} className="text-zinc-500" /><input type="text" placeholder="GitHub URL" value={formData.socialLinks.github} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, github: e.target.value }})} className={cn(inputClass, "flex-1")} /></div>
+            <div className="flex items-center gap-2"><Linkedin size={14} className="text-zinc-500" /><input type="text" placeholder="LinkedIn URL" value={formData.socialLinks.linkedin} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, linkedin: e.target.value }})} className={cn(inputClass, "flex-1")} /></div>
+            <div className="flex items-center gap-2"><Globe size={14} className="text-zinc-500" /><input type="text" placeholder="Personal Website" value={formData.socialLinks.website} onChange={(e) => setFormData({...formData, socialLinks: { ...formData.socialLinks, website: e.target.value }})} className={cn(inputClass, "flex-1")} /></div>
           </div>
         </form>
-
-        <div className="p-4 border-t border-[#ffffff08] flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-zinc-500 hover:text-white transition-colors">Cancel</button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium flex items-center gap-2 transition-all disabled:opacity-50"
-          >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            Save Changes
+        <div className="p-4 border-t border-zinc-800 flex justify-end gap-2 bg-zinc-950/50">
+          <button onClick={onClose} className="px-4 py-1.5 text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50">
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
           </button>
         </div>
       </div>

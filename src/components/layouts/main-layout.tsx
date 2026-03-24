@@ -58,8 +58,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <span className="font-semibold text-white">NeetCode</span>
         </div>
 
-        {/* Background Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+        {/* Premium Deep Radial Background */}
+        <div className="absolute inset-0 bg-zinc-950">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.1),rgba(255,255,255,0))]" />
+        </div>
 
         {/* Content Scroll Area */}
         <ScrollArea className="flex-1 scrollbar-none">

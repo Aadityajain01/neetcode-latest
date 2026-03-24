@@ -2,344 +2,299 @@
 
 import React, { useEffect, useState } from "react";
 import { ActivityCalendar } from "react-activity-calendar";
-import { 
+import { useQuery } from "@tanstack/react-query";
+import {
   MapPin, Calendar, Github, Linkedin, Globe, Twitter,
-  Flame, Trophy, Target, Zap, Loader2, Users, Crown, ChevronRight, Hash, ArrowLeft
+  Flame, Trophy, Target, Zap, Loader2, Users, Crown,
+  ChevronRight, Hash, TrendingUp, Send, BarChart3, Activity, ArrowLeft
 } from "lucide-react";
-import { format } from "date-fns";
-import { useRouter, useParams } from "next/navigation"; // 1. Import useParams
+import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
+import { useRouter, useParams } from "next/navigation";
 import { profileApi } from "@/lib/api-modules/profile.api";
 import { problemApi } from "@/lib/api-modules";
-import MainLayout from "@/components/layouts/main-layout"; 
+import MainLayout from "@/components/layouts/main-layout";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ResponsiveContainer, Tooltip
+} from 'recharts';
 
-// --- TYPES (Same as your main profile) ---
-interface SocialLinks {
-  github?: string;
-  linkedin?: string;
-  website?: string;
-  twitter?: string;
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface SocialLinks { github?: string; linkedin?: string; website?: string; twitter?: string; }
+interface UserDetails { _id: string; displayName?: string; username?: string; email: string; avatarUrl?: string; bio?: string; socialLinks?: SocialLinks; createdAt: string; }
+interface ProfileStats { score: number; rank: number; totalSubmissions: number; solvedBreakdown: { easy: number; medium: number; hard: number; total: number; }; mcqSolvedBreakdown?: { easy: number; medium: number; hard: number; total: number; }; }
+interface ActivityData { heatmap: Array<{ _id: string; count: number }>; recent: Array<{ _id: string; problemId: { title: string; difficulty: string; slug: string }; status: string; createdAt: string; }>; }
+interface Community { id: string; name: string; role: string; }
+interface ProfileResponse { details: UserDetails; stats: ProfileStats; activity: ActivityData; communities: Community[]; }
 
-interface UserDetails {
-  _id: string;
-  displayName?: string;
-  username?: string;
-  email: string;
-  avatarUrl?: string;
-  bio?: string;
-  socialLinks?: SocialLinks;
-  createdAt: string;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const generateFullYearData = (backendData: Array<{ _id: string; count: number }>) => {
+  const today = new Date();
+  const start = startOfYear(today);
+  const end = endOfYear(today);
+  const dataMap = new Map<string, number>();
+  backendData.forEach(item => dataMap.set(item._id, item.count));
+  return eachDayOfInterval({ start, end }).map(day => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const count = dataMap.get(dateStr) || 0;
+    let level = 0;
+    if (count >= 1) level = 1;
+    if (count > 1) level = 2;
+    if (count > 3) level = 3;
+    if (count > 6) level = 4;
+    return { date: dateStr, count, level };
+  });
+};
 
-interface ProfileStats {
-  score: number;
-  rank: number;
-  totalSubmissions: number;
-  solvedBreakdown: {
-    easy: number;
-    medium: number;
-    hard: number;
-    total: number;
-  };
-  mcqSolvedBreakdown?: {
-    easy: number;
-    medium: number;
-    hard: number;
-    total: number;
-  };
-}
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs shadow-xl">
+        <p className="font-bold text-zinc-300">{payload[0].payload.subject}</p>
+        <p className="text-emerald-400 font-mono mt-1">DSA Solved: {payload[0].value}</p>
+        {payload[1] && <p className="text-purple-400 font-mono">MCQ Solved: {payload[1].value}</p>}
+      </div>
+    );
+  }
+  return null;
+};
 
-interface ActivityData {
-  heatmap: Array<{ _id: string; count: number }>;
-  recent: Array<{
-    _id: string;
-    problemId: { title: string; difficulty: string; slug: string };
-    status: string;
-    createdAt: string;
-  }>;
-}
-
-interface Community {
-  id: string;
-  name: string;
-  role: string;
-}
-
-interface ProfileResponse {
-  details: UserDetails;
-  stats: ProfileStats;
-  activity: ActivityData;
-  communities: Community[];
-}
-
-// --- PUBLIC PROFILE PAGE COMPONENT ---
+// ─── Public Profile Page ──────────────────────────────────────────────────────
 export default function PublicProfilePage() {
   const router = useRouter();
-  const params = useParams(); // 2. Get the ID from the URL
+  const params = useParams();
   const { initialized, isLoading: authLoading, isAuthenticated } = useAuthStore();
-  
-  // params.id might be an array or string, force it to string
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [data, setData] = useState<ProfileResponse | null>(null);
   const [dsaCounts, setDsaCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Fetch Data using ID
   useEffect(() => {
     const fetchProfile = async () => {
       if (!initialized || authLoading) return;
-      if (!isAuthenticated) {
-        router.push("/login");
-        return;
-      }
+      if (!isAuthenticated) { router.push("/login"); return; }
       if (!userId) return;
 
       try {
         setLoading(true);
-        // 3. THIS IS THE KEY FIX: Use getProfileById(userId) instead of getMyProfile()
         const [res, dsaCountsRes] = await Promise.all([
           profileApi.getProfileById(userId),
           problemApi.getCounts({ type: "dsa" }),
         ]);
         
-        // Note: Check your API response structure. 
-        // If your backend returns { profile: ... }, use res.data.profile
-        // If your backend returns the object directly, use res.data
-        const json = res.data; 
+        const json = res.data;
+        if (json.profile) setData(json.profile);
+        else setData(json as unknown as ProfileResponse);
         
-        if (json.profile) {
-          setData(json.profile);
-        } else {
-           // Fallback if structure is different
-           setData(json as unknown as ProfileResponse); 
-        }
         setDsaCounts(dsaCountsRes);
-
       } catch (error) {
         console.error("Failed to load profile", error);
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
-
     fetchProfile();
   }, [userId, initialized, authLoading, isAuthenticated, router]);
 
-  // --- DERIVED STATE ---
-  const myCommunities = data?.communities.filter(c => 
-    c.role.toUpperCase() === 'OWNER' || c.role.toUpperCase() === 'ADMIN'
-  ) || [];
-  
-  const joinedCommunities = data?.communities.filter(c => 
-    c.role.toUpperCase() !== 'OWNER' && c.role.toUpperCase() !== 'ADMIN'
-  ) || [];
+  const myCommunities = data?.communities.filter(c => ['OWNER', 'ADMIN'].includes(c.role.toUpperCase())) || [];
+  const joinedCommunities = data?.communities.filter(c => !['OWNER', 'ADMIN'].includes(c.role.toUpperCase())) || [];
+  const calendarData = data ? generateFullYearData(data.activity.heatmap) : [];
 
-  const calendarData = data?.activity.heatmap.map((item) => {
-     let level = 0;
-     if (item.count === 0) level = 0;
-     else if (item.count <= 2) level = 1;
-     else if (item.count <= 5) level = 2;
-     else if (item.count <= 10) level = 3;
-     else level = 4;
-
-     return {
-       date: item._id, 
-       count: item.count,
-       level: level
-     };
-  }) || [];
-
-  const defaultCalendarData = [
-    { date: format(new Date(), 'yyyy-01-01'), count: 0, level: 0 },
-    { date: format(new Date(), 'yyyy-12-31'), count: 0, level: 0 }
-  ];
-
-  const handleCommunityClick = (id: string) => {
-    router.push(`/communities/${id}`);
-  };
+  const radarData = data ? [
+    { subject: 'Easy', DSA: data.stats.solvedBreakdown.easy, MCQ: data.stats.mcqSolvedBreakdown?.easy || 0, fullMark: Math.max(dsaCounts.easy, 1) },
+    { subject: 'Medium', DSA: data.stats.solvedBreakdown.medium, MCQ: data.stats.mcqSolvedBreakdown?.medium || 0, fullMark: Math.max(dsaCounts.medium, 1) },
+    { subject: 'Hard', DSA: data.stats.solvedBreakdown.hard, MCQ: data.stats.mcqSolvedBreakdown?.hard || 0, fullMark: Math.max(dsaCounts.hard, 1) },
+  ] : [];
 
   return (
     <MainLayout>
-      <div className="text-gray-200 font-sans pb-20">
-        
-        {/* Loading State */}
+      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4">
+
+        {/* Back Button */}
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4 text-xs font-bold uppercase tracking-widest outline-none">
+          <ArrowLeft size={14} /> Back
+        </button>
+
         {loading && (
-          <div className="min-h-[60vh] flex items-center justify-center text-emerald-500">
-            <Loader2 className="w-8 h-8 animate-spin" />
+          <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <p className="text-xs text-zinc-500 font-medium tracking-widest uppercase">Fetching Profile</p>
           </div>
         )}
 
-        {/* Error State */}
         {!loading && !data && (
-           <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-             <div className="text-gray-400 text-lg">User not found</div>
-             <button onClick={() => router.back()} className="text-emerald-500 hover:underline">Go Back</button>
-           </div>
+          <div className="text-center mt-20 text-zinc-500 font-mono">USER NOT FOUND 404</div>
         )}
 
-        {/* Profile Content */}
         {!loading && data && (
-          <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8 px-4">
-            
-            {/* --- HEADER --- */}
-            {/* Added a Back Button for better navigation */}
-            <button onClick={() => router.back()} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-[5px]">
-                <ArrowLeft size={16} />
-            </button>
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-800 pb-8">
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 p-1 shadow-2xl shadow-emerald-500/20">
-                  <div className="w-full h-full rounded-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
-                    {data.details.avatarUrl ? (
-                      <img src={data.details.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-4xl font-bold text-white">
+            {/* ── Header ──────────────────────────────────────────── */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-white/5">
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[2px] shadow-lg shadow-emerald-500/10">
+                  <div className="w-full h-full rounded-[14px] bg-zinc-950 flex items-center justify-center overflow-hidden">
+                    <Avatar className="w-full h-full rounded-none">
+                      <AvatarImage src={data.details.avatarUrl} className="object-cover" />
+                      <AvatarFallback className="text-3xl font-bold text-emerald-400 bg-zinc-950 w-full h-full flex items-center justify-center">
                         {data.details.displayName?.[0]?.toUpperCase() || "U"}
-                      </span>
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
+                    {data.details.displayName || "Anonymous User"}
+                  </h1>
+                  <p className="text-sm text-zinc-500 font-medium">@{data.details.username || data.details.email.split('@')[0]}</p>
+                  <div className="flex items-center gap-1.5 mt-2 px-2 py-0.5 w-fit rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+                    <Zap size={10} fill="currentColor" /> Pro Member
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Top Core Stats Row ──────────────────────────────────────── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MinimalStatCard icon={<Trophy className="text-yellow-400" size={16} />} label="Global Rank" value={`#${data.stats.rank}`} />
+              <MinimalStatCard icon={<TrendingUp className="text-emerald-400" size={16} />} label="Total Score" value={data.stats.score} />
+              <MinimalStatCard icon={<Target className="text-blue-400" size={16} />} label="Total Solved" value={data.stats.solvedBreakdown.total} />
+              <MinimalStatCard icon={<Flame className="text-orange-400" size={16} />} label="Day Streak" value="0" />
+            </div>
+
+            {/* ── Bento Grid ──────────────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+              {/* LEFT COLUMN (4 cols) */}
+              <div className="md:col-span-4 space-y-6">
+
+                {/* Bio Card */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
+                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <MapPin size={12} className="text-emerald-500" /> About
+                  </h3>
+                  <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    {data.details.bio || "No biography provided."}
+                  </p>
+                  <div className="mt-5 pt-4 border-t border-zinc-800/50 space-y-2">
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+                      <Calendar size={12} /> Joined {format(new Date(data.details.createdAt), "MMM yyyy")}
+                    </div>
+                    {data.details.socialLinks?.github && (
+                      <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><Github size={12} /> GitHub</a>
+                    )}
+                    {data.details.socialLinks?.linkedin && (
+                      <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><Linkedin size={12} /> LinkedIn</a>
+                    )}
+                    {data.details.socialLinks?.twitter && (
+                      <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><Twitter size={12} /> Twitter</a>
+                    )}
+                    {data.details.socialLinks?.website && (
+                      <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-colors text-xs font-medium"><Globe size={12} /> Website</a>
                     )}
                   </div>
                 </div>
-                
-                <div className="space-y-1">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                    {data.details.displayName || "Anonymous User"}
-                  </h1>
-                  <p className="text-lg text-gray-400 font-medium">@{data.details.username || "user"}</p>
-                  <div className="flex items-center gap-2 pt-2 text-sm text-emerald-400">
-                      <Zap size={14} fill="currentColor" /> 
-                      <span>Pro Member</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* REMOVED: Edit Button (Since we are viewing someone else) */}
-            </div>
-
-            {/* --- BENTO GRID --- */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-
-              {/* LEFT COLUMN (4 spans) */}
-              <div className="md:col-span-4 space-y-6">
-                
-                {/* Bio Card */}
-                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                   <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                     <MapPin size={14} className="text-emerald-500" /> About Me
-                   </h3>
-                   <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">
-                     {data.details.bio || "No bio added yet."}
-                   </p>
-                   
-                   <div className="mt-6 pt-6 border-t border-gray-800/60 space-y-3">
-                     <div className="flex items-center gap-3 text-gray-500 text-sm">
-                       <Calendar size={15} /> Joined {format(new Date(data.details.createdAt), "MMMM yyyy")}
-                     </div>
-                     {data.details.socialLinks?.github && (
-                       <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
-                         <Github size={15} /> GitHub
-                       </a>
-                     )}
-                     {data.details.socialLinks?.linkedin && (
-                       <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors text-sm">
-                         <Linkedin size={15} /> LinkedIn
-                       </a>
-                     )}
-                     {data.details.socialLinks?.twitter && (
-                       <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-sky-400 transition-colors text-sm">
-                         <Twitter size={15} /> Twitter
-                       </a>
-                     )}
-                     {data.details.socialLinks?.website && (
-                       <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                         <Globe size={15} /> Website
-                       </a>
-                     )}
-                   </div>
-                </div>
-
-                {/* Communities Section */}
-                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl overflow-hidden flex flex-col">
-                  {/* Created Communities */}
-                  <div className="p-5 border-b border-gray-800/60">
-                    <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Crown size={14} /> Created by user
+                {/* Communities Card */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col">
+                  <div className="p-4 border-b border-zinc-800/50">
+                    <h3 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Crown size={12} /> Created
                     </h3>
                     <div className="space-y-1">
                       {myCommunities.length > 0 ? myCommunities.map((c) => (
-                        <CommunityItem key={c.id} community={c} onClick={() => handleCommunityClick(c.id)} />
-                      )) : (
-                        <div className="text-gray-600 text-xs py-2 italic text-center">No communities created.</div>
-                      )}
+                         <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
+                      )) : <div className="text-zinc-600 text-xs py-2 italic text-center">No created communities.</div>}
                     </div>
                   </div>
-                  {/* Joined Communities */}
-                  <div className="p-5">
-                    <h3 className="text-sm font-semibold text-blue-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Users size={14} /> Joined
+                  <div className="p-4">
+                    <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Users size={12} /> Joined
                     </h3>
                     <div className="space-y-1">
                       {joinedCommunities.length > 0 ? joinedCommunities.map((c) => (
-                        <CommunityItem key={c.id} community={c} onClick={() => handleCommunityClick(c.id)} />
-                      )) : (
-                        <div className="text-gray-600 text-xs py-2 italic text-center">No communities joined.</div>
-                      )}
+                         <CommunityItem key={c.id} community={c} onClick={() => router.push(`/communities/${c.id}`)} />
+                      )) : <div className="text-zinc-600 text-xs py-2 italic text-center">No joined communities.</div>}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT COLUMN (8 spans) */}
+              {/* RIGHT COLUMN (8 cols) */}
               <div className="md:col-span-8 space-y-6">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={<Trophy className="text-yellow-500" size={20} />} label="Global Rank" value={`#${data.stats.rank}`} />
-                  <StatCard icon={<Zap className="text-emerald-500" size={20} />} label="Total Score" value={data.stats.score} />
-                  <StatCard icon={<Target className="text-blue-500" size={20} />} label="Solved" value={data.stats.solvedBreakdown.total} />
-                  <StatCard icon={<Flame className="text-orange-500" size={20} />} label="Streak" value="0" />
-                </div>
 
-                {/* Progress Bars */}
-                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-white mb-6">Solving Stats</h3>
-                  <div className="space-y-5">
-                    <DifficultyBar label="Easy" count={data.stats.solvedBreakdown.easy} total={dsaCounts.easy} color="bg-emerald-500" bg="bg-emerald-500/10" />
-                    <DifficultyBar label="Medium" count={data.stats.solvedBreakdown.medium} total={dsaCounts.medium} color="bg-yellow-500" bg="bg-yellow-500/10" />
-                    <DifficultyBar label="Hard" count={data.stats.solvedBreakdown.hard} total={dsaCounts.hard} color="bg-red-500" bg="bg-red-500/10" />
+                {/* ── Advanced Proficiency Radar ───────────────────── */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 flex flex-col md:flex-row items-center gap-6">
+                  
+                  {/* Chart Container */}
+                  <div className="w-full md:w-1/2 h-56 relative group">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                        <PolarGrid stroke="#27272a" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 700 }} />
+                        <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+                        <Radar name="DSA" dataKey="DSA" stroke="#10b981" fill="#10b981" fillOpacity={0.2} strokeWidth={2} />
+                        <Radar name="MCQ" dataKey="MCQ" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Detailed Breakdowns */}
+                  <div className="flex-1 w-full space-y-4">
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                      <Activity size={12} className="text-emerald-500" /> Proficiency Matrix
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                       <CompactDiffCard label="Easy" dsa={data.stats.solvedBreakdown.easy} mcq={data.stats.mcqSolvedBreakdown?.easy || 0} color="text-emerald-400" />
+                       <CompactDiffCard label="Medium" dsa={data.stats.solvedBreakdown.medium} mcq={data.stats.mcqSolvedBreakdown?.medium || 0} color="text-amber-400" />
+                       <CompactDiffCard label="Hard" dsa={data.stats.solvedBreakdown.hard} mcq={data.stats.mcqSolvedBreakdown?.hard || 0} color="text-red-400" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-white mb-6">MCQ Solving Stats</h3>
-                  <div className="space-y-5">
-                    <DifficultyBar label="Easy" count={data.stats.mcqSolvedBreakdown?.easy || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-emerald-500" bg="bg-emerald-500/10" />
-                    <DifficultyBar label="Medium" count={data.stats.mcqSolvedBreakdown?.medium || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-yellow-500" bg="bg-yellow-500/10" />
-                    <DifficultyBar label="Hard" count={data.stats.mcqSolvedBreakdown?.hard || 0} total={data.stats.mcqSolvedBreakdown?.total || 0} color="bg-red-500" bg="bg-red-500/10" />
+                {/* Activity Heatmap */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 overflow-hidden">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                      <BarChart3 size={12} className="text-emerald-500" /> Contribution Activity
+                    </h3>
+                    <span className="text-[10px] text-zinc-600 font-mono font-bold bg-zinc-800/50 px-2 py-1 rounded-md">{new Date().getFullYear()}</span>
                   </div>
-                </div>
-
-                {/* Heatmap */}
-                <div className="bg-[#0f1115] border border-gray-800/60 rounded-xl p-6 overflow-hidden">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-semibold text-white">Activity</h3>
-                    <span className="text-xs text-gray-500">{new Date().getFullYear()}</span>
-                  </div>
-                  <div className="w-full overflow-x-auto pb-2 flex justify-center">
-                    <ActivityCalendar 
-                      data={calendarData.length > 0 ? calendarData : defaultCalendarData}
+                  <div className="flex justify-center w-full overflow-x-auto scrollbar-emerald pb-1">
+                    <ActivityCalendar
+                      data={calendarData}
                       theme={{
-                        light: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
-                        dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                        light: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
+                        dark: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
                       }}
-                      blockSize={12}
-                      blockMargin={4}
-                      fontSize={12}
+                      blockSize={11} blockMargin={3} fontSize={10} showWeekdayLabels={true}
                     />
                   </div>
                 </div>
+
+                {/* Recent Solves */}
+                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
+                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Send size={12} className="text-emerald-500" /> Recent Solves
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {data.activity.recent.slice(0, 6).map((sub, idx) => (
+                      <div key={idx} className="flex justify-between items-center px-3 py-2 bg-zinc-800/30 rounded-lg hover:bg-zinc-800/60 transition-colors border border-zinc-800/40">
+                        <div className="flex items-center gap-2 w-[70%]">
+                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
+                            sub.problemId.difficulty === 'Easy' ? 'bg-emerald-500' :
+                            sub.problemId.difficulty === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
+                          )} />
+                          <span className="text-[11px] font-semibold text-zinc-300 truncate" title={sub.problemId.title}>{sub.problemId.title}</span>
+                        </div>
+                        <span className="text-[10px] text-zinc-600 font-mono font-medium">{format(new Date(sub.createdAt), "MMM d")}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {data.activity.recent.length === 0 && <p className="text-zinc-600 text-xs text-center py-4 font-mono">NO RECENT ACTIVITY.</p>}
+                </div>
+
               </div>
             </div>
           </div>
@@ -349,50 +304,45 @@ export default function PublicProfilePage() {
   );
 }
 
-// Reuse your Helper Components
-function CommunityItem({ community, onClick }: { community: Community, onClick: () => void }) {
-    return (
-      <button 
-        onClick={onClick}
-        className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-all group border border-transparent hover:border-gray-800 text-left"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-[#1a1d24] flex items-center justify-center text-gray-500 group-hover:text-emerald-500 transition-colors">
-            <Hash size={16} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">
-              {community.name}
-            </span>
-            <span className="text-[10px] text-gray-500 font-mono uppercase">
-              {community.role}
-            </span>
-          </div>
-        </div>
-        <ChevronRight size={14} className="text-gray-600 group-hover:text-gray-300 transition-colors" />
-      </button>
-    );
-  }
-  
-  function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
-    return (
-      <div className="bg-[#0f1115] border border-gray-800/60 p-5 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-gray-700 transition-colors">
-        <div className="mb-1 p-2 bg-[#1a1d24] rounded-lg">{icon}</div>
-        <span className="text-2xl font-bold text-white tracking-tight">{value}</span>
-        <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{label}</span>
+// ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function MinimalStatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return (
+    <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-xl p-4 flex flex-col gap-1 transition-all">
+      <div className="flex justify-between items-start mb-1">
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</p>
+        <div className="p-1 rounded bg-zinc-800/50">{icon}</div>
       </div>
-    );
-  }
-  
-  function DifficultyBar({ label, count, total, color, bg }: { label: string, count: number, total: number, color: string, bg: string }) {
-    const percentage = total > 0 ? (count / total) * 100 : 0;
-    return (
-      <div className="flex items-center gap-4 group">
-        <span className="w-16 text-sm font-medium text-gray-400 group-hover:text-white transition-colors">{label}</span>
-        <div className={`flex-1 h-2 ${bg} rounded-full overflow-hidden`}>
-          <div className={`h-full ${color} rounded-full transition-all duration-500 ease-out`} style={{ width: `${percentage}%` }} />
-        </div>
-        <span className="w-10 text-sm text-gray-300 text-right font-mono">{count}</span>
+      <p className="text-2xl font-black text-white tracking-tighter">{value}</p>
+    </div>
+  );
+}
+
+function CompactDiffCard({ label, dsa, mcq, color }: { label: string; dsa: number, mcq: number, color: string }) {
+  return (
+    <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+      <span className={cn("text-[10px] font-bold uppercase tracking-widest", color)}>{label}</span>
+      <div className="mt-2 text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
+        <span><span className="text-emerald-400 font-bold">{dsa}</span> <span className="text-[8px] uppercase">DSA</span></span>
       </div>
-    );
-  }
+      <div className="text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
+        <span><span className="text-purple-400 font-bold">{mcq}</span> <span className="text-[8px] uppercase">MCQ</span></span>
+      </div>
+    </div>
+  );
+}
+
+function CommunityItem({ community, onClick }: { community: Community; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-zinc-800/50 transition-all group text-left">
+      <div className="flex items-center gap-2">
+        <div className="text-zinc-600 group-hover:text-emerald-500 transition-colors"><Hash size={12} /></div>
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors">{community.name}</span>
+          <span className="text-[8px] text-zinc-600 font-mono uppercase">{community.role}</span>
+        </div>
+      </div>
+      <ChevronRight size={10} className="text-zinc-700 group-hover:text-zinc-400 transition-colors" />
+    </button>
+  );
+}
