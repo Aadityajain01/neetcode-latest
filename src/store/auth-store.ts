@@ -69,14 +69,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }));
 
-// --------------------------------------------------
-// 🔐 GLOBAL AUTH LISTENER
-// Firebase persists its own session in IndexedDB and fires onAuthStateChanged
-// on every page load when a session exists.
-//
-// Restore flow (in priority order):
-//   1. Session cookie (Redis) → instant restore, no Firebase Admin roundtrip
-//   2. Firebase token → full backend verification + new session created
+// Global auth listener: restore from Firebase persisted auth state and
+// sync the backend user via token-based login.
 onAuthStateChanged(auth, async (firebaseUser) => {
   const store = useAuthStore.getState();
   store.setLoading(true);
@@ -137,25 +131,6 @@ onAuthStateChanged(auth, async (firebaseUser) => {
   try {
     const { authApi } = await import("@/lib/api-modules");
 
-    // ── Fast path: restore from server-side session cookie ─────────────────
-    // The session was created at login time and survives page refreshes.
-    // No Firebase Admin SDK roundtrip needed.
-    try {
-      const sessionRes = await authApi.getSession();
-      if (sessionRes?.user) {
-        console.info("[AUTH_CHECKPOINT] LOGIN_SUCCESS: source=session_restore", {
-          userId: sessionRes.user.id,
-          email: sessionRes.user.email,
-        });
-        store.setUser(sessionRes.user);
-        store.setLoading(false);
-        return;
-      }
-    } catch {
-      // Session expired or not found — fall through to full verification
-    }
-
-    // ── Fallback: verify Firebase token and create a new session ───────────
     try {
       const res = await authApi.login(token);
       console.info("[AUTH_CHECKPOINT] LOGIN_SUCCESS: source=token_login", {

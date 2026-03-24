@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layouts/main-layout";
-import { mcqApi, MCQ } from "@/lib/api-modules";
+import { mcqApi, problemApi, MCQ, Problem } from "@/lib/api-modules";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Code2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,6 +17,10 @@ type LanguageMeta = {
 };
 
 const ITEMS_PER_PAGE = 5;
+
+function normalizeLanguage(value: string): string {
+  return value.trim().toLowerCase();
+}
 
 export default function PracticeLanguagePage() {
   const router = useRouter();
@@ -36,19 +40,51 @@ export default function PracticeLanguagePage() {
   const fetchLanguages = async () => {
     try {
       setLoading(true);
-      const data = await mcqApi.getMCQs({ limit: 1000 });
+      const [mcqMetaRes, mcqListRes, dsaProblemsRes, practiceProblemsRes] = await Promise.all([
+        mcqApi.getMeta(),
+        mcqApi.getMCQs({ limit: 2000 }),
+        problemApi.getProblems({ type: "dsa", limit: 2000 }),
+        problemApi.getProblems({ type: "practice", limit: 2000 }),
+      ]);
+
       const map = new Map<string, LanguageMeta>();
 
-      (data.mcqs || []).forEach((mcq: MCQ) => {
-        const lang = mcq.language.toLowerCase();
+      const ensureLanguage = (lang: string) => {
+        const normalized = normalizeLanguage(lang);
+        if (!normalized) return;
+
+        if (!map.has(normalized)) {
+          map.set(normalized, {
+            name: normalized,
+            difficulties: new Set(),
+            tags: new Set(),
+          });
+        }
+      };
+
+      (mcqMetaRes.data.languages || []).forEach((lang) => {
+        ensureLanguage(lang);
+      });
+
+      (mcqListRes.mcqs || []).forEach((mcq: MCQ) => {
+        const lang = normalizeLanguage(mcq.language);
         if (!map.has(lang)) {
           map.set(lang, { name: lang, difficulties: new Set(), tags: new Set() });
         }
         map.get(lang)!.difficulties.add(mcq.difficulty);
         mcq.tags?.forEach((t) => map.get(lang)!.tags.add(t));
       });
+
+      const addProblemLanguages = (problem: Problem) => {
+        (problem.languages || []).forEach((lang) => {
+          ensureLanguage(lang);
+        });
+      };
+
+      (dsaProblemsRes.problems || []).forEach(addProblemLanguages);
+      (practiceProblemsRes.problems || []).forEach(addProblemLanguages);
       
-      const langs = Array.from(map.values());
+      const langs = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
       setLanguages(langs);
       
       // Initialize default difficulty 'all' for each language
@@ -140,8 +176,8 @@ export default function PracticeLanguagePage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for language searching"
-            className="pl-12 h-14 bg-zinc-900/50 border-zinc-800 text-zinc-100 rounded-2xl focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-lg"
+            placeholder="Search languages"
+            className="pl-12 h-14 bg-zinc-900/60 border-zinc-800 text-zinc-100 rounded-2xl focus:ring-zinc-600 focus:border-zinc-600 transition-all text-lg"
           />
         </div>
 
@@ -150,11 +186,11 @@ export default function PracticeLanguagePage() {
           {visibleLanguages.map((lang) => (
             <div
               key={lang.name}
-              className="group flex flex-col md:flex-row items-center justify-between p-6 bg-zinc-900/30 border border-zinc-800/50 rounded-2xl hover:bg-zinc-900 hover:border-zinc-700 transition-all gap-4"
+                className="group flex flex-col md:flex-row items-center justify-between p-6 bg-zinc-900/45 border border-zinc-800/70 rounded-2xl hover:bg-zinc-900/70 hover:border-zinc-700 transition-all gap-4"
             >
               <div className="flex items-center gap-4 w-full md:w-1/3">
-                 <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center border border-zinc-700 group-hover:border-emerald-500/30">
-                    <Code2 className="h-5 w-5 text-zinc-400 group-hover:text-emerald-400 transition-colors" />
+                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-zinc-900/90 flex items-center justify-center border border-zinc-700">
+                    <Code2 className="h-5 w-5 text-zinc-400 transition-colors" />
                  </div>
                  <h3 className="text-xl font-bold text-white capitalize">{lang.name}</h3>
               </div>

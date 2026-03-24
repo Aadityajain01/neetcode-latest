@@ -31,6 +31,13 @@ export interface UserStats {
   rank: number;
 }
 
+export interface DashboardPayload {
+  stats: UserStats;
+  totalProblems: number;
+  dsaCounts: { easy: number; medium: number; hard: number; total: number };
+  mcqCounts: { easy: number; medium: number; hard: number; total: number };
+}
+
 export const userApi = {
   getMe: async () => {
     const response = await api.get<{ user: User }>('/users/me');
@@ -51,6 +58,11 @@ export const userApi = {
     const url = userId ? `/users/${userId}/stats` : '/users/me/stats';
     const response = await api.get<{ stats: UserStats }>(url);
     return response.data.stats;
+  },
+
+  getDashboard: async () => {
+    const response = await api.get<DashboardPayload>('/users/me/dashboard');
+    return response.data;
   },
 
 // api-modules/user.api.ts

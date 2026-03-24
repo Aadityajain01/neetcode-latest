@@ -116,40 +116,42 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1100px] flex-col px-3 py-3 sm:px-5 sm:py-5">
-      <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-[24px] border border-zinc-800 bg-black p-4 sm:p-6">
-        <div className="rounded-[20px] border border-zinc-800 bg-zinc-950 p-4">
-          <h2 className="text-xl font-semibold text-white">{community?.name}</h2>
-          <p className="mt-1 text-sm text-zinc-500">Community settings and member management.</p>
-        </div>
+    <div className="flex w-full flex-col px-4 py-6 sm:px-8 max-w-4xl mx-auto h-full overflow-y-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-[#e9edef]">{community?.name} Settings</h2>
+        <p className="mt-1 text-[#8696a0]">Manage community details and members</p>
+      </div>
 
+      <div className="flex flex-col gap-6">
         {isAdmin && (
-          <div className="rounded-[20px] border border-zinc-800 bg-zinc-950 p-4">
-            <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl bg-[#111b21] p-5 shadow-sm border border-transparent hover:border-[#2a3942] transition-colors">
+            <h3 className="text-lg font-semibold text-[#e9edef] mb-4">General Info</h3>
+            <div className="grid gap-5 lg:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-zinc-300">Community Name</Label>
+                <Label className="text-[#aebac1]">Community Name</Label>
                 <Input
                   value={form.name}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, name: event.target.value }))
                   }
-                  className="rounded-sm border-zinc-800 bg-black"
+                  className="rounded-lg border-none bg-[#202c33] text-[#d1d7db] h-10 focus-visible:ring-0"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-zinc-300">Description</Label>
+                <Label className="text-[#aebac1]">Description</Label>
                 <Textarea
                   value={form.description}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, description: event.target.value }))
                   }
-                  className="min-h-24 rounded-sm border-zinc-800 bg-black"
+                  className="min-h-24 rounded-lg border-none bg-[#202c33] text-[#d1d7db] resize-none focus-visible:ring-0"
                 />
               </div>
             </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <h3 className="text-lg font-semibold text-[#e9edef] mt-8 mb-4">Permissions</h3>
+            <div className="grid gap-4 lg:grid-cols-2">
               <ToggleCard
                 label="Allow chat"
                 description="If disabled, only admins can send messages."
@@ -168,35 +170,35 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-6 flex justify-end">
               <Button
                 onClick={handleSave}
                 disabled={loading}
-                className="bg-emerald-600 text-white hover:bg-emerald-700"
+                className="bg-[#00a884] text-[#111b21] font-semibold hover:bg-[#029074] rounded-full px-6 shadow-none border-0"
               >
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Save Settings
+                Save Changes
               </Button>
             </div>
           </div>
         )}
 
-        <div className="min-h-0 flex-1 rounded-[20px] border border-zinc-800 bg-zinc-950">
-          <div className="border-b border-zinc-800 px-4 py-4">
-            <h3 className="text-lg font-semibold text-white">Members</h3>
+        <div className="rounded-2xl bg-[#111b21] shadow-sm border border-transparent flex flex-col min-h-[300px]">
+          <div className="border-b border-[#202c33] px-5 py-4 shrink-0">
+            <h3 className="text-lg font-semibold text-[#e9edef]">Members</h3>
           </div>
 
-          <div className="min-h-0 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             {membersLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+              <div className="flex h-full items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-[#00a884]" />
               </div>
             ) : members.length === 0 ? (
-              <div className="py-16 text-center text-sm text-zinc-500">
+              <div className="py-16 text-center text-sm text-[#8696a0]">
                 No members found.
               </div>
             ) : (
-              <div className="divide-y divide-zinc-800">
+              <div className="divide-y divide-[#202c33]">
                 {members.map((member) => {
                   const userData = member.userId as any;
                   const isUserOwner = member.role === "owner";
@@ -206,32 +208,34 @@ export default function SettingsPage() {
                   return (
                     <div
                       key={member._id}
-                      className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between hover:bg-[#202c33]/30 transition-colors"
                     >
                       <Link href={`/profile/${userData?._id || ""}`} className="min-w-0">
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              "flex h-10 w-10 items-center justify-center rounded-sm border text-sm font-semibold",
+                              "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold shadow-sm",
                               isUserOwner
-                                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                                ? "bg-amber-500/10 text-amber-500"
                                 : isUserAdmin
-                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                                  : "border-zinc-700 bg-black text-zinc-300"
+                                  ? "bg-emerald-500/10 text-emerald-500"
+                                  : "bg-[#202c33] text-[#aebac1]"
                             )}
                           >
                             {(userData?.displayName?.[0] || userData?.email?.[0] || "?").toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="truncate text-sm font-medium text-white">
-                                {userData?.displayName || "Unknown"}
-                              </p>
-                              {isUserOwner && <Crown className="h-3.5 w-3.5 text-amber-300" />}
-                              {isUserAdmin && <Shield className="h-3.5 w-3.5 text-emerald-300" />}
-                              {member.isMuted && <MicOff className="h-3.5 w-3.5 text-red-300" />}
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <p className="truncate text-[15px] font-medium text-[#e9edef]">
+                                  {userData?.displayName || "Unknown"}
+                                </p>
+                                {isUserOwner && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                                {isUserAdmin && <Shield className="h-3.5 w-3.5 text-emerald-500" />}
+                                {member.isMuted && <MicOff className="h-3.5 w-3.5 text-red-500" />}
+                              </div>
+                              <p className="text-[13px] text-[#8696a0] capitalize">{member.role}</p>
                             </div>
-                            <p className="text-xs text-zinc-500">{member.role}</p>
                           </div>
                         </div>
                       </Link>
@@ -239,10 +243,10 @@ export default function SettingsPage() {
                       {canManage && (
                         <div className="flex items-center gap-2">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleMuteToggle(userData._id, !!member.isMuted)}
-                            className="rounded-sm border-zinc-700 bg-black text-white hover:bg-zinc-900"
+                            className="rounded-lg h-8 text-[#8696a0] hover:bg-[#202c33] hover:text-[#d1d7db]"
                           >
                             {member.isMuted ? (
                               <Mic className="mr-2 h-4 w-4" />
@@ -252,10 +256,10 @@ export default function SettingsPage() {
                             {member.isMuted ? "Unmute" : "Mute"}
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveMember(userData._id)}
-                            className="rounded-sm border-red-500/30 bg-red-950/20 text-red-300 hover:bg-red-950/40"
+                            className="rounded-lg h-8 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                           >
                             <UserX className="mr-2 h-4 w-4" />
                             Remove
@@ -271,36 +275,35 @@ export default function SettingsPage() {
         </div>
 
         {isOwner && (
-          <div className="rounded-[20px] border border-red-500/20 bg-red-950/10 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-red-300">Danger Zone</h3>
-                <p className="text-sm text-zinc-500">
+                <h3 className="text-lg font-semibold text-red-400">Danger Zone</h3>
+                <p className="text-sm text-[#8696a0]">
                   Deleting the community removes the group and its test records.
                 </p>
               </div>
 
               <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-red-600 text-white hover:bg-red-700">
+                  <Button className="bg-red-500/10 text-red-400 hover:bg-red-500/20 font-semibold rounded-full px-6 shadow-none border-0">
                     Delete Community
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
+                <DialogContent className="border-[#2a3942] bg-[#233138] text-[#e9edef]">
                   <DialogHeader>
                     <DialogTitle>Delete Community?</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-[#8696a0]">
                       This action cannot be undone.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
-                    <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)}>
+                    <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="hover:bg-[#111b21] text-[#aebac1]">
                       Cancel
                     </Button>
                     <Button
-                      variant="destructive"
                       onClick={handleDelete}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-500 hover:bg-red-600 border-0 shadow-none text-white"
                     >
                       Delete
                     </Button>
@@ -327,12 +330,12 @@ function ToggleCard({
   onCheckedChange: (value: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-[16px] border border-zinc-800 bg-black p-4">
+    <div className="flex items-center justify-between rounded-xl border border-[#202c33] bg-[#0b141a]/50 p-4 hover:border-[#2a3942] transition-colors">
       <div>
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs text-zinc-500">{description}</p>
+        <p className="text-[15px] font-medium text-[#e9edef]">{label}</p>
+        <p className="text-xs text-[#8696a0] mt-0.5">{description}</p>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="data-[state=checked]:bg-[#00a884]" />
     </div>
   );
 }

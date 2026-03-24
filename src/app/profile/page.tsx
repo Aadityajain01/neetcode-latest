@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { ActivityCalendar } from "react-activity-calendar";
+import { useQuery } from "@tanstack/react-query";
 import {
   Edit, MapPin, Calendar, Github, Linkedin, Globe, Twitter,
   Flame, Trophy, Target, Zap, X, Save, Loader2, Users, Crown,
@@ -14,6 +15,7 @@ import { problemApi } from "@/lib/api-modules";
 import MainLayout from "@/components/layouts/main-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SocialLinks { github?: string; linkedin?: string; website?: string; twitter?: string; }
@@ -89,28 +91,36 @@ const generateFullYearData = (backendData: Array<{ _id: string; count: number }>
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const router = useRouter();
-  const [data, setData] = useState<ProfileResponse | null>(null);
-  const [dsaCounts, setDsaCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
-  const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const fetchProfile = async () => {
-    try {
+  const profileQuery = useQuery<{
+    data: ProfileResponse | null;
+    dsaCounts: { easy: number; medium: number; hard: number; total: number };
+  }>({
+    queryKey: ["my-profile"],
+    queryFn: async () => {
       const [profileRes, dsaCountsRes] = await Promise.all([
         profileApi.getMyProfile(),
         problemApi.getCounts({ type: "dsa" }),
       ]);
-      const json = profileRes.data;
-      if (json.profile) setData(json.profile);
-      setDsaCounts(dsaCountsRes);
-    } catch (error) {
-      console.error("Failed to load profile", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => { fetchProfile(); }, []);
+      return {
+        data: profileRes.data?.profile || null,
+        dsaCounts: dsaCountsRes,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (profileQuery.error) {
+      console.error("Failed to load profile", profileQuery.error);
+      toast.error("Failed to load profile");
+    }
+  }, [profileQuery.error]);
+
+  const data = profileQuery.data?.data ?? null;
+  const dsaCounts = profileQuery.data?.dsaCounts ?? { easy: 0, medium: 0, hard: 0, total: 0 };
+  const loading = profileQuery.isLoading;
 
   const myCommunities = data?.communities.filter(c => ['OWNER', 'ADMIN'].includes(c.role.toUpperCase())) || [];
   const joinedCommunities = data?.communities.filter(c => !['OWNER', 'ADMIN'].includes(c.role.toUpperCase())) || [];

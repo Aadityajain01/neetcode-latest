@@ -74,78 +74,80 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1100px] flex-col px-3 py-3 sm:px-5 sm:py-5">
-      <div className="flex min-h-0 flex-1 flex-col rounded-[24px] border border-zinc-800/80 bg-zinc-950/70 backdrop-blur">
-        <div className="flex flex-col gap-4 border-b border-zinc-800/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <h2 className="text-xl font-semibold text-white">Test Analytics</h2>
-            <p className="text-sm text-zinc-500">Performance overview for selected assessment</p>
-          </div>
-
-          {tests.length > 0 && (
-            <Select value={selectedTestId} onValueChange={setSelectedTestId}>
-              <SelectTrigger className="w-full rounded-sm border-zinc-700 bg-zinc-950 text-white sm:w-[260px]">
-                <SelectValue placeholder="Select test" />
-              </SelectTrigger>
-              <SelectContent className="border-zinc-800 bg-zinc-900 text-zinc-100">
-                {tests.map((test) => (
-                  <SelectItem key={test._id} value={test._id}>
-                    {test.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+    <div className="flex h-full w-full flex-col px-4 py-6 sm:px-8 max-w-5xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[#e9edef]">Test Analytics</h2>
+          <p className="text-[#8696a0] mt-1">Performance overview for selected assessment</p>
         </div>
 
+        {tests.length > 0 && (
+          <Select value={selectedTestId} onValueChange={setSelectedTestId}>
+            <SelectTrigger className="w-full rounded-lg border-none bg-[#202c33] text-[#e9edef] sm:w-[260px] h-10 shadow-sm focus:ring-0">
+              <SelectValue placeholder="Select test" />
+            </SelectTrigger>
+            <SelectContent className="border-[#2a3942] bg-[#233138] text-[#d1d7db] rounded-xl shadow-xl">
+              {tests.map((test) => (
+                <SelectItem key={test._id} value={test._id} className="hover:bg-[#111b21] focus:bg-[#111b21] cursor-pointer rounded-lg py-2">
+                  {test.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {tests.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+          <div className="flex h-full items-center justify-center text-sm text-[#8696a0]">
             No tests to analyze yet.
           </div>
         ) : dataLoading ? (
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-7 w-7 animate-spin text-emerald-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#00a884]" />
           </div>
         ) : !data?.analytics ? (
-          <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+          <div className="flex h-full items-center justify-center text-sm text-[#8696a0]">
             No students have attempted this test yet.
           </div>
         ) : (
-          <>
-            <div className="grid gap-3 border-b border-zinc-800/80 px-4 py-4 sm:grid-cols-4 sm:px-6">
+          <div className="space-y-6">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <StatCard label="Attempts" value={data.analytics.studentsAttempted} />
               <StatCard label="Avg Score" value={Math.round(data.analytics.averageScore * 10) / 10} />
               <StatCard label="Highest" value={data.analytics.highestScore} />
               <StatCard label="Lowest" value={data.analytics.lowestScore} />
             </div>
 
-            <div className="grid grid-cols-[80px_minmax(0,1fr)_90px_90px_90px] gap-3 border-b border-zinc-800 px-4 py-4 text-sm font-medium text-white sm:px-6">
-              <div>Rank</div>
-              <div>Name</div>
-              <div className="text-right">MCQ</div>
-              <div className="text-right">Code</div>
-              <div className="text-right">Total</div>
-            </div>
+            <div className="bg-[#111b21] rounded-2xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-[80px_minmax(0,1fr)_90px_90px_90px] gap-3 px-6 py-4 text-xs font-semibold tracking-wider uppercase text-[#8696a0] border-b border-[#202c33]">
+                <div>Rank</div>
+                <div>Name</div>
+                <div className="text-right">MCQ</div>
+                <div className="text-right">Code</div>
+                <div className="text-right">Total</div>
+              </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              {data.students
-                .sort((a, b) => b.totalScore - a.totalScore)
-                .map((student, index) => (
-                  <div
-                    key={student.userId?._id || index}
-                    className="grid grid-cols-[80px_minmax(0,1fr)_90px_90px_90px] gap-3 border-b border-zinc-800 px-4 py-4 text-sm sm:px-6"
-                  >
-                    <div className="text-zinc-400">#{index + 1}</div>
-                    <div className="truncate text-white">
-                      {student.userId?.displayName || "Unknown"}
+              <div className="divide-y divide-[#202c33]">
+                {data.students
+                  .sort((a, b) => b.totalScore - a.totalScore)
+                  .map((student, index) => (
+                    <div
+                      key={student.userId?._id || index}
+                      className="grid grid-cols-[80px_minmax(0,1fr)_90px_90px_90px] gap-3 items-center px-6 py-4 text-[14.5px] hover:bg-[#202c33]/50 transition-colors"
+                    >
+                      <div className="text-[#8696a0] font-medium">#{index + 1}</div>
+                      <div className="truncate text-[#e9edef] font-medium">
+                        {student.userId?.displayName || "Unknown"}
+                      </div>
+                      <div className="text-right text-[#aebac1]">{student.mcqScore}</div>
+                      <div className="text-right text-[#aebac1]">{student.programmingScore}</div>
+                      <div className="text-right font-bold text-[#00a884]">{student.totalScore}</div>
                     </div>
-                    <div className="text-right text-zinc-300">{student.mcqScore}</div>
-                    <div className="text-right text-zinc-300">{student.programmingScore}</div>
-                    <div className="text-right text-emerald-300">{student.totalScore}</div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -154,9 +156,9 @@ export default function AnalyticsPage() {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[18px] border border-zinc-800/80 bg-black/50 p-4">
-      <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+    <div className="rounded-2xl bg-[#111b21] p-5 shadow-sm border border-transparent hover:border-[#2a3942] transition-colors">
+      <div className="text-xs uppercase tracking-widest font-semibold text-[#8696a0]">{label}</div>
+      <div className="mt-2.5 text-3xl font-bold text-[#e9edef]">{value}</div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link'; // ✅ Import Link for profile clicking
 import { useAuthStore } from '@/store/auth-store';
 import { leaderboardApi, userApi, LeaderboardEntry } from '@/lib/api-modules';
@@ -23,79 +24,79 @@ export default function LeaderboardPage() {
   const { user, initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<string>('global');
-  const [communities, setCommunities] = useState<CommunityOption[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [rankingLoading, setRankingLoading] = useState(false);
-  const [myStats, setMyStats] = useState<{ rank: number; score: number } | null>(null);
+  const isAuthReady = initialized && !authLoading;
 
   useEffect(() => {
-    if (!initialized || authLoading) return;
+    if (!isAuthReady) return;
     if (!isAuthenticated) {
       router.push('/login');
-      return;
     }
-    initPage();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [isAuthReady, isAuthenticated, router]);
 
-  useEffect(() => {
-    if (initialized && isAuthenticated) {
-      fetchRankings(activeTab);
-    }
-  }, [activeTab, initialized, isAuthenticated]);
-
-  const initPage = async () => {
-    try {
-      setLoading(true);
+  const communitiesQuery = useQuery<CommunityOption[]>({
+    queryKey: ['leaderboard-communities', user?.id],
+    enabled: isAuthReady && isAuthenticated,
+    queryFn: async () => {
       const myCommunities = await userApi.getCommunities(user?.id);
-      const formatted = (myCommunities || []).map((c: any) => ({
+      return (myCommunities || []).map((c: any) => ({
         id: c.id || c._id,
-        name: c.name
+        name: c.name,
       }));
-      setCommunities(formatted);
-    } catch (error) {
-      toast.error('Failed to load community filters');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  const fetchRankings = async (scope: string) => {
-    setRankingLoading(true);
-    setLeaderboard([]);
-    setMyStats(null);
+  const rankingsQuery = useQuery<{
+    leaderboard: LeaderboardEntry[];
+    myStats: { rank: number; score: number } | null;
+  }>({
+    queryKey: ['leaderboard-rankings', user?.id, activeTab],
+    enabled: isAuthReady && isAuthenticated,
+    queryFn: async () => {
+      const listPromise =
+        activeTab === 'global'
+          ? leaderboardApi.getGlobal({ limit: 50 })
+          : leaderboardApi.getCommunity(activeTab, { limit: 50 });
 
-    try {
-      const listPromise = scope === 'global' 
-        ? leaderboardApi.getGlobal({ limit: 50 }) 
-        : leaderboardApi.getCommunity(scope, { limit: 50 });
-
-      const statsPromise = scope === 'global'
-        ? leaderboardApi.getGlobalMe().catch(() => null)
-        : leaderboardApi.getCommunityMe(scope).catch(() => null);
+      const statsPromise =
+        activeTab === 'global'
+          ? leaderboardApi.getGlobalMe().catch(() => null)
+          : leaderboardApi.getCommunityMe(activeTab).catch(() => null);
 
       const [data, stats] = await Promise.all([listPromise, statsPromise]);
 
       const processed = (data || [])
-        .filter(entry => entry.displayName !== 'Anonymous' && entry.displayName !== 'admin')
+        .filter((entry) => entry.displayName !== 'Anonymous' && entry.displayName !== 'admin')
         .slice(0, 10);
 
-      setLeaderboard(processed);
+      const myEntryInList = processed.find((entry) => entry.userId === user?.id);
+      const myStats = myEntryInList
+        ? { rank: myEntryInList.rank, score: myEntryInList.score }
+        : stats
+          ? { rank: stats.rank, score: stats.score }
+          : null;
 
-      const myEntryInList = processed.find(entry => entry.userId === user?.id);
+      return {
+        leaderboard: processed,
+        myStats,
+      };
+    },
+  });
 
-      if (myEntryInList) {
-        setMyStats({ rank: myEntryInList.rank, score: myEntryInList.score });
-      } else if (stats) {
-        setMyStats({ rank: stats.rank, score: stats.score });
-      }
-
-    } catch (error) {
-      toast.error('Could not load rankings');
-    } finally {
-      setRankingLoading(false);
+  useEffect(() => {
+    if (communitiesQuery.error) {
+      toast.error('Failed to load community filters');
     }
-  };
+  }, [communitiesQuery.error]);
+
+  useEffect(() => {
+    if (rankingsQuery.error) {
+      toast.error('Could not load rankings');
+    }
+  }, [rankingsQuery.error]);
+
+  const communities = communitiesQuery.data || [];
+  const leaderboard = rankingsQuery.data?.leaderboard || [];
+  const myStats = rankingsQuery.data?.myStats || null;
 
   const isMeInTop10 = useMemo(() => {
     return leaderboard.some(entry => entry.userId === user?.id);
@@ -185,13 +186,17 @@ export default function LeaderboardPage() {
     );
   };
 
-  if (!initialized || loading) {
+  if (!isAuthReady || (isAuthenticated && communitiesQuery.isLoading)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         <p className="text-zinc-500 text-sm animate-pulse">Loading Leaderboard...</p>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
@@ -309,7 +314,7 @@ export default function LeaderboardPage() {
 
             {/* Leaderboard List */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm min-h-[500px]">
-              {rankingLoading ? (
+              {rankingsQuery.isLoading ? (
                 <div className="h-full flex flex-col items-center justify-center min-h-[400px] gap-3">
                   <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
                   <span className="text-zinc-500 text-sm">Fetching latest scores...</span>

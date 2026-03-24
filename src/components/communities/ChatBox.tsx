@@ -4,13 +4,11 @@ import { useEffect, useState, useRef, FormEvent, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCommunity } from "./CommunityContext";
 import { useAuthStore } from "@/store/auth-store";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, ShieldAlert, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { messageApi } from "@/lib/api-modules";
-import { format } from "date-fns";
 import { TestBuilder } from "./TestBuilder";
 
 interface Message {
@@ -26,27 +24,6 @@ interface Message {
     href?: string;
     testId?: string;
   };
-}
-
-// Generate a consistent color from a string (sender name)
-function getAvatarColor(name: string): string {
-  const colors = [
-    "#10b981", // emerald
-    "#6366f1", // indigo
-    "#f59e0b", // amber
-    "#ef4444", // red
-    "#8b5cf6", // violet
-    "#ec4899", // pink
-    "#14b8a6", // teal
-    "#f97316", // orange
-    "#06b6d4", // cyan
-    "#84cc16", // lime
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
 }
 
 function formatTime(timestamp: string): string {
@@ -219,18 +196,18 @@ export function ChatBox() {
   const canCreateTest = isAdmin || community?.allowTestCreation;
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-transparent">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-950/60">
       {/* Chat Background */}
       <ScrollArea
         ref={scrollAreaRef}
         className="h-full w-full flex-1"
       >
-        <div className="p-4 space-y-1 flex flex-col min-h-full">
+        <div className="px-4 py-8 space-y-1 flex flex-col min-h-full">
           {/* Admin-only chat notice */}
           {!community?.allowUsersToChat && (
             <div className="flex justify-center my-4">
-              <div className="bg-amber-500/10 text-amber-500 text-xs px-4 py-1.5 rounded-full text-center border border-amber-500/20 flex items-center gap-1.5 backdrop-blur-sm">
-                <ShieldAlert className="w-3 h-3" /> Only admins can send
+              <div className="bg-zinc-900 text-zinc-400 text-xs px-4 py-2 rounded-lg text-center shadow-sm flex items-center gap-1.5 border border-zinc-800">
+                <ShieldAlert className="w-4 h-4" /> Only admins can send
                 messages
               </div>
             </div>
@@ -238,14 +215,14 @@ export function ChatBox() {
 
           {/* Empty state */}
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full py-20 text-zinc-600">
-              <div className="bg-zinc-800/30 rounded-full p-6 mb-4">
-                <MessageSquare className="w-12 h-12 text-zinc-600" />
+            <div className="flex flex-col items-center justify-center h-full py-20 text-zinc-400">
+              <div className="bg-zinc-900 rounded-full p-6 mb-4 shadow border border-zinc-800">
+                <MessageSquare className="w-12 h-12 text-zinc-500" />
               </div>
-              <p className="text-sm font-medium text-zinc-500">
+              <p className="text-sm font-medium text-zinc-200">
                 No messages yet
               </p>
-              <p className="text-xs text-zinc-600 mt-1">
+              <p className="text-xs mt-1">
                 Start a conversation below
               </p>
             </div>
@@ -266,11 +243,11 @@ export function ChatBox() {
               !showDate;
 
             return (
-              <div key={msg._id}>
+              <div key={msg._id} className="flex flex-col">
                 {/* Date separator */}
                 {showDate && (
                   <div className="flex justify-center my-4">
-                    <span className="bg-zinc-800/80 text-zinc-400 text-[10px] px-3 py-1 rounded-md font-medium uppercase tracking-wider backdrop-blur-sm">
+                    <span className="bg-zinc-900 text-zinc-400 text-[11px] px-3 py-1.5 rounded-lg font-medium shadow-sm border border-zinc-800">
                       {formatDateSeparator(msg.timestamp)}
                     </span>
                   </div>
@@ -279,18 +256,18 @@ export function ChatBox() {
                 {/* System message */}
                 {msg.isSystem ? (
                   <div className="flex justify-center my-3">
-                    <div className="bg-zinc-900/85 text-zinc-100 text-xs px-4 py-3 rounded-xl text-center border border-zinc-700/70 max-w-sm backdrop-blur-sm shadow-md w-full sm:w-auto">
-                      <div className="text-emerald-400 font-semibold mb-1 tracking-wide text-[11px] uppercase">
+                    <div className="bg-zinc-900 text-zinc-100 px-4 py-3 rounded-xl text-center shadow-sm max-w-sm w-full sm:w-auto border border-zinc-800">
+                      <div className="text-zinc-300 font-semibold mb-1 text-[12px] uppercase tracking-wide">
                         Community Update
                       </div>
-                      <div className="text-sm text-zinc-200">{msg.text}</div>
+                      <div className="text-[13.5px] leading-relaxed text-zinc-300 break-all [overflow-wrap:anywhere]">{msg.text}</div>
 
                       {msg.action?.type === "take_test" && (msg.action.href || msg.action.testId) && (
                         <div className="mt-3">
                           <Button
                             type="button"
                             size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4"
+                            className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 rounded-full px-5 font-semibold border-0 shadow-none"
                             onClick={() => {
                               const href = msg.action?.href || `/communities/${community?._id}/tests/${msg.action?.testId}`;
                               router.push(href);
@@ -303,99 +280,97 @@ export function ChatBox() {
                     </div>
                   </div>
                 ) : (
-                  /* User message — Minimal style */
+                  /* User message */
                   <div
-                    className={`flex items-end gap-2 ${
-                      isSameSenderAsPrev ? "mt-1" : "mt-4"
-                    } ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                    className={`flex items-end gap-2 relative ${
+                      isSameSenderAsPrev ? "mt-0.5" : "mt-2"
+                    } ${isMe ? "self-end pr-2 md:pr-10" : "self-start pl-2 md:pl-10"}`}
                   >
-                    {/* Avatar */}
-                    {!isSameSenderAsPrev && !isMe ? (
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
-                        style={{
-                          backgroundColor: getAvatarColor(msg.senderName),
-                        }}
-                      >
-                        {msg.senderName.charAt(0).toUpperCase()}
-                      </div>
-                    ) : (
-                      !isMe && <div className="w-8 shrink-0" />
-                    )}
+                    {/* Optional avatar on left for others */}
+                    {/* Removing avatar entirely to make it exactly like WhatsApp Web where group chats just show colored names */}
 
-                    {/* Bubble */}
                     <div
-                      className={`max-w-[75%] flex flex-col ${
-                        isMe ? "items-end" : "items-start"
+                      className={`relative w-fit max-w-[84vw] sm:max-w-[70vw] lg:max-w-[58vw] px-2.5 py-1.5 text-[14.5px] leading-[21px] shadow-sm flex flex-col ${
+                        isMe
+                          ? `bg-zinc-800 text-zinc-100 rounded-lg ${!isSameSenderAsPrev ? 'rounded-tr-none' : ''}`
+                          : `bg-zinc-900 text-zinc-100 rounded-lg border border-zinc-800 ${!isSameSenderAsPrev ? 'rounded-tl-none' : ''}`
                       }`}
                     >
-                      {/* Sender name — only for other users on first message in group */}
+                      {/* Name for others */}
                       {!isMe && !isSameSenderAsPrev && (
-                        <p className="text-[11px] font-medium text-zinc-400 mb-1 ml-1">
+                        <span className="text-[13px] text-zinc-300 font-medium mb-0.5 leading-tight cursor-pointer hover:underline">
                           {msg.senderName}
-                        </p>
+                        </span>
                       )}
 
-                      <div
-                        className={`relative px-4 py-2.5 text-sm leading-relaxed shadow-sm rounded-2xl ${
-                          isMe
-                            ? "bg-zinc-800 text-white"
-                            : "bg-zinc-900 border border-zinc-800 text-zinc-100"
-                        }`}
-                      >
-                        <span>{msg.text}</span>
-                        <span
-                          className={`text-[10px] ml-3 inline-block align-bottom translate-y-[2px] ${
-                            isMe ? "text-zinc-400" : "text-zinc-500"
-                          }`}
-                        >
+                      <div className="flex flex-wrap items-end justify-between gap-3 min-w-[70px]">
+                        <span className="break-all whitespace-pre-wrap [overflow-wrap:anywhere]">{msg.text}</span>
+                        <span className="text-[11px] text-zinc-400 shrink-0 float-right translate-y-1">
                           {formatTime(msg.timestamp)}
                         </span>
                       </div>
+                      
+                      {/* Tail arrow SVG for first message in block */}
+                      {!isSameSenderAsPrev && (
+                        <svg
+                          viewBox="0 0 8 13"
+                          width="8"
+                          height="13"
+                          className={`absolute top-0 ${isMe ? "text-zinc-800 -right-2" : "text-zinc-900 -left-2"}`}
+                        >
+                          {isMe ? (
+                            <path opacity="1" fill="currentColor" d="M5.188 1H0v11.193l6.467-8.625C7.526 2.156 6.958 1 5.188 1z"></path>
+                          ) : (
+                            <path opacity="1" fill="currentColor" d="M1.533 3.568L8 12.193V1H2.812C1.042 1 .474 2.156 1.533 3.568z"></path>
+                          )}
+                        </svg>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
-          <div ref={scrollRef} />
+          <div ref={scrollRef} className="h-6" />
         </div>
       </ScrollArea>
 
       {/* Input area */}
-      <div className="relative z-20 w-full shrink-0 bg-transparent p-4 sm:px-6 mb-2">
-        <div className="flex items-center gap-3 relative w-full h-full">
+      <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-3 sm:px-6 md:px-10 flex items-center justify-center">
+        <div className="flex items-center gap-3 w-full max-w-5xl">
           {canCreateTest && (
-            <div className="shrink-0">
-              <TestBuilder onTestCreated={() => {}} />
+            <div className="shrink-0 bg-transparent">
+               <TestBuilder onTestCreated={() => {}} />
             </div>
           )}
-          <form onSubmit={handleSend} className="flex-1 flex items-center relative h-12">
-          <Input
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            disabled={chatDisabled}
-            placeholder={
-              chatDisabled
-                ? "Chat is disabled for members"
-                : "Type a message..."
-            }
-            className="bg-zinc-900/40 border-zinc-800/80 focus-visible:ring-emerald-500/30 w-full text-base h-full rounded-full pl-5 pr-14 placeholder:text-zinc-500 transition-colors shadow-none"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
+          <form onSubmit={handleSend} className="flex-1 flex items-center bg-zinc-900 rounded-lg px-4 py-2 min-h-11 shadow-sm border border-zinc-800">
+            <input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              disabled={chatDisabled}
+              placeholder={
+                chatDisabled
+                  ? "Only admins can send messages"
+                  : "Type a message"
               }
-            }}
-          />
-          <Button
-            type="submit"
-            disabled={chatDisabled || !inputText.trim() || sending}
-            className="absolute right-1 top-1 h-10 w-10 shrink-0 rounded-full bg-emerald-600/20 text-emerald-500 hover:bg-emerald-600 hover:text-white transition-all shadow-none"
-          >
-            <Send className="w-4 h-4 ml-0.5" />
-          </Button>
-        </form>
+              className="bg-transparent border-none w-full text-[15px] text-zinc-200 placeholder:text-zinc-500 focus:ring-0 focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
+          </form>
+          {inputText.trim() && !chatDisabled && !sending && (
+             <Button
+               type="submit"
+               onClick={handleSend}
+               className="h-11 w-11 shrink-0 rounded-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-all shadow-none border-0 p-0 flex items-center justify-center"
+             >
+               <Send className="w-5 h-5 ml-1" />
+             </Button>
+          )}
         </div>
       </div>
     </div>

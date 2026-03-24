@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
-import { communityApi, Community } from "@/lib/api-modules";
+import { communityApi, Community, userApi } from "@/lib/api-modules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -34,11 +33,25 @@ import {
   Globe,
   Lock,
   Plus,
-  Building2,
   ArrowRight,
-  User
+  UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function normalizeDomainInput(value: string): string {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return "";
+
+  const withoutProtocol = trimmed.replace(/^https?:\/\//, "");
+  const withoutPath = withoutProtocol.split("/")[0];
+  const withoutAt = withoutPath.startsWith("@")
+    ? withoutPath.slice(1)
+    : withoutPath;
+
+  return withoutAt.includes("@")
+    ? withoutAt.split("@").pop() || ""
+    : withoutAt;
+}
 
 export default function CommunitiesPage() {
   const router = useRouter();
@@ -47,7 +60,9 @@ export default function CommunitiesPage() {
   /* -------------------- DATA STATE -------------------- */
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [joiningCommunityId, setJoiningCommunityId] = useState<string | null>(null);
 
   /* -------------------- PAGINATION & SEARCH -------------------- */
   const [search, setSearch] = useState("");
@@ -113,7 +128,18 @@ export default function CommunitiesPage() {
     try {
       setLoading(true);
 
-      const list = await communityApi.getCommunities();
+      const [list, mine] = await Promise.all([
+        communityApi.getCommunities(),
+        userApi.getCommunities(),
+      ]);
+
+      setJoinedCommunityIds(
+        new Set(
+          (mine || [])
+            .map((community: any) => community._id || community.id)
+            .filter(Boolean)
+        )
+      );
       setAllCommunities(list);
       setCommunities(list);
     } catch (err) {
@@ -136,19 +162,29 @@ export default function CommunitiesPage() {
       return;
     }
 
+    const normalizedDomain =
+      newCommunity.type === "domain_restricted"
+        ? normalizeDomainInput(newCommunity.domain)
+        : "";
+
+    if (newCommunity.type === "domain_restricted" && !normalizedDomain) {
+      toast.error("Enter a valid domain, e.g. company.com or user@company.com");
+      return;
+    }
+
     setCreateLoading(true);
     try {
-      await communityApi.createCommunity({
+      const created = await communityApi.createCommunity({
         name: newCommunity.name,
         description: newCommunity.description,
         type: newCommunity.type,
         domain:
           newCommunity.type === "domain_restricted"
-            ? newCommunity.domain
+            ? normalizedDomain
             : undefined,
       });
 
-      toast.success("Community created");
+      toast.success("Community created successfully");
       setIsCreateDialogOpen(false);
       setNewCommunity({
         name: "",
@@ -157,11 +193,42 @@ export default function CommunitiesPage() {
         domain: "",
       });
 
-      fetchCommunities();
+      await fetchCommunities();
+      router.push(`/communities/${created._id}/chat`);
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Create failed");
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const handleJoinCommunity = async (communityId: string) => {
+    if (joiningCommunityId) return;
+
+    setJoiningCommunityId(communityId);
+    try {
+      await communityApi.joinCommunity(communityId);
+      toast.success("Joined community successfully");
+
+      setJoinedCommunityIds((prev) => new Set(prev).add(communityId));
+      setAllCommunities((prev) =>
+        prev.map((community) =>
+          community._id === communityId
+            ? { ...community, memberCount: (community.memberCount || 0) + 1 }
+            : community
+        )
+      );
+      setCommunities((prev) =>
+        prev.map((community) =>
+          community._id === communityId
+            ? { ...community, memberCount: (community.memberCount || 0) + 1 }
+            : community
+        )
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to join community");
+    } finally {
+      setJoiningCommunityId(null);
     }
   };
 
@@ -262,7 +329,11 @@ export default function CommunitiesPage() {
                         })
                       }
                       className="bg-zinc-900 border-zinc-800"
+                      placeholder="company.com or user@company.com"
                     />
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Domain will be normalized automatically.
+                    </p>
                   </div>
                 )}
               </div>
@@ -298,7 +369,7 @@ export default function CommunitiesPage() {
           <div className="col-span-5">Community Name</div>
           <div className="col-span-3">Type</div>
           <div className="col-span-2">Member count</div>
-          <div className="col-span-2 text-right pr-4">View</div>
+          <div className="col-span-2 text-right pr-4">Action</div>
         </div>
 
         {/* List */}
@@ -309,7 +380,8 @@ export default function CommunitiesPage() {
         ) : paginatedCommunities.length > 0 ? (
           <div className="flex flex-col">
             {paginatedCommunities.map((c) => {
-              const owner = typeof c.ownerId === "object" ? c.ownerId : null;
+              const isJoined = joinedCommunityIds.has(c._id);
+              const isJoining = joiningCommunityId === c._id;
               return (
                 <div key={c._id} className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-zinc-800/50 hover:bg-zinc-800/20 transition items-center">
                   {/* Community Name Column */}
@@ -350,13 +422,29 @@ export default function CommunitiesPage() {
 
                   {/* View Column */}
                   <div className="col-span-12 md:col-span-2 flex md:justify-end items-center mt-2 md:mt-0">
-                    <Button 
-                      variant="outline" 
-                      className="border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white w-full md:w-24 h-9 shadow-none bg-transparent"
-                      onClick={() => router.push(`/communities/${c._id}`)}
-                    >
-                      View <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
+                    {isJoined ? (
+                      <Button
+                        className="w-full md:w-24 h-9 shadow-none bg-emerald-500 hover:bg-emerald-600 text-white"
+                        onClick={() => router.push(`/communities/${c._id}/chat`)}
+                      >
+                        Enter <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        disabled={isJoining}
+                        className="border-zinc-700 hover:bg-zinc-800 text-zinc-200 hover:text-white w-full md:w-24 h-9 shadow-none bg-transparent"
+                        onClick={() => handleJoinCommunity(c._id)}
+                      >
+                        {isJoining ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            Join <UserPlus className="ml-1 h-3 w-3" />
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               );

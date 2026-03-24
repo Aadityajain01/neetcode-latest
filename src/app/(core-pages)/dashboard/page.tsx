@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
-import { userApi, problemApi, UserStats, mcqApi } from '@/lib/api-modules';
+import { userApi, DashboardPayload } from '@/lib/api-modules/user.api';
 import MainLayout from '@/components/layouts/main-layout';
 import { toast } from 'sonner';
 import {
@@ -145,51 +146,27 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
 
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [totalProblems, setTotalProblems] = useState<number>(0);
-  const [dsaCounts, setDsaCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
-  const [mcqCounts, setMcqCounts] = useState<{ easy: number; medium: number; hard: number; total: number }>({ easy: 0, medium: 0, hard: 0, total: 0 });
-  const [loading, setLoading] = useState(true);
+  const isAuthReady = initialized && !authLoading;
 
   useEffect(() => {
-    if (!initialized || authLoading) return;
+    if (!isAuthReady) return;
     if (!isAuthenticated) {
       router.push('/login');
-      return;
     }
-    fetchData();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [isAuthReady, isAuthenticated, router]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [statsData, problemsData, mcqCountsData, dsaCountsData] = await Promise.all([
-        userApi.getStats(),
-        problemApi.getProblems({ type: 'dsa', limit: 1000 }),
-        mcqApi.getCounts(),
-        problemApi.getCounts({ type: 'dsa' })
-      ]);
+  const dashboardQuery = useQuery<DashboardPayload>({
+    queryKey: ['dashboard-data', user?.id],
+    enabled: isAuthReady && isAuthenticated,
+    queryFn: userApi.getDashboard,
+  });
 
-      setStats(statsData);
-      setMcqCounts(mcqCountsData);
-      setDsaCounts(dsaCountsData);
-
-      let calculatedTotal = 0;
-      if (typeof (problemsData as any)?.pagination?.total === 'number') {
-        calculatedTotal = (problemsData as any).pagination.total;
-      } else if (Array.isArray(problemsData)) {
-        calculatedTotal = problemsData.length;
-      } else if (problemsData?.problems && Array.isArray(problemsData.problems)) {
-        calculatedTotal = problemsData.problems.length;
-      }
-      setTotalProblems(calculatedTotal);
-    } catch (error: any) {
-      console.error("Dashboard fetch error:", error);
+  useEffect(() => {
+    if (dashboardQuery.error) {
+      console.error('Dashboard fetch error:', dashboardQuery.error);
       toast.error('Failed to sync dashboard data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [dashboardQuery.error]);
 
   const getStreak = (s: any) => {
     if (!s) return 0;
@@ -197,7 +174,7 @@ export default function DashboardPage() {
   };
 
   // ── Loading State ────
-  if (!initialized || authLoading || loading) {
+  if (!isAuthReady || (isAuthenticated && dashboardQuery.isLoading)) {
     return (
       <MainLayout>
         <div className="min-h-[80vh] flex flex-col items-center justify-center gap-3">
@@ -211,6 +188,11 @@ export default function DashboardPage() {
     );
   }
 
+  if (!isAuthenticated || !dashboardQuery.data) {
+    return null;
+  }
+
+  const { stats, totalProblems, dsaCounts, mcqCounts } = dashboardQuery.data;
   const currentStreak = getStreak(stats);
   const solved = stats?.problemsSolved || 0;
 
