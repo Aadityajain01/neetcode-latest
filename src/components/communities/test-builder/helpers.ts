@@ -45,7 +45,9 @@ export function formatTimeValue(date: Date) {
 }
 
 export function toDateTimeLocalValue(date: Date) {
-  return format(date, "yyyy-MM-dd'T'HH:mm");
+  // Always emit a full ISO-8601 UTC string so the server interprets the
+  // timestamp identically regardless of the user's local timezone.
+  return date.toISOString();
 }
 
 export function parseMcqQuestionText(question: string) {

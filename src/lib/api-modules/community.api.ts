@@ -164,7 +164,7 @@ export const communityApi = {
   },
 
   getTestById: async (communityId: string, testId: string) => {
-    const response = await api.get<{ test: CommunityTest, questions: TestQuestion[], hasSubmitted: boolean, result: TestResult | null }>(`/communities/${communityId}/tests/${testId}`);
+    const response = await api.get<{ test: CommunityTest, questions: TestQuestion[], hasSubmitted: boolean, evaluationComplete: boolean, resultHidden: boolean, result: TestResult | null }>(`/communities/${communityId}/tests/${testId}`);
     return response.data;
   },
 

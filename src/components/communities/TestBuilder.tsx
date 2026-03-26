@@ -275,8 +275,22 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
       return;
     }
 
-    if (new Date(form.endTime) <= new Date(form.startTime)) {
+    const now = new Date();
+    const startDate = new Date(form.startTime);
+    const endDate = new Date(form.endTime);
+
+    if (startDate < now) {
+      toast.error("Start time cannot be in the past");
+      return;
+    }
+
+    if (endDate <= startDate) {
       toast.error("End date must be after start date");
+      return;
+    }
+
+    if (!form.durationMinutes || form.durationMinutes <= 0) {
+      toast.error("Duration must be a positive number");
       return;
     }
 

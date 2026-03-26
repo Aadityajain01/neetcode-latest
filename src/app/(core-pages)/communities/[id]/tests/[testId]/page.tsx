@@ -38,6 +38,8 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
+  const [resultHidden, setResultHidden] = useState(false);
+  const [evaluationComplete, setEvaluationComplete] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -61,6 +63,8 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         setQuestions(data.questions);
         setHasSubmitted(data.hasSubmitted);
         setResult(data.result);
+        setResultHidden(data.resultHidden ?? false);
+        setEvaluationComplete(data.evaluationComplete ?? false);
 
         const initialCodes: Record<string, any> = {};
         data.questions.forEach((q: TestQuestion) => {
@@ -73,7 +77,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         const end = new Date(data.test.endTime);
         const durationSec = data.test.durationMinutes * 60;
         const remainingUntilEnd = differenceInSeconds(end, new Date());
-        setTimeLeft(Math.min(durationSec, remainingUntilEnd));
+        setTimeLeft(Math.max(0, Math.min(durationSec, remainingUntilEnd)));
       } catch (e) {
         toast.error("Failed to load test");
       } finally {
@@ -93,7 +97,8 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   }, [timeLeft, hasSubmitted]);
 
   useEffect(() => {
-    if (!communityId || !testId || !hasSubmitted || result) return;
+    // Don't poll if: no submission, result already loaded, results hidden by instructor, or evaluation already done (hidden)
+    if (!communityId || !testId || !hasSubmitted || result || resultHidden || evaluationComplete) return;
 
     let isCancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -108,6 +113,14 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         if (isCancelled) return;
 
         setHasSubmitted(data.hasSubmitted);
+        setResultHidden(data.resultHidden ?? false);
+        setEvaluationComplete(data.evaluationComplete ?? false);
+
+        // If results are hidden by instructor, stop polling
+        if (data.resultHidden || data.evaluationComplete) {
+          return;
+        }
+
         if (data.result) {
           setResult(data.result);
           toast.success("Results are ready");
@@ -132,13 +145,18 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       isCancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [communityId, testId, hasSubmitted, result]);
+  }, [communityId, testId, hasSubmitted, result, resultHidden, evaluationComplete]);
 
   const handleManualRefresh = async () => {
     try {
       const data = await communityApi.getTestById(communityId, testId);
       setHasSubmitted(data.hasSubmitted);
-      if (data.result) {
+      setResultHidden(data.resultHidden ?? false);
+      setEvaluationComplete(data.evaluationComplete ?? false);
+      if (data.resultHidden) {
+        toast.info("Results are hidden by the instructor.");
+        setPollFailed(false);
+      } else if (data.result) {
         setResult(data.result);
         toast.success("Results are ready");
         setPollFailed(false);
@@ -200,6 +218,8 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       setPollFailed(false);
       const data = await communityApi.getTestById(communityId, testId);
       setResult(data.result);
+      setResultHidden(data.resultHidden ?? false);
+      setEvaluationComplete(data.evaluationComplete ?? false);
     } catch {
       toast.error("Failed to submit test");
     } finally {
@@ -252,6 +272,24 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
 
   // ── Submitted / Ended States ──
   if (hasSubmitted || isEnded) {
+    // Results hidden by instructor — show a clear message, no spinner
+    if (resultHidden) {
+      return (
+        <div className="max-w-3xl mx-auto pt-12 text-center px-4">
+          <BackButton href={`/communities/${communityId}/tests`} className="mb-6 justify-center" />
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 shadow-lg">
+            <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-emerald-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Test Submitted Successfully</h2>
+            <div className="mt-6 text-amber-500 bg-amber-500/10 p-4 rounded-xl text-sm border border-amber-500/20">
+              Results are hidden by the instructor. You will be able to see your score when results are published.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Evaluating state — show animated loading with progress
     if (!result) {
       return (
@@ -304,123 +342,249 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                 </Button>
               </div>
             )}
-
-            {test.isResultVisible === false && (
-              <div className="mt-6 text-amber-500 bg-amber-500/10 p-4 rounded-xl text-sm border border-amber-500/20">
-                Results are hidden by the instructor. You will be able to see your score when results are published.
-              </div>
-            )}
           </div>
         </div>
       );
     }
 
     // Results View
-    return (
-      <div className="max-w-5xl mx-auto h-full min-h-0 py-3 animate-in fade-in flex flex-col px-4">
-        <BackButton href={`/communities/${communityId}/tests`} className="mb-3" />
+    const correctCount = result.mcqResults?.filter(r => r.isCorrect).length ?? 0;
+    const totalMcq = result.mcqResults?.length ?? 0;
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center shrink-0">
-          <h2 className="text-2xl font-bold text-white">{test.title} — Results</h2>
-          <div className="text-4xl font-black text-emerald-500 mt-2">
-            {result.totalScore} <span className="text-xl text-zinc-500">/ {test.totalMarks}</span>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 max-w-[280px] mx-auto text-sm font-semibold">
-            <div className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
-              <span className="text-zinc-500 uppercase tracking-wide text-[10px] block">MCQ</span>
-              <span className="text-white text-base">{result.mcqScore}</span>
+    return (
+      <div className="w-full h-full min-h-0 animate-in fade-in flex flex-col">
+
+        {/* ── Sticky Score Header ────────────────────────────── */}
+        <div className="shrink-0 bg-zinc-950 border-b border-zinc-800/80">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <BackButton href={`/communities/${communityId}/tests`} className="shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-base font-bold text-zinc-100 truncate">{test.title}</h1>
+                <p className="text-[11px] text-zinc-500 uppercase tracking-widest font-semibold">Results</p>
+              </div>
             </div>
-            <div className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
-              <span className="text-zinc-500 uppercase tracking-wide text-[10px] block">Code</span>
-              <span className="text-white text-base">{result.programmingScore}</span>
+
+            <div className="flex items-stretch gap-2 sm:gap-3 shrink-0">
+              {/* Total */}
+              <div className="flex flex-col items-center justify-center px-4 py-2 bg-zinc-900 border border-emerald-500/20 rounded-xl">
+                <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">Score</span>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-xl font-black text-emerald-400 leading-none">{result.totalScore}</span>
+                  <span className="text-xs text-zinc-600 font-semibold">/{test.totalMarks}</span>
+                </div>
+              </div>
+              {/* MCQ pill */}
+              <div className="flex flex-col items-center justify-center px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl">
+                <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">MCQ</span>
+                <span className="text-sm font-bold text-zinc-200 leading-none">{result.mcqScore}</span>
+              </div>
+              {/* Code pill */}
+              <div className="flex flex-col items-center justify-center px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl">
+                <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">Code</span>
+                <span className="text-sm font-bold text-zinc-200 leading-none">{result.programmingScore}</span>
+              </div>
+              {/* Accuracy dot */}
+              {totalMcq > 0 && (
+                <div className="flex flex-col items-center justify-center px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl">
+                  <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">Accuracy</span>
+                  <span className={cn("text-sm font-bold leading-none", correctCount === totalMcq ? "text-emerald-400" : "text-amber-400")}>
+                    {Math.round((correctCount / totalMcq) * 100)}%
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 flex-1 min-h-0 rounded-xl border border-zinc-800 bg-zinc-900/80 overflow-hidden">
-          <ScrollArea className="h-full p-3 md:p-4 scrollbar-emerald">
+        {/* ── Review Body ───────────────────────────────────── */}
+        <ScrollArea className="flex-1 min-h-0 scrollbar-emerald">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-10">
+
+            {/* MCQ Review */}
             {result.mcqResults && result.mcqResults.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-white mb-3">MCQ Review</h3>
-                <div className="space-y-2.5">
+              <section>
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-1 h-5 bg-emerald-500 rounded-full shrink-0" />
+                  <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-wide">MCQ Review</h2>
+                  <span className="text-xs text-zinc-500 font-medium ml-1">{correctCount}/{totalMcq} correct</span>
+                  <div className="flex-1 h-px bg-zinc-800 ml-2" />
+                </div>
+
+                <div className="space-y-3">
                   {result.mcqResults.map((item, index) => {
-                    const fallbackQuestion = questions.find((question) => question._id === item.questionId);
+                    const fallbackQuestion = questions.find(q => q._id === item.questionId);
                     const options = Array.isArray(item.options) && item.options.length > 0
                       ? item.options
-                      : Array.isArray(fallbackQuestion?.options)
-                        ? fallbackQuestion.options
-                        : [];
+                      : (Array.isArray(fallbackQuestion?.options) ? fallbackQuestion!.options : []);
                     const selectedIndex = typeof item.selectedOption === "number" ? item.selectedOption : null;
                     const correctIndex = typeof item.correctOption === "number" ? item.correctOption : null;
-                    const selectedText =
-                      selectedIndex !== null && options[selectedIndex] !== undefined
-                        ? options[selectedIndex]
-                        : ((item as any).selectedOptionText || "Not answered");
-                    const correctText =
-                      (correctIndex !== null && options[correctIndex] !== undefined
-                        ? options[correctIndex]
-                        : ((item as any).correctOptionText || "N/A"));
+                    const selectedText = selectedIndex !== null && options[selectedIndex] != null
+                      ? options[selectedIndex]
+                      : ((item as any).selectedOptionText || "Not answered");
+                    const correctText = correctIndex !== null && options[correctIndex] != null
+                      ? options[correctIndex]
+                      : ((item as any).correctOptionText || "N/A");
 
                     return (
-                      <div key={item.questionId} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Question {index + 1}</p>
-                            <p className="text-sm text-zinc-100 leading-relaxed">{item.question || fallbackQuestion?.question || "N/A"}</p>
+                      <div
+                        key={item.questionId}
+                        className={cn(
+                          "rounded-xl border overflow-hidden",
+                          item.isCorrect ? "border-emerald-500/25" : "border-zinc-800"
+                        )}
+                      >
+                        {/* Question row */}
+                        <div className={cn(
+                          "flex items-start gap-3 px-4 py-3",
+                          item.isCorrect ? "bg-emerald-500/8" : "bg-zinc-900/60"
+                        )}>
+                          <div className={cn(
+                            "shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
+                            item.isCorrect ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                          )}>
+                            {item.isCorrect
+                              ? <CheckCircle className="w-3.5 h-3.5" />
+                              : <XCircle className="w-3.5 h-3.5" />
+                            }
                           </div>
-                          <Badge
-                            className={cn(
-                              "border text-xs px-2 py-0.5",
+                          <div className="flex-1 min-w-0 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">Q{index + 1}</p>
+                              <p className="text-sm text-zinc-100 leading-relaxed">{item.question || fallbackQuestion?.question || "—"}</p>
+                            </div>
+                            <span className={cn(
+                              "shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border mt-0.5",
                               item.isCorrect
-                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                                : "border-rose-500/30 bg-rose-500/10 text-rose-400"
-                            )}
-                          >
-                            {item.isCorrect ? "Correct" : "Incorrect"}
-                          </Badge>
+                                ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25"
+                                : "text-rose-400 bg-rose-500/10 border-rose-500/25"
+                            )}>
+                              {item.isCorrect ? `+${item.marksAwarded ?? 0}` : "0"} pts
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="mt-2 grid gap-1.5 text-sm">
-                          <div className="rounded-md border border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-zinc-300">
-                            <span className="text-zinc-500">Your answer:</span> {selectedText}
+                        {/* Answer comparison row — always two columns */}
+                        <div className="grid grid-cols-2 divide-x divide-zinc-800 border-t border-zinc-800">
+                          {/* Your answer */}
+                          <div className={cn(
+                            "px-4 py-3 flex flex-col gap-1",
+                            !item.isCorrect ? "bg-rose-950/30" : "bg-zinc-950/40"
+                          )}>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              {!item.isCorrect
+                                ? <XCircle className="w-3 h-3 text-rose-400 shrink-0" />
+                                : <CheckCircle className="w-3 h-3 text-emerald-400 shrink-0" />
+                              }
+                              <span className={cn(
+                                "text-[9px] font-bold uppercase tracking-widest",
+                                !item.isCorrect ? "text-rose-400" : "text-emerald-400"
+                              )}>Your Answer</span>
+                            </div>
+                            <p className={cn(
+                              "text-xs font-medium leading-snug",
+                              !item.isCorrect ? "text-rose-200" : "text-emerald-100"
+                            )}>
+                              {selectedText}
+                            </p>
                           </div>
-                          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1.5 text-emerald-300">
-                            <span className="text-emerald-500/80">Correct answer:</span> {correctText}
+
+                          {/* Correct answer */}
+                          <div className={cn(
+                            "px-4 py-3 flex flex-col gap-1",
+                            item.isCorrect ? "bg-zinc-950/40" : "bg-emerald-950/30"
+                          )}>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <CheckCircle className="w-3 h-3 text-emerald-400 shrink-0" />
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400">Correct Answer</span>
+                            </div>
+                            <p className="text-xs font-medium text-emerald-100 leading-snug">{correctText}</p>
                           </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              </section>
             )}
 
+            {/* Programming Review */}
             {result.programmingResults && result.programmingResults.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-3">Programming Review</h3>
-                <div className="space-y-2.5">
-                  {result.programmingResults.map((item, index) => (
-                    <div key={item.questionId} className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <p className="text-sm font-semibold text-zinc-200">Problem {index + 1}</p>
-                        <Badge variant="outline" className="border-zinc-700 text-zinc-300 text-xs px-2 py-0.5">
-                          {item.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-zinc-400">
-                        Passed {item.passedCases}/{item.totalCases} test cases
-                      </p>
-                      <p className="text-sm text-emerald-400 font-semibold mt-0.5">Marks: {item.marksAwarded}</p>
-                    </div>
-                  ))}
+              <section>
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-1 h-5 bg-cyan-500 rounded-full shrink-0" />
+                  <h2 className="text-sm font-bold text-zinc-200 uppercase tracking-wide">Programming Review</h2>
+                  <div className="flex-1 h-px bg-zinc-800 ml-2" />
                 </div>
-              </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {result.programmingResults.map((item, index) => {
+                    const isAccepted = item.status === "Accepted";
+                    const pct = item.totalCases > 0 ? (item.passedCases / item.totalCases) * 100 : 0;
+                    const qTitle = questions.find(q => q._id === item.questionId)?.title;
+                    return (
+                      <div
+                        key={item.questionId}
+                        className={cn(
+                          "rounded-xl border overflow-hidden flex flex-col",
+                          isAccepted ? "border-emerald-500/25" : "border-zinc-800"
+                        )}
+                      >
+                        {/* Header */}
+                        <div className={cn(
+                          "px-4 py-3 flex items-start justify-between gap-2",
+                          isAccepted ? "bg-emerald-500/8" : "bg-zinc-900/60"
+                        )}>
+                          <div className="min-w-0">
+                            <p className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold mb-0.5">P{index + 1}</p>
+                            <h3 className="text-xs font-semibold text-zinc-200 truncate" title={qTitle}>{qTitle || "Programming Question"}</h3>
+                          </div>
+                          <span className={cn(
+                            "shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border",
+                            isAccepted
+                              ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25"
+                              : item.status === "Wrong Answer"
+                              ? "text-rose-400 bg-rose-500/10 border-rose-500/25"
+                              : "text-amber-400 bg-amber-500/10 border-amber-500/25"
+                          )}>
+                            {item.status}
+                          </span>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="px-4 py-3 bg-zinc-950/60 border-t border-zinc-800 flex-1 flex flex-col gap-2.5">
+                          <div>
+                            <div className="flex items-center justify-between text-[10px] font-semibold text-zinc-400 mb-1.5">
+                              <span>Test Cases</span>
+                              <span className={cn(isAccepted ? "text-emerald-400" : "text-zinc-300")}>{item.passedCases}/{item.totalCases}</span>
+                            </div>
+                            <div className="h-1 rounded-full bg-zinc-900 overflow-hidden">
+                              <div
+                                className={cn("h-full rounded-full transition-all duration-700", isAccepted ? "bg-emerald-500" : "bg-amber-500")}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-auto pt-1.5 border-t border-zinc-800/60">
+                            <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold">Marks</span>
+                            <span className={cn("text-sm font-black", isAccepted ? "text-emerald-400" : "text-zinc-500")}>{item.marksAwarded}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             )}
-          </ScrollArea>
-        </div>
+
+          </div>
+        </ScrollArea>
       </div>
     );
   }
+
+
+
 
   const isLocked = q?.type === "mcq" ? !!lockedAnswers[q._id] : !!lockedProgramming[q?._id || ""];
 
