@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Code2, Trophy, Users, Shield,
@@ -23,8 +24,15 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, firebaseUser } = useAuthStore();
   const isAdmin = user?.role === 'admin';
+  const profileImageUrl = user?.avatarUrl || firebaseUser?.photoURL || undefined;
+  const profileInitial =
+    user?.displayName?.[0]?.toUpperCase() ||
+    user?.email?.[0]?.toUpperCase() ||
+    firebaseUser?.displayName?.[0]?.toUpperCase() ||
+    firebaseUser?.email?.[0]?.toUpperCase() ||
+    'U';
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -165,9 +173,17 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
             <Link href="/profile" className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer outline-none">
               <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] relative overflow-hidden group-hover:shadow-[0_0_15px_-3px_rgba(16,185,129,0.5)] transition-shadow duration-300">
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-                <div className="h-full w-full rounded-[11px] bg-zinc-950 flex items-center justify-center text-emerald-400 font-bold text-sm">
-                  {user?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                </div>
+                <Avatar className="h-full w-full rounded-[11px] bg-zinc-950">
+                  <AvatarImage
+                    src={profileImageUrl}
+                    alt={user?.displayName || user?.email || 'User avatar'}
+                    className="h-full w-full rounded-[11px] object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <AvatarFallback className="rounded-[11px] bg-zinc-950 text-emerald-400 font-bold text-sm">
+                    {profileInitial}
+                  </AvatarFallback>
+                </Avatar>
               </div>
               <div className="flex-1 min-w-0 lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-auto lg:group-hover/sidebar:opacity-100 transition-all duration-500">
                 <p className="text-[13px] font-bold text-white truncate group-hover:text-emerald-400 transition-colors">
