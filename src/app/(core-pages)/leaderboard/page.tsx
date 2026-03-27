@@ -20,7 +20,7 @@ interface CommunityOption {
 
 const PAGE_SIZE = 7;
 
-// ── Podium Card for Top 3 (no box border) ──
+// ── Podium Card for Top 3 (Compact) ──
 function PodiumCard({
   entry,
   position,
@@ -32,103 +32,108 @@ function PodiumCard({
 }) {
   const config = {
     1: {
-      size: 'h-24 w-24 md:h-28 md:w-28',
+      size: 'h-16 w-16 md:h-20 md:w-20',
       ring: 'ring-amber-400 ring-4',
       badge: '🥇',
-      badgeBg: 'bg-amber-500',
-      order: 'order-2',
-      height: 'pt-0',
+      badgeBg: 'bg-gradient-to-br from-amber-300 to-amber-600 shadow-amber-500/50',
+      order: 'order-2 z-10',
+      height: 'md:-translate-y-6',
       scoreColor: 'text-amber-400',
       nameColor: 'text-amber-300',
+      glow: 'shadow-[0_0_30px_rgba(251,191,36,0.15)]',
     },
     2: {
-      size: 'h-20 w-20 md:h-24 md:w-24',
+      size: 'h-14 w-14 md:h-16 md:w-16',
       ring: 'ring-slate-300 ring-[3px]',
       badge: '🥈',
-      badgeBg: 'bg-slate-400',
+      badgeBg: 'bg-gradient-to-br from-slate-300 to-slate-500 shadow-slate-400/50',
       order: 'order-1',
-      height: 'pt-8',
+      height: '',
       scoreColor: 'text-slate-300',
       nameColor: 'text-slate-200',
+      glow: 'shadow-[0_0_20px_rgba(148,163,184,0.1)]',
     },
     3: {
-      size: 'h-20 w-20 md:h-24 md:w-24',
-      ring: 'ring-amber-700 ring-[3px]',
+      size: 'h-14 w-14 md:h-16 md:w-16',
+      ring: 'ring-amber-700/80 ring-[3px]',
       badge: '🥉',
-      badgeBg: 'bg-amber-700',
+      badgeBg: 'bg-gradient-to-br from-amber-600 to-amber-800 shadow-amber-700/50',
       order: 'order-3',
-      height: 'pt-8',
+      height: '',
       scoreColor: 'text-amber-600',
       nameColor: 'text-amber-700',
+      glow: 'shadow-[0_0_20px_rgba(180,83,9,0.15)]',
     },
   }[position];
 
   return (
-    <Link href={`/profile/${entry.userId}`} className={cn('block flex-1 max-w-[200px]', config.order)}>
-      <div className={cn('group flex flex-col items-center text-center transition-all duration-300 hover:scale-105', config.height)}>
-        {/* Avatar */}
+    <Link href={`/profile/${entry.userId}`} className={cn('block flex-1 max-w-[160px]', config.order)}>
+      <div className={cn('group relative flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 p-4 md:p-5 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 hover:bg-zinc-800/60 hover:border-zinc-700/50 backdrop-blur-md', config.glow, config.height)}>
+        <div className={cn("absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500", `bg-${config.scoreColor.split('-')[1]}-500`)} />
+        
         <div className="relative mb-3">
-          <Avatar className={cn(config.size, config.ring, 'ring-offset-2 ring-offset-zinc-950 shadow-2xl transition-transform group-hover:scale-105')}>
+          <Avatar className={cn(config.size, config.ring, 'ring-offset-2 ring-offset-zinc-900 shadow-xl transition-transform group-hover:scale-105')}>
             <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-            <AvatarFallback className={cn('font-bold text-xl flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-300')}>
+            <AvatarFallback className={cn('font-bold text-lg md:text-xl flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-300')}>
               {(entry.displayName || '??').slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className={cn('absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-lg text-sm', config.badgeBg)}>
+          <div className={cn('absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-xl text-xs md:text-sm border border-white/20', config.badgeBg)}>
             {config.badge}
           </div>
         </div>
 
-        {/* Name */}
-        <p className={cn('font-semibold text-sm md:text-base truncate max-w-[120px] mt-1', isMe ? 'text-emerald-400' : config.nameColor)}>
+        <p className={cn('font-bold text-sm md:text-base truncate max-w-full mt-1 relative z-10', isMe ? 'text-emerald-400' : config.nameColor)}>
           {entry.displayName}
         </p>
-        {isMe && <span className="text-[9px] uppercase tracking-wider text-emerald-500/70 font-bold">You</span>}
 
-        {/* Borderless score pill */}
-        <div className="mt-3 px-5 py-3 rounded-2xl backdrop-blur-sm bg-white/5">
-          <p className={cn('text-2xl md:text-3xl font-black', config.scoreColor)}>{entry.score}</p>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Points</p>
+        <div className="mt-3 px-3 py-1.5 rounded-xl bg-black/20 border border-white/5 shadow-inner relative z-10 w-full group-hover:bg-black/30 transition-colors">
+          <p className={cn('text-lg md:text-2xl font-black tracking-tighter leading-none', config.scoreColor)}>{entry.score}</p>
+          <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-0.5 font-bold">Points</p>
         </div>
       </div>
     </Link>
   );
 }
 
-// ── List Row for Rank 4+ ──
+// ── List Row for Rank 4+ (Compact) ──
 function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) {
   return (
     <Link href={`/profile/${entry.userId}`} className="block">
       <div className={cn(
-        'group grid grid-cols-12 gap-4 px-5 py-3.5 items-center rounded-xl transition-all duration-150 cursor-pointer',
-        isMe ? 'bg-emerald-500/10 ring-1 ring-emerald-500/25' : 'hover:bg-white/[0.03]'
+        'group grid grid-cols-12 gap-3 px-4 md:px-5 py-3 items-center transition-all duration-200 cursor-pointer overflow-hidden relative',
+        isMe ? 'bg-emerald-500/10' : 'hover:bg-zinc-800/40'
       )}>
-        {/* Rank */}
-        <div className="col-span-1 flex justify-center">
-          <span className={cn('font-mono text-sm font-semibold', isMe ? 'text-emerald-400' : 'text-zinc-500')}>
+        {isMe && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
+        
+        <div className="col-span-2 md:col-span-1 flex items-center justify-center">
+          <div className={cn(
+            'flex items-center justify-center h-7 w-7 rounded-full font-mono text-xs font-bold',
+            isMe ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800/50 text-zinc-500 group-hover:text-zinc-300 group-hover:bg-zinc-700/50'
+          )}>
             {entry.rank}
-          </span>
+          </div>
         </div>
 
-        {/* User */}
-        <div className="col-span-8 flex items-center gap-3">
-          <Avatar className={cn('h-8 w-8 ring-2 ring-offset-2 ring-offset-zinc-950', isMe ? 'ring-emerald-500/30' : 'ring-zinc-800')}>
+        <div className="col-span-7 md:col-span-8 flex items-center gap-3">
+          <Avatar className={cn('h-8 w-8 md:h-10 md:w-10 shadow-sm transition-transform group-hover:scale-105', isMe ? 'ring-2 ring-emerald-500/50 ring-offset-1 ring-offset-zinc-900' : 'border border-zinc-700')}>
             <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
             <AvatarFallback className={cn('font-bold text-xs rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-400')}>
               {(entry.displayName || '??').slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className={cn('text-sm font-medium truncate', isMe ? 'text-emerald-400' : 'text-zinc-300 group-hover:text-white')}>
-            {entry.displayName}{isMe && ' (You)'}
-          </span>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className={cn('text-sm font-bold truncate transition-colors leading-tight', isMe ? 'text-emerald-400' : 'text-zinc-200 group-hover:text-white')}>
+              {entry.displayName} {isMe && <span className="opacity-70">(You)</span>}
+            </span>
+          </div>
         </div>
 
-        {/* Score */}
-        <div className="col-span-3 text-right">
-          <span className={cn('font-mono font-semibold text-sm', isMe ? 'text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-200')}>
+        <div className="col-span-3 md:col-span-3 text-right flex items-center justify-end gap-1.5">
+          <span className={cn('font-mono font-black text-sm md:text-base tracking-tight', isMe ? 'text-emerald-400' : 'text-zinc-300 group-hover:text-white')}>
             {entry.score}
           </span>
-          <span className="text-[10px] text-zinc-600 block">pts</span>
+          <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest hidden sm:inline-block mt-0.5">pts</span>
         </div>
       </div>
     </Link>
@@ -303,122 +308,130 @@ export default function LeaderboardPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+      <div className="min-h-[calc(100vh-80px)] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative overflow-hidden flex flex-col items-center pb-10">
+        {/* Premium Background Elements */}
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+        <div className="fixed -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent pointer-events-none blur-3xl" />
+        
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative z-10 flex flex-col h-full">
 
           {/* ── Header: Title + Scope Dropdown ── */}
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <Trophy className="h-6 w-6 text-emerald-500" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 lg:mb-12 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <Trophy className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">Leaderboard</h1>
-                <p className="text-zinc-500 text-xs mt-0.5">See where you stand in the community</p>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm">Leaderboard</h1>
               </div>
             </div>
 
             {/* Dropdown top-right */}
-            <ScopeDropdown
-              activeTab={activeTab}
-              setActiveTab={(id) => { setActiveTab(id); setListPage(0); }}
-              communities={communities}
-            />
+            <div className="shadow-lg shadow-black/20 rounded-xl shrink-0">
+              <ScopeDropdown
+                activeTab={activeTab}
+                setActiveTab={(id) => { setActiveTab(id); setListPage(0); }}
+                communities={communities}
+              />
+            </div>
           </div>
 
           {rankingsQuery.isLoading ? (
             <LeaderboardPageSkeleton />
           ) : leaderboard.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-600 gap-3">
-              <Users className="h-12 w-12 opacity-20" />
-              <p className="text-sm">No rankings found yet.</p>
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-600 gap-4 border border-dashed border-zinc-800/80 rounded-3xl bg-zinc-900/10 backdrop-blur-sm w-full">
+              <Users className="h-16 w-16 opacity-20" />
+              <p className="text-base font-medium">No rankings found yet.</p>
             </div>
           ) : (
-            <>
-              {/* ── Podium (Top 3) — no outer border ── */}
-              {top3.length > 0 && (
-                <div className="relative mb-10">
-                  {/* Ambient glow */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent rounded-3xl pointer-events-none" />
-                  <div className="flex items-end justify-center gap-3 md:gap-8 pt-8 pb-6">
-                    {top3[1] && <PodiumCard entry={top3[1]} position={2} isMe={top3[1].userId === user?.id} />}
-                    {top3[0] && <PodiumCard entry={top3[0]} position={1} isMe={top3[0].userId === user?.id} />}
-                    {top3[2] && <PodiumCard entry={top3[2]} position={3} isMe={top3[2].userId === user?.id} />}
-                  </div>
-                </div>
-              )}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 flex-1 items-start w-full">
+              
+              {/* ── 5/12 Left Side: Podium ── */}
+              <div className="lg:col-span-5 flex flex-col justify-center items-center w-full">
+                {top3.length > 0 ? (
+                  <div className="w-full max-w-lg mx-auto">
+                    <div className="text-center mb-8 lg:mb-12">
+                      <h2 className="text-emerald-400 font-bold tracking-[0.2em] uppercase text-xs">Hall of Fame</h2>
+                      <p className="text-zinc-500 text-sm mt-1">Top developers in this scope</p>
+                    </div>
 
-              {/* ── Divider ── */}
-              {allRest.length > 0 && (
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px flex-1 bg-zinc-800/60" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rankings</span>
-                  <div className="h-px flex-1 bg-zinc-800/60" />
-                </div>
-              )}
-
-              {/* ── List Table ── */}
-              {pagedList.length > 0 && (
-                <div className="rounded-2xl overflow-hidden border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-sm">
-                  {/* Table header */}
-                  <div className="grid grid-cols-12 gap-4 px-5 py-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider border-b border-zinc-800/50">
-                    <div className="col-span-1 text-center">#</div>
-                    <div className="col-span-8">Developer</div>
-                    <div className="col-span-3 text-right">Score</div>
-                  </div>
-
-                  <div className="divide-y divide-zinc-800/30">
-                    {pagedList.map((entry) => (
-                      <LeaderboardRow key={entry.userId} entry={entry} isMe={entry.userId === user?.id} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Pagination ── */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 px-1">
-                  <button
-                    onClick={() => setListPage((p) => Math.max(0, p - 1))}
-                    disabled={listPage === 0}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronLeft className="h-4 w-4" /> Previous
-                  </button>
-
-                  <span className="text-xs text-zinc-600 font-mono">
-                    Page {listPage + 1} of {totalPages}
-                  </span>
-
-                  <button
-                    onClick={() => setListPage((p) => Math.min(totalPages - 1, p + 1))}
-                    disabled={listPage >= totalPages - 1}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  >
-                    Next <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* ── User row at bottom if not visible in current page ── */}
-              {!isMeInTop3 && !isMeInPagedList && myStats && user && (
-                <div className="mt-4">
-                  <div className="flex justify-center mb-2">
-                    <div className="inline-flex items-center gap-1.5 text-zinc-700 text-xs">
-                      <span className="h-1 w-1 rounded-full bg-zinc-700" />
-                      <span className="h-1 w-1 rounded-full bg-zinc-700" />
-                      <span className="h-1 w-1 rounded-full bg-zinc-700" />
+                    <div className="flex items-end justify-center gap-3 md:gap-5 w-full relative">
+                      {top3[1] && <PodiumCard entry={top3[1]} position={2} isMe={top3[1].userId === user?.id} />}
+                      {top3[0] && <PodiumCard entry={top3[0]} position={1} isMe={top3[0].userId === user?.id} />}
+                      {top3[2] && <PodiumCard entry={top3[2]} position={3} isMe={top3[2].userId === user?.id} />}
                     </div>
                   </div>
-                  <div className="rounded-2xl overflow-hidden border border-zinc-800/50 bg-zinc-900/20">
-                    <LeaderboardRow
-                      entry={{ userId: user.id, displayName: user.displayName || 'You', avatarUrl: (user as any).avatarUrl, score: myStats.score, rank: myStats.rank }}
-                      isMe={true}
-                    />
+                ) : (
+                  <div className="hidden lg:block text-zinc-600 text-sm text-center">Not enough data for podium</div>
+                )}
+              </div>
+
+              {/* ── 7/12 Right Side: The Paged List ── */}
+              <div className="lg:col-span-7 flex flex-col h-full w-full mx-auto max-w-2xl lg:max-w-none">
+                {allRest.length > 0 && (
+                  <div className="flex items-center gap-4 w-full mb-5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Rankings 4+</span>
+                    <div className="h-px flex-1 bg-gradient-to-r from-zinc-800/80 to-transparent" />
                   </div>
-                </div>
-              )}
-            </>
+                )}
+
+                {pagedList.length > 0 ? (
+                  <div className="flex-1 flex flex-col w-full">
+                    <div className="w-full rounded-3xl overflow-hidden border border-zinc-800/60 bg-zinc-900/40 backdrop-blur-xl shadow-xl shadow-black/40">
+                      <div className="divide-y divide-zinc-800/40">
+                        {pagedList.map((entry) => (
+                          <LeaderboardRow key={entry.userId} entry={entry} isMe={entry.userId === user?.id} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ── Pagination ── */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between w-full pt-5 px-1">
+                        <button
+                          onClick={() => setListPage((p) => Math.max(0, p - 1))}
+                          disabled={listPage === 0}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline-block">Previous</span>
+                        </button>
+
+                        <div className="flex items-center gap-2 bg-zinc-900/50 px-4 py-1.5 rounded-xl border border-zinc-800/50">
+                          <span className="text-sm text-emerald-400 font-bold">{listPage + 1}</span>
+                          <span className="text-zinc-600 font-medium text-xs">/</span>
+                          <span className="text-sm text-zinc-400 font-bold">{totalPages}</span>
+                        </div>
+
+                        <button
+                          onClick={() => setListPage((p) => Math.min(totalPages - 1, p + 1))}
+                          disabled={listPage >= totalPages - 1}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                          <span className="hidden sm:inline-block">Next</span> <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-sm text-zinc-600 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800/50 w-full flex-1 flex items-center justify-center">
+                    No further rankings available.
+                  </div>
+                )}
+
+                {/* ── User sticky row bottom ── */}
+                {!isMeInTop3 && !isMeInPagedList && myStats && user && (
+                  <div className="w-full mt-8 pt-4 relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-zinc-950 border border-zinc-800/50 shadow-md text-[10px] text-zinc-400 font-bold tracking-widest uppercase rounded-full z-20">Your Rank</div>
+                    <div className="rounded-2xl overflow-hidden border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.1)] bg-zinc-900/80 backdrop-blur-md relative z-10">
+                      <LeaderboardRow
+                        entry={{ userId: user.id, displayName: user.displayName || 'You', avatarUrl: (user as any).avatarUrl, score: myStats.score, rank: myStats.rank }}
+                        isMe={true}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>

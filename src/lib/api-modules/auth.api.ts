@@ -23,7 +23,12 @@ export const authApi = {
   login: async (idToken: string) => {
     const response = await AuthApiInstance.post<{ user: any; idToken: string }>(
       "/auth/login",
-      { idToken }
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
     );
     return response.data;
   },
@@ -43,7 +48,15 @@ export const authApi = {
       valid: boolean;
       uid: string;
       email: string;
-    }>("/auth/verify-token", { idToken });
+    }>(
+      "/auth/verify-token",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
     return response.data;
   },
 };

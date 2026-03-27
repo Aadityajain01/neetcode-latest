@@ -153,116 +153,152 @@ export default function PracticeLanguagePage() {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="min-h-[calc(100vh-80px)] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative overflow-hidden flex flex-col items-center pb-10">
         
-        {/* Header Tabs Area */}
-        <div className="flex bg-zinc-900/50 rounded-2xl p-2 border border-zinc-800">
-           <button 
-             onClick={() => setActiveTab('mcq')}
-             className={cn(
-               "flex-1 py-4 text-center font-bold text-lg rounded-xl transition-all duration-300",
-               activeTab === 'mcq' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
-             )}
-           >
-             MCQ
-           </button>
-           <button 
-             onClick={() => setActiveTab('programming')}
-             className={cn(
-               "flex-1 py-4 text-center font-bold text-lg rounded-xl transition-all duration-300",
-               activeTab === 'programming' ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
-             )}
-           >
-             Programming Questions
-           </button>
-        </div>
+        {/* Dynamic Backgrounds based on active tab */}
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+        <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
+        
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-16 relative z-10 flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 h-5 w-5" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search languages"
-            className="pl-12 h-14 bg-zinc-900/60 border-zinc-800 text-zinc-100 rounded-2xl focus:ring-zinc-600 focus:border-zinc-600 transition-all text-lg"
-          />
-        </div>
-
-        {/* List Layout */}
-        <div className="space-y-4">
-          {visibleLanguages.map((lang) => (
-            <div
-              key={lang.name}
-                className="group flex flex-col md:flex-row items-center justify-between p-6 bg-zinc-900/45 border border-zinc-800/70 rounded-2xl hover:bg-zinc-900/70 hover:border-zinc-700 transition-all gap-4"
-            >
-              <div className="flex items-center gap-4 w-full md:w-1/3">
-                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-zinc-900/90 flex items-center justify-center border border-zinc-700">
-                    <Code2 className="h-5 w-5 text-zinc-400 transition-colors" />
-                 </div>
-                 <h3 className="text-xl font-bold text-white capitalize">{lang.name}</h3>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-2/3 md:justify-end">
-                <Select 
-                  value={selectedDifficulties[lang.name] || "all"} 
-                  onValueChange={(val) => handleDifficultyChange(lang.name, val)}
-                >
-                  <SelectTrigger className="w-full sm:w-48 bg-zinc-950 border-zinc-800 text-zinc-100 rounded-xl h-12">
-                    <SelectValue placeholder="Select Difficulty" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
-                    <SelectItem value="all">All (Shuffled)</SelectItem>
-                    {/* Optionally, you could dynamically list difficulties based on lang.difficulties */}
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Button 
-                   onClick={() => handleEnterClick(lang.name)}
-                   className="w-full sm:w-auto bg-white hover:bg-zinc-200 text-zinc-900 h-12 px-8 rounded-xl font-bold transition-all hover:scale-105"
-                >
-                   Enter
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          {visibleLanguages.length === 0 && (
-             <div className="text-center py-20 border border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
-               <p className="text-zinc-500 text-lg">No languages found.</p>
-             </div>
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center pt-8 gap-4">
-             <Button 
-                variant="outline" 
-                onClick={() => setPage(p => Math.max(1, p - 1))} 
-                disabled={page === 1}
-                className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 transition-colors rounded-xl h-10 w-10 p-0"
-             >
-                <ChevronLeft className="h-5 w-5" />
-             </Button>
-             
-             <span className="text-zinc-400 font-medium">
-               {page} <span className="mx-1">..</span> <span className="text-white cursor-pointer hover:text-emerald-400 transition-colors" onClick={() => setPage(p => Math.min(totalPages, p + 1))}>next page &gt;</span>
-             </span>
-             
-             <Button 
-                variant="outline" 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                disabled={page === totalPages}
-                className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 transition-colors rounded-xl h-10 w-10 p-0"
-             >
-                <ChevronRight className="h-5 w-5" />
-             </Button>
+          {/* ── Header ── */}
+          <div className="flex flex-col items-center text-center gap-4 mb-12">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-sm">
+              Practice Area
+            </h1>
+            <p className="text-zinc-400 text-base font-medium max-w-lg">
+              Select your domain, choose a language, and hone your engineering skills.
+            </p>
           </div>
-        )}
 
+          {/* ── Controls (Tabs + Search) ── */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 w-full max-w-5xl mx-auto">
+            
+            {/* Tabs */}
+            <div className="flex bg-zinc-900/40 backdrop-blur-md rounded-2xl p-1.5 border border-zinc-800/80 shadow-lg w-full md:w-auto shrink-0">
+               <button 
+                 onClick={() => { setActiveTab('mcq'); setPage(1); }}
+                 className={cn(
+                   "flex-1 md:w-40 py-3 text-center font-bold text-sm rounded-xl transition-all duration-300",
+                   activeTab === 'mcq' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent"
+                 )}
+               >
+                 Multiple Choice
+               </button>
+               <button 
+                 onClick={() => { setActiveTab('programming'); setPage(1); }}
+                 className={cn(
+                   "flex-1 md:w-48 py-3 text-center font-bold text-sm rounded-xl transition-all duration-300",
+                   activeTab === 'programming' ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent"
+                 )}
+               >
+                 Programming
+               </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full md:w-96 group">
+              <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors", activeTab === 'mcq' ? "group-focus-within:text-emerald-500 text-zinc-500" : "group-focus-within:text-blue-500 text-zinc-500")} />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search languages..."
+                className="pl-12 h-14 bg-zinc-900/40 backdrop-blur-md border-zinc-800/80 text-zinc-100 rounded-2xl focus:ring-1 focus:ring-zinc-700 focus:border-zinc-700 transition-all text-base shadow-lg placeholder:text-zinc-600"
+              />
+            </div>
+          </div>
+
+          {/* ── Tabular Layout for Languages ── */}
+          <div className="w-full max-w-5xl mx-auto">
+            {visibleLanguages.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {/* Optional Table Header */}
+                <div className="hidden sm:grid grid-cols-12 gap-4 px-6 md:px-8 py-4 text-[10px] md:text-xs font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/50 border border-zinc-800/60 rounded-[1.25rem] mb-2 backdrop-blur-sm">
+                  <div className="col-span-5 flex items-center">Language Domain</div>
+                  <div className="col-span-7 flex items-center justify-end">Actions</div>
+                </div>
+
+                <div className="rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden border border-zinc-800/60 bg-zinc-900/30 backdrop-blur-xl shadow-xl shadow-black/40">
+                  <div className="divide-y divide-zinc-800/40">
+                    {visibleLanguages.map((lang) => (
+                      <div
+                        key={lang.name}
+                        className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 md:px-8 md:py-5 hover:bg-zinc-800/40 transition-all duration-300 gap-4 sm:gap-0"
+                      >
+                        {/* Hover Left Pill Indicator */}
+                        <div className={cn("absolute inset-y-0 left-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none", activeTab === 'mcq' ? "bg-emerald-500" : "bg-blue-500")} />
+
+                        <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                            <div className="h-12 w-12 flex-shrink-0 rounded-2xl bg-zinc-950 flex items-center justify-center border border-zinc-800/80 shadow-inner group-hover:scale-105 transition-transform">
+                              <Code2 className="h-6 w-6 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
+                            </div>
+                            <h3 className="text-lg md:text-xl font-bold text-white capitalize truncate">{lang.name}</h3>
+                        </div>
+                        
+                        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 relative z-10 w-full sm:w-auto">
+                          <Select 
+                            value={selectedDifficulties[lang.name] || "all"} 
+                            onValueChange={(val) => handleDifficultyChange(lang.name, val)}
+                          >
+                            <SelectTrigger className="w-full sm:w-[150px] bg-zinc-950/80 border-zinc-800/80 text-zinc-300 rounded-xl h-11 hover:bg-zinc-900 transition-colors focus:ring-1 shadow-none">
+                              <SelectValue placeholder="Difficulty" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-xl shadow-2xl">
+                              <SelectItem value="all" className="focus:bg-zinc-900 focus:text-white rounded-lg">All (Shuffled)</SelectItem>
+                              <SelectItem value="easy" className="text-emerald-400 focus:bg-emerald-500/10 focus:text-emerald-400 rounded-lg">Easy</SelectItem>
+                              <SelectItem value="medium" className="text-amber-400 focus:bg-amber-500/10 focus:text-amber-400 rounded-lg">Medium</SelectItem>
+                              <SelectItem value="hard" className="text-red-400 focus:bg-red-500/10 focus:text-red-400 rounded-lg">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <Button 
+                             onClick={() => handleEnterClick(lang.name)}
+                             className={cn("h-11 px-6 rounded-xl font-bold transition-all hover:scale-[1.02] shadow-md w-full sm:w-auto", activeTab === 'mcq' ? "bg-emerald-500 hover:bg-emerald-400 text-emerald-950" : "bg-blue-500 hover:bg-blue-400 text-blue-950")}
+                          >
+                             Start Session
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 border border-dashed border-zinc-800/80 rounded-[2rem] bg-zinc-900/20 backdrop-blur-sm w-full">
+                  <Code2 className="h-16 w-16 text-zinc-700 mb-4 opacity-50" />
+                  <p className="text-zinc-400 text-lg font-medium">No languages found matching "{search}".</p>
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center pt-8 pb-4 gap-4">
+                 <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))} 
+                    disabled={page === 1}
+                    className="flex items-center justify-center h-11 w-11 bg-zinc-900/80 border border-zinc-800/60 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300 transition-all rounded-[1rem] disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm"
+                 >
+                    <ChevronLeft className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+                 </button>
+                 
+                 <div className="flex items-center gap-2 bg-zinc-900/40 px-5 py-2 rounded-[1rem] border border-zinc-800/50 backdrop-blur-sm">
+                    <span className={cn("text-sm font-bold", activeTab === 'mcq' ? "text-emerald-400" : "text-blue-400")}>{page}</span>
+                    <span className="text-zinc-600 font-medium text-sm">/</span>
+                    <span className="text-sm text-zinc-400 font-bold">{totalPages}</span>
+                 </div>
+                 
+                 <button 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                    disabled={page === totalPages}
+                    className="flex items-center justify-center h-11 w-11 bg-zinc-900/80 border border-zinc-800/60 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300 transition-all rounded-[1rem] disabled:opacity-30 disabled:cursor-not-allowed group shadow-sm"
+                 >
+                    <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                 </button>
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
     </MainLayout>
   );
