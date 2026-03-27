@@ -7,7 +7,7 @@ export default function CommunitiesRootLayout({
 }) {
   return (
     <MainLayout>
-      <div className="flex flex-col  h-[calc(100vh-4rem)]">
+      <div className="flex flex-col min-h-0">
         {children}
       </div>
     </MainLayout>

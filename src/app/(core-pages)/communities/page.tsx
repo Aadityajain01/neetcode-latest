@@ -38,7 +38,9 @@ import {
   UserPlus,
   Sparkles,
   Shield,
-  Hash
+  Hash,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -246,37 +248,39 @@ export default function CommunitiesPage() {
   if (!initialized) return null;
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 md:p-8 space-y-8 font-sans">
+    <div className="w-full flex flex-col font-sans px-4 sm:px-6 md:px-8 py-4 animate-in fade-in duration-500 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950">
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+      
       {/* -------------------- HEADER -------------------- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-medium mb-2 border border-emerald-500/20">
-            <Sparkles className="h-3 w-3" />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 shrink-0 mb-3 z-10 relative">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase tracking-widest mb-1 border border-emerald-500/20 shadow-sm">
+            <Sparkles className="h-2.5 w-2.5" />
             <span>Discover Communities</span>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Communities</h1>
-          <p className="text-zinc-400 text-sm max-w-md">
-            Join groups of like-minded developers, share knowledge, and collaborate on projects.
+          <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-none">Communities</h1>
+          <p className="text-zinc-400 text-xs max-w-sm leading-tight mt-0.5">
+            Join groups of like-minded developers, share knowledge, and collaborate.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
           {/* SEARCH */}
-          <div className="relative w-full sm:w-72 group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
+          <div className="relative w-full sm:w-64 group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search communities..."
-              className="pl-10 h-11 bg-zinc-900/50 border-zinc-800 text-sm rounded-xl focus-visible:ring-1 focus-visible:ring-emerald-500 transition-all"
+              className="pl-9 h-9 bg-zinc-900/40 backdrop-blur-md border-zinc-800/80 text-xs rounded-lg focus-visible:ring-1 focus-visible:ring-emerald-500 transition-all text-zinc-200"
             />
           </div>
 
           {/* CREATE COMMUNITY */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-white text-zinc-950 hover:bg-zinc-200 shrink-0 h-11 px-5 rounded-xl font-medium w-full sm:w-auto transition-all active:scale-95 border-0">
-                <Plus className="mr-2 h-4 w-4" /> Create
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 h-9 px-4 rounded-lg font-bold text-xs w-full sm:w-auto transition-all shadow-sm border-0">
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> Create
               </Button>
             </DialogTrigger>
 
@@ -385,128 +389,144 @@ export default function CommunitiesPage() {
         </div>
       </div>
 
-      {/* -------------------- LIST -------------------- */}
-      <div className="grid grid-cols-1 gap-4">
-        {loading ? (
-          <div className="space-y-4">
-            {Array.from({ length: itemsPerPage }).map((_, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-2xl border border-zinc-800/40 bg-zinc-950/30 gap-4"
-              >
-                <div className="flex items-center gap-4 w-full">
-                  <Skeleton className="h-12 w-12 rounded-xl bg-zinc-800/50 shrink-0" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-48 bg-zinc-800/50" />
-                    <Skeleton className="h-4 w-3/4 max-w-[300px] bg-zinc-800/30" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
-                  <Skeleton className="h-4 w-16 bg-zinc-800/50 hidden sm:block" />
-                  <Skeleton className="h-10 w-full sm:w-28 rounded-xl bg-zinc-800/50" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : paginatedCommunities.length > 0 ? (
-          <div className="space-y-3">
-            {paginatedCommunities.map((c) => {
-              const isJoined = joinedCommunityIds.has(c._id);
-              const isJoining = joiningCommunityId === c._id;
-              
-              return (
-                <div 
-                  key={c._id} 
-                  className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-5 rounded-2xl border border-zinc-800/50 bg-zinc-950/40 hover:bg-zinc-900/60 hover:border-zinc-700/50 transition-all duration-300 gap-4 overflow-hidden"
-                >
-                  {/* Subtle gradient background on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  
-                  {/* Community Info */}
-                  <div className="flex items-center gap-4 min-w-0 flex-1 relative z-10 w-full">
-                    <div
-                      className={cn(
-                        "h-12 w-12 shrink-0 rounded-xl flex items-center justify-center shadow-inner",
-                        c.type === "domain_restricted"
-                          ? "bg-gradient-to-br from-amber-500/20 to-amber-600/10 text-amber-500 border border-amber-500/20"
-                          : "bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 text-emerald-500 border border-emerald-500/20"
-                      )}
-                    >
-                      {c.type === "domain_restricted" ? <Shield className="h-5 w-5" /> : <Hash className="h-5 w-5" />}
+      {/* -------------------- BALANCED TABULAR LIST -------------------- */}
+      <div className="flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative z-10 w-full mb-8 overflow-x-auto">
+        <div className="min-w-0 sm:min-w-[760px]">
+        
+        {/* Table Header */}
+        <div className="hidden sm:grid grid-cols-12 gap-3 px-4 md:px-6 py-3.5 text-[10px] md:text-xs font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/80 border-b border-zinc-800/60 shrink-0 z-20">
+          <div className="col-span-6 flex items-center">Community Name</div>
+          <div className="col-span-2 flex items-center justify-center">Access</div>
+          <div className="col-span-2 flex items-center justify-center">Members</div>
+          <div className="col-span-2 flex items-center justify-end pr-1">Actions</div>
+        </div>
+
+        {/* List Body */}
+        <div className="flex flex-col bg-zinc-900/20">
+          <div className="divide-y divide-zinc-800/40">
+            {loading ? (
+              Array.from({ length: 8 }).map((_, idx) => (
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-4 px-4 md:px-6 py-3.5 items-center">
+                  <div className="col-span-6 flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-xl bg-zinc-800/50 shrink-0" />
+                    <div className="space-y-2 flex-1 w-full max-w-[250px]">
+                      <Skeleton className="h-4 w-3/4 bg-zinc-800/50" />
+                      <Skeleton className="h-3 w-full bg-zinc-800/30" />
                     </div>
+                  </div>
+                  <div className="hidden sm:flex col-span-2 justify-center"><Skeleton className="h-5 w-16 bg-zinc-800/40" /></div>
+                  <div className="hidden sm:flex col-span-2 justify-center"><Skeleton className="h-4 w-10 bg-zinc-800/40" /></div>
+                  <div className="col-span-12 sm:col-span-2 flex justify-end"><Skeleton className="h-9 w-20 rounded-lg bg-zinc-800/50" /></div>
+                </div>
+              ))
+            ) : paginatedCommunities.length > 0 ? (
+              paginatedCommunities.map((c) => {
+                const isJoined = joinedCommunityIds.has(c._id);
+                const isJoining = joiningCommunityId === c._id;
+                
+                return (
+                  <div 
+                    key={c._id} 
+                    className="group relative grid grid-cols-1 sm:grid-cols-12 gap-4 px-4 md:px-6 py-3 hover:bg-zinc-800/40 transition-all duration-300 items-center overflow-hidden"
+                  >
+                    {/* Hover Pill Indicator */}
+                    <div className={cn("absolute inset-y-0 left-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none", c.type === "domain_restricted" ? "bg-amber-500" : "bg-emerald-500")} />
                     
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-semibold text-zinc-100 truncate group-hover:text-white transition-colors">
+                    {/* Community Info */}
+                    <div className="col-span-6 flex items-center gap-4 min-w-0">
+                      <div
+                        className={cn(
+                          "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform",
+                          c.type === "domain_restricted"
+                            ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                            : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                        )}
+                      >
+                        {c.type === "domain_restricted" ? <Shield className="h-4 w-4" /> : <Hash className="h-4 w-4" />}
+                      </div>
+                      
+                      <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <h3 className="text-base font-bold text-zinc-100 truncate leading-tight group-hover:text-white transition-colors">
                           {c.name}
                         </h3>
-                        {c.type === "domain_restricted" && (
-                          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
-                            Private
-                          </span>
-                        )}
+                        <p className="text-xs text-zinc-400 truncate leading-tight mt-0.5 group-hover:text-zinc-300 transition-colors">
+                          {c.description}
+                        </p>
                       </div>
-                      <p className="text-sm text-zinc-400 truncate mt-0.5 group-hover:text-zinc-300 transition-colors">
-                        {c.description}
-                      </p>
                     </div>
-                  </div>
 
-                  {/* Metadata & Actions */}
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto relative z-10 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t border-zinc-800/50 sm:border-0">
-                    <div className="flex items-center gap-1.5 text-sm text-zinc-400 shrink-0 bg-zinc-900/50 px-3 py-1.5 rounded-lg border border-zinc-800/50">
+                    {/* Access Type */}
+                    <div className="hidden sm:flex col-span-2 items-center justify-center mt-3 sm:mt-0">
+                      {c.type === "domain_restricted" ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 tracking-widest uppercase shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+                          Private
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 tracking-widest uppercase shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                          Open
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Members */}
+                    <div className="hidden sm:flex col-span-2 items-center justify-center gap-2 text-sm text-zinc-400 mt-3 sm:mt-0">
                       <Users className="h-4 w-4 text-zinc-500" />
-                      <span className="font-medium text-zinc-300">{c.memberCount}</span>
+                      <span className="font-semibold text-zinc-300 text-sm">{c.memberCount}</span>
                     </div>
 
-                    {isJoined ? (
-                      <Button
-                        className="w-full sm:w-auto h-10 px-5 rounded-xl shadow-none bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 hover:border-zinc-600 transition-all active:scale-95"
-                        onClick={() => router.push(`/communities/${c._id}/chat`)}
-                      >
-                        Open <ArrowRight className="ml-2 h-4 w-4 opacity-70" />
-                      </Button>
-                    ) : (
-                      <Button
-                        disabled={isJoining}
-                        className="w-full sm:w-auto h-10 px-5 rounded-xl shadow-none bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-500 border border-emerald-500/20 transition-all active:scale-95 group/btn"
-                        onClick={() => handleJoinCommunity(c._id)}
-                      >
-                        {isJoining ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <>
-                            Join <UserPlus className="ml-2 h-4 w-4 opacity-70 group-hover/btn:opacity-100" />
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    {/* Actions */}
+                    <div className="col-span-12 sm:col-span-2 flex items-center justify-between sm:justify-end gap-3 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-zinc-800/30 sm:border-0 relative z-10">
+                      <div className="sm:hidden flex items-center gap-1.5 text-sm text-zinc-400 shrink-0">
+                        <Users className="h-4 w-4 text-zinc-500" />
+                        <span className="font-semibold text-zinc-300 text-sm">{c.memberCount}</span>
+                      </div>
+
+                      {isJoined ? (
+                        <Button
+                          className="h-9 px-4 rounded-lg shadow-none bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold border border-zinc-700 transition-all active:scale-95 shrink-0"
+                          onClick={() => router.push(`/communities/${c._id}/chat`)}
+                        >
+                          Open <ArrowRight className="ml-1.5 h-3.5 w-3.5 opacity-70" />
+                        </Button>
+                      ) : (
+                        <Button
+                          disabled={isJoining}
+                          className="h-9 px-4 rounded-lg shadow-sm bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-500 text-xs font-bold border border-emerald-500/20 transition-all active:scale-95 group/btn shrink-0"
+                          onClick={() => handleJoinCommunity(c._id)}
+                        >
+                          {isJoining ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>Join <UserPlus className="ml-1.5 h-4 w-4 opacity-70 group-hover/btn:opacity-100" /></>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className="py-24 text-center flex flex-col items-center justify-center h-full w-full">
+                <div className="h-16 w-16 rounded-3xl bg-zinc-900/80 flex items-center justify-center mb-4 border border-zinc-800/80 shadow-inner">
+                  <Search className="h-8 w-8 text-zinc-600" />
                 </div>
-              );
-            })}
+                <h3 className="text-base font-bold text-zinc-300">No communities found</h3>
+                <p className="text-xs text-zinc-500 mt-1.5 max-w-[300px] mx-auto">Try searching for something else or create your own.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="py-24 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/30 flex flex-col items-center justify-center">
-            <div className="h-16 w-16 rounded-full bg-zinc-900/50 flex items-center justify-center mb-4 border border-zinc-800">
-              <Search className="h-8 w-8 text-zinc-600" />
-            </div>
-            <h3 className="text-lg font-medium text-zinc-200">No communities found</h3>
-            <p className="text-zinc-500 mt-1 max-w-sm mx-auto">We couldn't find any communities matching "{search}". Try searching for something else or create your own.</p>
-          </div>
-        )}
+        </div>
 
         {/* Pagination Footer */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between pt-6 border-t border-zinc-800/50 mt-4">
-            <Button
-              variant="outline"
+          <div className="flex items-center justify-between px-5 md:px-8 py-3.5 bg-zinc-950/80 border-t border-zinc-800/60 shrink-0 z-20 backdrop-blur-md">
+            <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="h-10 rounded-xl border border-zinc-800 bg-zinc-950/50 text-white hover:bg-zinc-900 px-5 disabled:opacity-50 transition-all"
+              className="flex items-center justify-center h-9 px-4 rounded-lg border border-zinc-800/60 bg-zinc-900/80 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed gap-1.5 group shadow-sm"
             >
-              Previous
-            </Button>
+              <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Prev
+            </button>
             
             <div className="flex items-center gap-1.5">
               {Array.from({ length: totalPages }).map((_, idx) => {
@@ -517,7 +537,7 @@ export default function CommunitiesPage() {
                   pageNum !== totalPages &&
                   Math.abs(currentPage - pageNum) > 1
                 ) {
-                  if (pageNum === 2 || pageNum === totalPages - 1) return <span key={pageNum} className="text-zinc-600 px-1">...</span>;
+                  if (pageNum === 2 || pageNum === totalPages - 1) return <span key={pageNum} className="text-zinc-600 text-xs font-bold tracking-widest px-1">...</span>;
                   return null;
                 }
                 
@@ -526,10 +546,10 @@ export default function CommunitiesPage() {
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
                     className={cn(
-                      "h-8 w-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all",
+                      "h-8 w-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all shadow-sm",
                       currentPage === pageNum 
-                        ? "bg-zinc-800 text-white border border-zinc-700" 
-                        : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+                        ? "bg-zinc-800 text-white border border-zinc-700 shadow-inner" 
+                        : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 border border-transparent"
                     )}
                   >
                     {pageNum}
@@ -538,16 +558,16 @@ export default function CommunitiesPage() {
               })}
             </div>
 
-            <Button
-              variant="outline"
+            <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="h-10 rounded-xl border border-zinc-800 bg-zinc-950/50 text-white hover:bg-zinc-900 px-5 disabled:opacity-50 transition-all"
+              className="flex items-center justify-center h-9 px-4 rounded-lg border border-zinc-800/60 bg-zinc-900/80 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed gap-1.5 group shadow-sm"
             >
-              Next
-            </Button>
+              Next <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
