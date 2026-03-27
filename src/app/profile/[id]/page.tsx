@@ -5,7 +5,7 @@ import { ActivityCalendar } from "react-activity-calendar";
 import { useQuery } from "@tanstack/react-query";
 import {
   MapPin, Calendar, Github, Linkedin, Globe, Twitter,
-  Flame, Trophy, Target, Zap, Loader2, Users, Crown,
+  Flame, Trophy, Target, Zap, Users, Crown,
   ChevronRight, Hash, TrendingUp, Send, BarChart3, Activity, ArrowLeft
 } from "lucide-react";
 import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
@@ -16,6 +16,7 @@ import MainLayout from "@/components/layouts/main-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { ProfilePageSkeleton } from "@/components/skeletons/site-skeletons";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip
@@ -117,10 +118,7 @@ export default function PublicProfilePage() {
         </button>
 
         {loading && (
-          <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-            <p className="text-xs text-zinc-500 font-medium tracking-widest uppercase">Fetching Profile</p>
-          </div>
+          <ProfilePageSkeleton />
         )}
 
         {!loading && !data && (

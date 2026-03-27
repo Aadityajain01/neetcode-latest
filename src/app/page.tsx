@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import logo from "../../public/logo.png";
+import { AppRouteSkeleton } from '@/components/skeletons/site-skeletons';
 
 // ─── INTERNAL COMPONENTS ───────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [initialized, isAuthenticated, router]);
 
-  if (!initialized) return null;
+  if (!initialized) return <AppRouteSkeleton />;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-emerald-500/30 font-sans overflow-x-hidden">

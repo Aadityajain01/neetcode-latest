@@ -9,10 +9,11 @@ import { userApi, DashboardPayload } from '@/lib/api-modules/user.api';
 import MainLayout from '@/components/layouts/main-layout';
 import { toast } from 'sonner';
 import {
-  Code2, Trophy, Target, Users, Loader2,
+  Code2, Trophy, Target, Users,
   Zap, Flame, TrendingUp, Award, BarChart3, Send, CheckCircle2, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DashboardPageSkeleton } from '@/components/skeletons/site-skeletons';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
@@ -96,10 +97,7 @@ export default function DashboardPage() {
   if (!isAuthReady || (isAuthenticated && dashboardQuery.isLoading) || !mounted) {
     return (
       <MainLayout>
-        <div className="min-h-[80vh] flex flex-col items-center justify-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Compiling Dashboard Data...</p>
-        </div>
+        <DashboardPageSkeleton />
       </MainLayout>
     );
   }

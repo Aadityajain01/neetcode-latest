@@ -9,8 +9,9 @@ import { leaderboardApi, userApi, LeaderboardEntry } from '@/lib/api-modules';
 import MainLayout from '@/components/layouts/main-layout';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from 'sonner';
-import { Loader2, Trophy, Globe, Users, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, Globe, Users, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LeaderboardPageSkeleton } from '@/components/skeletons/site-skeletons';
 
 interface CommunityOption {
   id: string;
@@ -292,10 +293,9 @@ export default function LeaderboardPage() {
 
   if (!isAuthReady || (isAuthenticated && communitiesQuery.isLoading)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-        <p className="text-zinc-500 text-sm animate-pulse">Loading Leaderboard...</p>
-      </div>
+      <MainLayout>
+        <LeaderboardPageSkeleton />
+      </MainLayout>
     );
   }
 
@@ -327,10 +327,7 @@ export default function LeaderboardPage() {
           </div>
 
           {rankingsQuery.isLoading ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-              <span className="text-zinc-600 text-sm">Fetching rankings…</span>
-            </div>
+            <LeaderboardPageSkeleton />
           ) : leaderboard.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-600 gap-3">
               <Users className="h-12 w-12 opacity-20" />

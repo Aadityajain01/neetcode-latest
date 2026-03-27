@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   Search,
-  Loader2,
   CheckCircle2,
   Circle,
   ChevronLeft,
@@ -25,6 +24,7 @@ import {
   Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ProblemsPageSkeleton } from '@/components/skeletons/site-skeletons';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -103,9 +103,9 @@ export default function ProblemsPage() {
 
   if (!initialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-      </div>
+      <MainLayout>
+        <ProblemsPageSkeleton />
+      </MainLayout>
     );
   }
 
@@ -174,10 +174,7 @@ export default function ProblemsPage() {
         {/* Problem List */}
         <div className="space-y-2">
           {loading ? (
-            <div className="py-24 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
-              <p className="text-zinc-500 animate-pulse">Loading library...</p>
-            </div>
+            <ProblemsPageSkeleton />
           ) : problems.length === 0 ? (
             <div className="py-24 text-center text-zinc-500 bg-zinc-900/30 rounded-2xl border border-dashed border-zinc-800">
               <BrainCircuit className="h-16 w-16 mx-auto mb-4 opacity-20" />

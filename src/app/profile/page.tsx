@@ -16,6 +16,7 @@ import MainLayout from "@/components/layouts/main-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ProfilePageSkeleton } from "@/components/skeletons/site-skeletons";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip
@@ -107,10 +108,7 @@ export default function ProfilePage() {
       <div className="font-sans pb-20 max-w-5xl mx-auto pt-4">
 
         {loading && (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-            <p className="text-xs text-zinc-500 font-medium tracking-widest uppercase">Fetching Profile</p>
-          </div>
+          <ProfilePageSkeleton />
         )}
 
         {!loading && !data && (

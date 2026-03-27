@@ -5,8 +5,8 @@ import { communityApi, Community } from "@/lib/api-modules";
 import type { CommunityRole } from "@/lib/api-modules/community.api";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { CommunityShellSkeleton } from "@/components/skeletons/site-skeletons";
 
 interface CommunityContextType {
   community: Community | null;
@@ -59,12 +59,7 @@ export function CommunityProvider({ children, communityId }: { children: ReactNo
   }, [initialized, authLoading, isAuthenticated, communityId, router]);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-24 h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mb-4" />
-        <p className="text-zinc-500 animate-pulse">Loading Classroom...</p>
-      </div>
-    );
+    return <CommunityShellSkeleton />;
   }
 
   if (!community) {

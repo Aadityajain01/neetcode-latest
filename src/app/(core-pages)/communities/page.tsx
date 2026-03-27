@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Search,
@@ -381,8 +382,35 @@ export default function CommunitiesPage() {
 
         {/* List */}
         {loading ? (
-          <div className="py-20 flex justify-center border-b border-zinc-800">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+          <div className="border-b border-zinc-800 p-4 md:p-6">
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-12 gap-4 items-center rounded-xl border border-zinc-800/40 bg-zinc-900/20 p-4 md:p-5"
+                >
+                  <div className="col-span-12 md:col-span-5 flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg bg-zinc-800" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40 bg-zinc-800" />
+                      <Skeleton className="h-3 w-64 max-w-full bg-zinc-800/80" />
+                    </div>
+                  </div>
+
+                  <div className="col-span-6 md:col-span-3">
+                    <Skeleton className="h-4 w-20 bg-zinc-800" />
+                  </div>
+
+                  <div className="col-span-6 md:col-span-2">
+                    <Skeleton className="h-4 w-14 bg-zinc-800" />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-2 flex md:justify-end">
+                    <Skeleton className="h-9 w-full md:w-24 rounded-md bg-zinc-800" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : paginatedCommunities.length > 0 ? (
           <div className="flex flex-col">

@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import MainLayout from "@/components/layouts/main-layout";
 import { problemApi, Problem, TestCase } from "@/lib/api-modules";
 import { toast } from "sonner";
-import { Loader2, Clock, Database } from "lucide-react";
+import { Clock, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 // ✅ Import the new component
 // ✅ Import the new component
 import { CodeExecutor } from "@/components/code-execution";
+import { SplitViewSkeleton } from "@/components/skeletons/site-skeletons";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -104,7 +105,7 @@ export default function ProblemDetailPage() {
     router.push(`/problems/${sessionProblems[nextIndex]}`);
   };
 
-  if (loading) return <MainLayout><div className="h-[calc(100vh-64px)] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div></MainLayout>;
+  if (loading) return <MainLayout><SplitViewSkeleton /></MainLayout>;
   if (!problem) return null;
 
   return (

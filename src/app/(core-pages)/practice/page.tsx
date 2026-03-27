@@ -6,9 +6,10 @@ import MainLayout from "@/components/layouts/main-layout";
 import { mcqApi, problemApi, MCQ, Problem } from "@/lib/api-modules";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, Code2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Code2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ProblemsPageSkeleton } from "@/components/skeletons/site-skeletons";
 
 type LanguageMeta = {
   name: string;
@@ -142,7 +143,13 @@ export default function PracticeLanguagePage() {
     }
   };
 
-  if (loading) return <div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
+  if (loading) {
+    return (
+      <MainLayout>
+        <ProblemsPageSkeleton />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
