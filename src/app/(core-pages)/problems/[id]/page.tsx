@@ -133,7 +133,7 @@ export default function ProblemDetailPage() {
                   <span className="flex items-center gap-1.5"><Database className="h-3.5 w-3.5" /> {problem.memoryLimit}MB</span>
                </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-emerald">
               <div className="prose prose-invert prose-sm max-w-none text-zinc-300 prose-headings:text-white prose-p:leading-relaxed prose-pre:bg-zinc-950 prose-pre:border prose-pre:border-zinc-800">
                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{problem.description}</ReactMarkdown>
               </div>

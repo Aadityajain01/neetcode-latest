@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0F172A] text-[#E5E7EB]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0F172A] text-[#E5E7EB] scrollbar-emerald`}
       >
         <QueryProvider>
           <AuthProvider>

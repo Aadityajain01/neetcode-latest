@@ -138,7 +138,7 @@
 }
 
 .scrollbar-emerald::-webkit-scrollbar {
-  width: 0;
+  width: 6px;
   height: 6px;
 }
 
@@ -152,8 +152,7 @@
 }
 
 .scrollbar-emerald [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
-  width: 0;
-  display: none;
+  width: 6px;
 }
 
 .scrollbar-emerald [data-slot="scroll-area-scrollbar"][data-orientation="horizontal"] {

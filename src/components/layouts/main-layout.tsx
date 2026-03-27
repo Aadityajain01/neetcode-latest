@@ -64,8 +64,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Content Scroll Area */}
-        <ScrollArea className="flex-1 scrollbar-none">
-          <div className="container mx-auto p-4 lg:p-8 max-w-7xl relative z-10">
+        <ScrollArea className="flex-1 scrollbar-emerald">
+          <div className="container mx-auto p-4 lg:p-8 max-w-7xl relative z-10 ">
             {children}
           </div>
         </ScrollArea>
