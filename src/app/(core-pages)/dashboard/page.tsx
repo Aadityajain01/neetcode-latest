@@ -54,14 +54,14 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
 // ─── Minimal Components ──────────────────────────────────────────────────────
 function MinimalStatCard({ icon, label, value, colorClass }: { icon: React.ReactNode; label: string; value: string | number; colorClass: string }) {
   return (
-    <div className="group relative bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 hover:bg-zinc-800/40 hover:border-zinc-700/50 transition-all duration-300">
-      <div className="flex justify-between items-start mb-2">
-        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</p>
+    <div className="group relative bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-3 2xl:p-4 hover:bg-zinc-800/40 hover:border-zinc-700/50 transition-all duration-300">
+      <div className="flex justify-between items-start mb-1.5">
+        <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{label}</p>
         <div className={cn("p-1.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50", colorClass)}>
           {icon}
         </div>
       </div>
-      <p className="text-2xl font-black text-white tracking-tighter">{value}</p>
+      <p className="text-xl md:text-2xl font-black text-white tracking-tighter">{value}</p>
     </div>
   );
 }
@@ -154,168 +154,199 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen pb-12 font-sans max-w-6xl mx-auto pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="h-[calc(100vh-80px)] overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* ── Header ────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-white/5 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3 shrink-0">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Platform Active
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter">
+            <h1 className="text-xl md:text-2xl xl:text-3xl font-black text-white tracking-tighter leading-none mb-0.5">
               Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">{user?.displayName || 'Developer'}</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-3 px-5 py-3 bg-zinc-900/60 backdrop-blur-md border border-zinc-800/80 rounded-2xl">
-            <div className={cn("p-2 rounded-xl", currentStreak > 0 ? "bg-orange-500/10 text-orange-500" : "bg-zinc-800 text-zinc-500")}>
-              <Flame className="h-5 w-5" />
+          <div className="flex items-center gap-2.5 px-3 py-1.5 bg-zinc-900/60 backdrop-blur-md border border-zinc-800/80 rounded-xl shrink-0 shadow-sm w-fit">
+            <div className={cn("p-1.5 rounded-lg", currentStreak > 0 ? "bg-orange-500/10 text-orange-500" : "bg-zinc-800 text-zinc-500")}>
+              <Flame className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Streak</p>
-              <p className="text-xl font-black text-white leading-none tracking-tight">{currentStreak} <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest ml-1">days</span></p>
+              <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest leading-none mb-0.5">Active Streak</p>
+              <p className="text-sm xl:text-base font-black text-white leading-none tracking-tight">{currentStreak} <span className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest ml-1">days</span></p>
             </div>
           </div>
         </div>
 
-        {/* ── Top Core Stats Row ──────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <MinimalStatCard icon={<TrendingUp className="h-4 w-4" />} label="Total Score" value={stats?.score || 0} colorClass="text-blue-400" />
-          <MinimalStatCard icon={<Award className="h-4 w-4" />} label="Global Rank" value={stats?.rank ? `#${stats.rank}` : '—'} colorClass="text-amber-400" />
-          <MinimalStatCard icon={<Send className="h-4 w-4" />} label="Submissions" value={stats?.totalSubmissions || 0} colorClass="text-purple-400" />
-          <MinimalStatCard icon={<CheckCircle2 className="h-4 w-4" />} label="Accuracy" value={`${stats?.totalSubmissions ? Math.round((solved / stats.totalSubmissions) * 100) : 0}%`} colorClass="text-emerald-400" />
-        </div>
-
-        {/* ── Advanced Bento Visualizations ──────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-          {/* 1. DSA Pie Chart */}
-          <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 relative overflow-hidden flex flex-col items-center col-span-1">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
-            
-            <div className="w-full flex items-center gap-2 mb-4">
-              <Target className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Algorithms (DSA)</h3>
+        {/* ── Main Layout Box ──────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0">
+          
+          {/* Left Column (Stats + Nav) */}
+          <div className="flex flex-col gap-3 xl:gap-4 w-full lg:w-[320px] xl:w-[340px] shrink-0 min-h-0">
+            {/* Top 4 Stats (Grid 2x2 on Desktop) */}
+            <div className="grid grid-cols-2 gap-2.5 shrink-0">
+              <MinimalStatCard icon={<TrendingUp className="h-3.5 w-3.5" />} label="Score" value={stats?.score || 0} colorClass="text-blue-400" />
+              <MinimalStatCard icon={<Award className="h-3.5 w-3.5" />} label="Rank" value={stats?.rank ? `#${stats.rank}` : '—'} colorClass="text-amber-400" />
+              <MinimalStatCard icon={<Send className="h-3.5 w-3.5" />} label="Submits" value={stats?.totalSubmissions || 0} colorClass="text-purple-400" />
+              <MinimalStatCard icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Accuracy" value={`${stats?.totalSubmissions ? Math.round((solved / stats.totalSubmissions) * 100) : 0}%`} colorClass="text-emerald-400" />
             </div>
-            
-            <div className="w-full h-44 relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <RechartsTooltip content={<CustomPieTooltip />} />
-                  <Pie
-                    data={dsaPieData}
-                    cx="50%" cy="50%"
-                    innerRadius={55} outerRadius={75}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {dsaPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} style={{ filter: entry.name !== 'Unsolved' ? `drop-shadow(0px 0px 6px ${entry.fill}40)` : 'none' }} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-black text-white tracking-tighter drop-shadow-lg">{solved}</span>
-                <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {totalProblems}</span>
+
+            {/* Quick Links */}
+            <div className="flex-1 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-2.5 xl:p-3 flex flex-col min-h-0 shadow-sm">
+              <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 shrink-0 px-1">Quick Navigation</h3>
+              <div className="flex-1 flex flex-col justify-around min-h-0 overflow-y-auto custom-scrollbar pr-1">
+                {quickLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="group outline-none">
+                    <div className={cn("bg-zinc-900/40 rounded-xl p-2.5 xl:p-3 flex items-center gap-3 transition-all duration-300 border border-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]", link.hoverBg)}>
+                      <div className="p-1.5 rounded-lg bg-zinc-800/50 group-hover:scale-110 transition-transform duration-300">
+                        <link.icon className={cn("h-4 w-4", link.color)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-[11px] xl:text-[12px] tracking-tight truncate leading-none mb-1">{link.title}</p>
+                        <p className="text-[9px] font-medium text-zinc-500 truncate leading-none">{link.desc}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            </div>
-
-            <div className="w-full grid grid-cols-3 gap-2 mt-2">
-               <SkillPill label="Easy" count={dsaEasy} color="text-emerald-400" bg="bg-emerald-500/10" dot="bg-emerald-500" />
-               <SkillPill label="Med" count={dsaMedium} color="text-amber-400" bg="bg-amber-500/10" dot="bg-amber-500" />
-               <SkillPill label="Hard" count={dsaHard} color="text-red-400" bg="bg-red-500/10" dot="bg-red-500" />
             </div>
           </div>
 
-          {/* 2. Side-by-side Bar Chart (DSA vs MCQ Comparison) */}
-          <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 col-span-1 lg:col-span-1 flex flex-col relative overflow-hidden">
-             <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
-             <div className="w-full flex flex-col mb-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Activity className="h-4 w-4 text-blue-400" />
-                <h3 className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Performance Split</h3>
-              </div>
-              <p className="text-[10px] text-zinc-500">DSA vs MCQ across difficulties</p>
-            </div>
+          {/* Right Column (Charts + Wide Banner) */}
+          <div className="flex-1 flex flex-col gap-3 xl:gap-4 min-w-0 min-h-0">
+             
+             {/* Top Row: 3 Square-ish Charts */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xl:gap-4 flex-[3] min-h-0 overflow-hidden">
+               {/* 1. DSA Pie Chart */}
+               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl py-3 px-3 xl:p-4 relative overflow-hidden flex flex-col items-center min-h-0 shadow-sm">
+                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] rounded-full pointer-events-none" />
+                 <div className="w-full flex items-center gap-1.5 mb-1 shrink-0 z-10">
+                   <Target className="h-3 w-3 text-emerald-400" />
+                   <h3 className="text-[9px] font-bold text-zinc-400 tracking-widest uppercase">DSA</h3>
+                 </div>
+                 
+                 <div className="w-full flex-1 relative min-h-0">
+                   <ResponsiveContainer width="100%" height="100%">
+                     <PieChart>
+                       <RechartsTooltip content={<CustomPieTooltip />} />
+                       <Pie data={dsaPieData} cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" paddingAngle={4} dataKey="value" stroke="none">
+                         {dsaPieData.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={entry.fill} style={{ filter: entry.name !== 'Unsolved' ? `drop-shadow(0px 0px 4px ${entry.fill}40)` : 'none' }} />
+                         ))}
+                       </Pie>
+                     </PieChart>
+                   </ResponsiveContainer>
+                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                     <span className="text-xl xl:text-2xl font-black text-white tracking-tighter drop-shadow-md leading-none">{solved}</span>
+                     <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {totalProblems}</span>
+                   </div>
+                 </div>
 
-            <div className="w-full flex-1 min-h-[160px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={comparisonData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }} barGap={2} barSize={12}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fill: '#71717a', fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <RechartsTooltip content={<CustomBarTooltip />} cursor={{ fill: '#27272a', opacity: 0.4 }} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 600, paddingTop: '10px' }} />
-                  <Bar dataKey="DSA" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="MCQ" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+                 <div className="w-full grid grid-cols-3 gap-1 xl:gap-1.5 mt-1 xl:mt-2 shrink-0 z-10 text-center">
+                    <SkillPill label="Easy" count={dsaEasy} color="text-emerald-400" bg="bg-emerald-500/10" dot="bg-emerald-500" />
+                    <SkillPill label="Med" count={dsaMedium} color="text-amber-400" bg="bg-amber-500/10" dot="bg-amber-500" />
+                    <SkillPill label="Hard" count={dsaHard} color="text-red-400" bg="bg-red-500/10" dot="bg-red-500" />
+                 </div>
+               </div>
 
-          {/* 3. MCQ Pie Chart */}
-          <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 relative overflow-hidden flex flex-col items-center col-span-1">
-            <div className="absolute top-0 left-0 w-40 h-40 bg-purple-500/5 blur-[50px] rounded-full pointer-events-none" />
-            
-            <div className="w-full flex items-center gap-2 mb-4">
-              <BarChart3 className="h-4 w-4 text-purple-400" />
-              <h3 className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Knowledge (MCQ)</h3>
-            </div>
-            
-            <div className="w-full h-44 relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <RechartsTooltip content={<CustomPieTooltip />} />
-                  <Pie
-                    data={mcqPieData}
-                    cx="50%" cy="50%"
-                    innerRadius={55} outerRadius={75}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {mcqPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} style={{ filter: entry.name !== 'Unsolved' ? `drop-shadow(0px 0px 6px ${entry.fill}40)` : 'none' }} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-black text-white tracking-tighter drop-shadow-lg">{mcqTotal}</span>
-                <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {mcqCounts.total || 1}</span>
-              </div>
-            </div>
-
-             <div className="w-full grid grid-cols-3 gap-2 mt-2">
-               <SkillPill label="Easy" count={mcqEasy} color="text-emerald-400" bg="bg-emerald-500/10" dot="bg-emerald-500" />
-               <SkillPill label="Med" count={mcqMedium} color="text-amber-400" bg="bg-amber-500/10" dot="bg-amber-500" />
-               <SkillPill label="Hard" count={mcqHard} color="text-red-400" bg="bg-red-500/10" dot="bg-red-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* ── Action Grid ──────────────────────────────────────── */}
-        <div>
-          <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-1">Quick Navigation</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="group outline-none">
-                <div className={cn("bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 flex flex-col gap-3 transition-all duration-300", link.hoverBg)}>
-                  <div className="p-2 w-fit rounded-lg bg-zinc-800/50 group-hover:scale-110 transition-transform duration-300">
-                    <link.icon className={cn("h-4 w-4", link.color)} />
+               {/* 2. Side-by-side Bar Chart */}
+               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl py-3 px-3 xl:p-4 flex flex-col relative overflow-hidden min-h-0 shadow-sm">
+                  <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none" />
+                  
+                  <div className="w-full flex items-center gap-1.5 shrink-0 mb-1 z-10">
+                    <Activity className="h-3 w-3 text-blue-400" />
+                    <h3 className="text-[9px] font-bold text-zinc-400 tracking-widest uppercase">Breakdown</h3>
                   </div>
-                  <div>
-                    <p className="font-bold text-white text-[13px] tracking-tight mb-0.5">{link.title}</p>
-                    <p className="text-[10px] font-medium text-zinc-500">{link.desc}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                  <p className="text-[8px] text-zinc-500 mb-0.5 shrink-0 z-10">DSA vs MCQ difficulties</p>
+
+                 <div className="w-full flex-1 relative min-h-0 ml-[-10px]">
+                   <ResponsiveContainer width="100%" height="100%">
+                     <BarChart data={comparisonData} margin={{ top: 10, right: 0, left: -20, bottom: -5 }} barGap={2} barSize={8}>
+                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                       <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 8, fontWeight: 700 }} tickLine={false} axisLine={false} />
+                       <YAxis tick={{ fill: '#71717a', fontSize: 8 }} tickLine={false} axisLine={false} />
+                       <RechartsTooltip content={<CustomBarTooltip />} cursor={{ fill: '#27272a', opacity: 0.4 }} />
+                       <Legend iconType="circle" wrapperStyle={{ fontSize: '8px', fontWeight: 600, paddingTop: '5px' }} />
+                       <Bar dataKey="DSA" fill="#10b981" radius={[2, 2, 0, 0]} />
+                       <Bar dataKey="MCQ" fill="#a855f7" radius={[2, 2, 0, 0]} />
+                     </BarChart>
+                   </ResponsiveContainer>
+                 </div>
+               </div>
+
+               {/* 3. MCQ Pie Chart */}
+               <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl py-3 px-3 xl:p-4 relative overflow-hidden flex flex-col items-center min-h-0 shadow-sm">
+                 <div className="absolute top-0 left-0 w-24 h-24 bg-purple-500/5 blur-[30px] rounded-full pointer-events-none" />
+                 <div className="w-full flex items-center gap-1.5 mb-1 shrink-0 z-10">
+                   <BarChart3 className="h-3 w-3 text-purple-400" />
+                   <h3 className="text-[9px] font-bold text-zinc-400 tracking-widest uppercase">MCQ</h3>
+                 </div>
+                 
+                 <div className="w-full flex-1 relative min-h-0">
+                   <ResponsiveContainer width="100%" height="100%">
+                     <PieChart>
+                       <RechartsTooltip content={<CustomPieTooltip />} />
+                       <Pie data={mcqPieData} cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" paddingAngle={4} dataKey="value" stroke="none">
+                         {mcqPieData.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={entry.fill} style={{ filter: entry.name !== 'Unsolved' ? `drop-shadow(0px 0px 4px ${entry.fill}40)` : 'none' }} />
+                         ))}
+                       </Pie>
+                     </PieChart>
+                   </ResponsiveContainer>
+                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                     <span className="text-xl xl:text-2xl font-black text-white tracking-tighter drop-shadow-md leading-none">{mcqTotal}</span>
+                     <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {mcqCounts.total || 1}</span>
+                   </div>
+                 </div>
+
+                  <div className="w-full grid grid-cols-3 gap-1 xl:gap-1.5 mt-1 xl:mt-2 shrink-0 z-10 text-center">
+                    <SkillPill label="Easy" count={mcqEasy} color="text-emerald-400" bg="bg-emerald-500/10" dot="bg-emerald-500" />
+                    <SkillPill label="Med" count={mcqMedium} color="text-amber-400" bg="bg-amber-500/10" dot="bg-amber-500" />
+                    <SkillPill label="Hard" count={mcqHard} color="text-red-400" bg="bg-red-500/10" dot="bg-red-500" />
+                 </div>
+               </div>
+             </div>
+
+             {/* Bottom Row: Realistic Performance / Mastery Tile */}
+             <div className="flex-none bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 xl:p-5 relative overflow-hidden flex flex-col justify-center shadow-sm w-full">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
+                 
+                 <div className="relative z-10 flex flex-row items-end justify-between w-full mb-3 gap-3">
+                    <div className="flex flex-col">
+                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-bold uppercase tracking-widest mb-1.5 w-fit">
+                          <Target className="h-2.5 w-2.5" /> Overall Mastery
+                       </div>
+                       <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none mb-1">
+                         Platform Completion Rate
+                       </h2>
+                       <p className="text-[9px] md:text-[10px] text-zinc-400 font-medium leading-none">
+                         Valid consistent coding problem solving rate.
+                       </p>
+                    </div>
+                    
+                    <div className="text-right shrink-0">
+                       <p className="text-3xl font-black text-emerald-400 tracking-tighter leading-none">
+                          {totalProblems > 0 ? Math.round((solved / totalProblems) * 100) : 0}<span className="text-base text-emerald-500/50 ml-0.5">%</span>
+                       </p>
+                    </div>
+                 </div>
+
+                 {/* Wide Progress Bar */}
+                 <div className="relative z-10 w-full h-3 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/80 mb-1.5 shadow-inner">
+                    <div 
+                      className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                      style={{ width: `${totalProblems > 0 ? Math.max(0, (solved / totalProblems) * 100) : 0}%` }}
+                    />
+                 </div>
+                 
+                 <div className="w-full flex justify-between relative z-10">
+                    <span className="text-[8px] xl:text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1"><CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> {solved} Solved</span>
+                    <span className="text-[8px] xl:text-[9px] font-bold text-zinc-500 uppercase tracking-widest hidden sm:inline">{totalProblems} Total Verified Questions</span>
+                 </div>
+             </div>
+
           </div>
         </div>
-
       </div>
     </MainLayout>
   );

@@ -153,29 +153,29 @@ export default function PracticeLanguagePage() {
 
   return (
     <MainLayout>
-      <div className="min-h-[calc(100vh-80px)] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative overflow-hidden flex flex-col items-center pb-10">
+      <div className="h-[calc(100vh-80px)] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative overflow-hidden flex flex-col items-center pb-6">
         
         {/* Dynamic Backgrounds based on active tab */}
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
         
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-16 relative z-10 flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative z-10 flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
 
           {/* ── Header ── */}
-          <div className="flex flex-col items-center text-center gap-4 mb-12">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-sm">
+          <div className="flex flex-col items-center text-center gap-3 mb-6 shrink-0">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-sm">
               Practice Area
             </h1>
-            <p className="text-zinc-400 text-base font-medium max-w-lg">
+            <p className="text-zinc-400 text-sm font-medium max-w-lg">
               Select your domain, choose a language, and hone your engineering skills.
             </p>
           </div>
 
           {/* ── Controls (Tabs + Search) ── */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 w-full max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 shrink-0 w-full max-w-5xl mx-auto">
             
             {/* Tabs */}
-            <div className="flex bg-zinc-900/40 backdrop-blur-md rounded-2xl p-1.5 border border-zinc-800/80 shadow-lg w-full md:w-auto shrink-0">
+            <div className="flex bg-zinc-900/40 backdrop-blur-md rounded-2xl p-1.5 border border-zinc-800/80 shadow-sm w-full md:w-auto shrink-0">
                <button 
                  onClick={() => { setActiveTab('mcq'); setPage(1); }}
                  className={cn(
