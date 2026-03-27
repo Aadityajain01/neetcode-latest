@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
-  DEFAULT_TIME,
+  getCurrentDefaultTime,
   formatDateTimeLabel,
   formatTimeValue,
   getDateFromValue,
@@ -36,7 +36,8 @@ export function DateTimePopoverField({
   minDate?: Date;
 }) {
   const selectedDate = getDateFromValue(value);
-  const [defaultHours, defaultMinutes] = DEFAULT_TIME.split(":");
+  const currentDefault = getCurrentDefaultTime();
+  const [defaultHours, defaultMinutes] = currentDefault.split(":");
 
   const handleDateSelect = (nextDate?: Date) => {
     if (!nextDate) return;

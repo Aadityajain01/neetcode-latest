@@ -48,7 +48,7 @@ import {
 } from "./test-builder/types";
 
 export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
-  const QUESTIONS_PER_PAGE = 8;
+  const QUESTIONS_PER_PAGE = 5;
   const { community } = useCommunity();
   const [open, setOpen] = useState(false);
   const [selectedTestType, setSelectedTestType] = useState<"mcq" | "programming" | "mixed">("mcq");
@@ -400,7 +400,17 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
                     type="number"
                     className="w-full h-8 bg-zinc-900 border-zinc-800 focus:border-zinc-700"
                     value={form.durationMinutes}
-                    onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })}
+                    min={1}
+                    max={300}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                      const num = Number(raw);
+                      if (raw === '' || isNaN(num)) {
+                        setForm({ ...form, durationMinutes: 0 });
+                        return;
+                      }
+                      setForm({ ...form, durationMinutes: Math.min(300, Math.max(0, num)) });
+                    }}
                   />
                 </div>
 

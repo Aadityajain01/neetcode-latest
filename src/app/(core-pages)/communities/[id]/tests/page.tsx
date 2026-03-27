@@ -23,7 +23,10 @@ export default function TestsPage() {
   const [page, setPage] = useState(1);
 
   const canCreate =
-    userRole === "admin" || userRole === "owner" || community?.allowTestCreation;
+    userRole === "admin" ||
+    userRole === "owner" ||
+    userRole === "subadmin" ||
+    !!community?.allowTestCreation;
 
   const fetchTests = async () => {
     if (!community) return;
@@ -110,7 +113,7 @@ export default function TestsPage() {
               }
 
               const buttonLabel = hasEnded
-                ? "Results"
+                ? "Result Out"
                 : isOngoing
                   ? "Enter Test"
                   : "View Details";

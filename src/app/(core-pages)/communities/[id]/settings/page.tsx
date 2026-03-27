@@ -58,8 +58,8 @@ export default function SettingsPage() {
     if (!community) return;
     try {
       setMembersLoading(true);
-      const response = await communityApi.getMembers(community._id);
-      setMembers(Array.isArray(response.members) ? response.members : []);
+      const membersList = await communityApi.getMembers(community._id);
+      setMembers(Array.isArray(membersList) ? membersList : []);
     } catch {
       toast.error("Failed to load members");
     } finally {
@@ -203,6 +203,7 @@ export default function SettingsPage() {
                   const userData = member.userId as any;
                   const isUserOwner = member.role === "owner";
                   const isUserAdmin = member.role === "admin";
+                  const isUserSubadmin = member.role === "subadmin";
                   const canManage = isAdmin && !isUserOwner;
 
                   return (
@@ -219,6 +220,8 @@ export default function SettingsPage() {
                                 ? "bg-amber-500/10 text-amber-500"
                                 : isUserAdmin
                                   ? "bg-emerald-500/10 text-emerald-500"
+                                  : isUserSubadmin
+                                    ? "bg-sky-500/10 text-sky-400"
                                   : "bg-[#202c33] text-[#aebac1]"
                             )}
                           >
@@ -232,6 +235,7 @@ export default function SettingsPage() {
                                 </p>
                                 {isUserOwner && <Crown className="h-3.5 w-3.5 text-amber-500" />}
                                 {isUserAdmin && <Shield className="h-3.5 w-3.5 text-emerald-500" />}
+                                {isUserSubadmin && <Shield className="h-3.5 w-3.5 text-sky-400" />}
                                 {member.isMuted && <MicOff className="h-3.5 w-3.5 text-red-500" />}
                               </div>
                               <p className="text-[13px] text-[#8696a0] capitalize">{member.role}</p>

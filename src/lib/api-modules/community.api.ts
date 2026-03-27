@@ -1,5 +1,7 @@
 import { api } from "@/lib/api";
 
+export type CommunityRole = "owner" | "admin" | "subadmin" | "member";
+
 export interface Community {
   _id: string;
   name: string;
@@ -18,7 +20,7 @@ export interface CommunityMember {
   _id: string;
   communityId: string;
   userId: string | { _id: string; displayName: string; email: string; avatarUrl?: string };
-  role: "owner" | "admin" | "member";
+  role: CommunityRole;
   isMuted?: boolean;
   joinedAt: string;
 }
@@ -98,7 +100,7 @@ export const communityApi = {
     const res = await api.get<{ 
       community: Community; 
       isMember: boolean; 
-      userRole: string | null 
+      userRole: CommunityRole | null 
     }>(`/communities/${communityId}`);
     return res.data;
   },
@@ -123,12 +125,14 @@ export const communityApi = {
     return response.data;
   },
 
-  getMembers: async (communityId: string, params?: { limit?: number; offset?: number }) => {
-    const response = await api.get<{ members: CommunityMember[] }>(`/communities/${communityId}/members`, { params });
-    return response.data;
+  getMembers: async (communityId: string, params?: { limit?: number; offset?: number }): Promise<CommunityMember[]> => {
+    const response = await api.get<CommunityMember[] | { members: CommunityMember[] }>(`/communities/${communityId}/members`, { params });
+    // Backend returns a raw array, not { members: [...] }
+    const data = response.data;
+    return Array.isArray(data) ? data : (data.members ?? []);
   },
 
-  updateSettings: async (communityId: string, data: { name: string; description: string }) => {
+  updateSettings: async (communityId: string, data: { name: string; description: string; allowUsersToChat?: boolean; allowTestCreation?: boolean }) => {
     const response = await api.patch(`/communities/${communityId}/settings`, data);
     return response.data;
   },
@@ -143,8 +147,18 @@ export const communityApi = {
     return response.data;
   },
 
-  promoteMember: async (communityId: string, userId: string) => {
-    const response = await api.post(`/communities/${communityId}/promote`, { userId });
+  promoteMember: async (communityId: string, userId: string, role: "subadmin" | "admin") => {
+    const response = await api.post(`/communities/${communityId}/promote`, { userId, role });
+    return response.data;
+  },
+
+  updateMemberRole: async (communityId: string, userId: string, role: "member" | "subadmin" | "admin") => {
+    const response = await api.patch(`/communities/${communityId}/members/${userId}/role`, { role });
+    return response.data;
+  },
+
+  demoteMember: async (communityId: string, userId: string) => {
+    const response = await api.patch(`/communities/${communityId}/members/${userId}/role`, { role: "member" });
     return response.data;
   },
 

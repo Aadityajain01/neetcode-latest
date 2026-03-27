@@ -47,11 +47,13 @@ export const mcqApi = {
     limit?: number;
     offset?: number;
     excludeSolved?: string;
+    unsolvedFirst?: string;
   }) => {
-    // Expecting backend to return: { mcqs: [], pagination: {} }
+    // Expecting backend to return: { mcqs: [], pagination: {}, meta?: {} }
     const response = await api.get<{
       mcqs: MCQ[];
       pagination: { total: number; offset: number; limit: number };
+      meta?: { unsolvedCount: number };
     }>('/mcqs', { params });
     return response.data;
   },

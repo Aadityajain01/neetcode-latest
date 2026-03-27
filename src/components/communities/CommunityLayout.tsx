@@ -51,7 +51,13 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
   const basePath = `/communities/${community._id}`;
   const isAdmin = userRole === "admin" || userRole === "owner";
   const roleLabel =
-    userRole === "owner" ? "Owner" : userRole === "admin" ? "Admin" : "Member";
+    userRole === "owner"
+      ? "Owner"
+      : userRole === "admin"
+        ? "Admin"
+        : userRole === "subadmin"
+          ? "Subadmin"
+          : "Member";
 
   const navItems = [
     {

@@ -8,7 +8,12 @@ import type {
 } from "./types";
 import { PROGRAMMING_LANGUAGES } from "./types";
 
-export const DEFAULT_TIME = "09:00";
+export function getCurrentDefaultTime(): string {
+  const now = new Date();
+  return `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+}
+
+export const DEFAULT_TIME = getCurrentDefaultTime();
 
 export function createEmptyMcqDraft(): McqDraft {
   return {

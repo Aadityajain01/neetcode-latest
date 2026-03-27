@@ -193,7 +193,8 @@ export function ChatBox() {
 
   const isAdmin = userRole === "admin" || userRole === "owner";
   const chatDisabled = !community?.allowUsersToChat && !isAdmin;
-  const canCreateTest = isAdmin || community?.allowTestCreation;
+  const canCreateTest =
+    isAdmin || userRole === "subadmin" || !!community?.allowTestCreation;
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-950/60">
