@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useCommunity } from "@/components/communities/CommunityContext";
 import { leaderboardApi, LeaderboardEntry, CommunityAverageLeaderboardMe } from "@/lib/api-modules";
@@ -9,9 +9,9 @@ import { Loader2, Trophy, Users, CalendarDays, ChevronLeft, ChevronRight } from 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 10;
+const TABLE_PAGE_SIZE = 7;
 
-// ── Podium Card (same style as global leaderboard) ──
+// ── Podium Card ──
 function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; position: 1 | 2 | 3; isMe: boolean }) {
   const config = {
     1: { size: "h-24 w-24", ring: "ring-amber-400 ring-4", badge: "🥇", badgeBg: "bg-amber-500", order: "order-2", height: "pt-0", scoreColor: "text-amber-400", nameColor: "text-amber-300" },
@@ -79,57 +79,100 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
 
 export default function CommunityLeaderboardPage() {
   const { community } = useCommunity();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+
+  // ── State: podium (always top 3) ──
+  const [top3, setTop3] = useState<LeaderboardEntry[]>([]);
+  const [podiumLoading, setPodiumLoading] = useState(true);
+
+  // ── State: rankings table (offset=3, paginated) ──
+  const [tableEntries, setTableEntries] = useState<LeaderboardEntry[]>([]);
+  const [tableLoading, setTableLoading] = useState(true);
+  const [tablePage, setTablePage] = useState(1);
+  const [totalBeyondTop3, setTotalBeyondTop3] = useState(0);
+
+  // ── Shared state ──
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [summary, setSummary] = useState<{ participants: number; testsConsidered: number }>({ participants: 0, testsConsidered: 0 });
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [myStats, setMyStats] = useState<(CommunityAverageLeaderboardMe & { displayName: string; avatarUrl?: string }) | null>(null);
 
-  useEffect(() => {
+  // ── Fetch the fixed top 3 podium ──
+  const fetchPodium = useCallback(async () => {
     if (!community?._id) return;
-    const fetchLeaderboard = async () => {
-      setLoading(true);
-      setPage(1);
-      try {
-        const [data, me] = await Promise.all([
-          leaderboardApi.getCommunityAverageLeaderboard(community._id, { years: selectedYears, limit: 500 }),
-          leaderboardApi.getCommunityAverageMe(community._id, { years: selectedYears }).catch(() => null),
-        ]);
-        const list = data.leaderboard || [];
-        setEntries(list);
-        setAvailableYears(data.availableYears || []);
-        setSummary(data.summary || { participants: 0, testsConsidered: 0 });
-        if (me) {
-          const myEntry = list.find((e) => e.userId === me.userId);
-          setMyStats({ ...me, displayName: myEntry?.displayName || "You", avatarUrl: myEntry?.avatarUrl });
-        } else {
-          setMyStats(null);
-        }
-      } catch {
-        setEntries([]);
-        setAvailableYears([]);
-        setSummary({ participants: 0, testsConsidered: 0 });
+    setPodiumLoading(true);
+    try {
+      const [data, me] = await Promise.all([
+        leaderboardApi.getCommunityAverageLeaderboard(community._id, { years: selectedYears, limit: 3, offset: 0 }),
+        leaderboardApi.getCommunityAverageMe(community._id, { years: selectedYears }).catch(() => null),
+      ]);
+      const list = data.leaderboard || [];
+      setTop3(list);
+      setAvailableYears(data.availableYears || []);
+      setSummary(data.summary || { participants: 0, testsConsidered: 0 });
+      if (me) {
+        const myEntry = list.find((e) => e.userId === me.userId);
+        setMyStats({ ...me, displayName: myEntry?.displayName || "You", avatarUrl: myEntry?.avatarUrl });
+      } else {
         setMyStats(null);
-        toast.error("Unable to load leaderboard");
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchLeaderboard();
+    } catch {
+      setTop3([]);
+      toast.error("Unable to load leaderboard");
+    } finally {
+      setPodiumLoading(false);
+    }
   }, [community?._id, selectedYears]);
 
-  const top3 = entries.slice(0, 3);
-  const allRest = entries.slice(3);
-  const totalPages = Math.max(1, Math.ceil(allRest.length / PAGE_SIZE));
-  const pagedList = allRest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // ── Fetch the paginated rankings table (rank 4 onwards) ──
+  const fetchTable = useCallback(async (page: number) => {
+    if (!community?._id) return;
+    setTableLoading(true);
+    const offset = 3 + (page - 1) * TABLE_PAGE_SIZE;
+    try {
+      const data = await leaderboardApi.getCommunityAverageLeaderboard(community._id, {
+        years: selectedYears,
+        limit: TABLE_PAGE_SIZE,
+        offset,
+      });
+      setTableEntries(data.leaderboard || []);
+      // total beyond top 3
+      const fullTotal = data.total ?? data.summary?.participants ?? 0;
+      setTotalBeyondTop3(Math.max(0, fullTotal - 3));
+      // update available years if changed
+      if (data.availableYears?.length) setAvailableYears(data.availableYears);
+      if (data.summary) setSummary(data.summary);
+    } catch {
+      setTableEntries([]);
+      toast.error("Unable to load rankings");
+    } finally {
+      setTableLoading(false);
+    }
+  }, [community?._id, selectedYears]);
+
+  // When years filter changes → reset everything
+  useEffect(() => {
+    setTablePage(1);
+    fetchPodium();
+    fetchTable(1);
+  }, [community?._id, selectedYears]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When table page changes → only fetch table
+  useEffect(() => {
+    fetchTable(tablePage);
+  }, [tablePage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const totalTablePages = Math.max(1, Math.ceil(totalBeyondTop3 / TABLE_PAGE_SIZE));
+
   const isMeInTop3 = top3.some((e) => e.userId === myStats?.userId);
-  const isMeInPagedList = pagedList.some((e) => e.userId === myStats?.userId);
+  const isMeInTable = tableEntries.some((e) => e.userId === myStats?.userId);
 
   const toggleYear = (year: number) => {
-    setSelectedYears((prev) => prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year].sort((a, b) => a - b));
+    setSelectedYears((prev) =>
+      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year].sort((a, b) => a - b)
+    );
   };
+
+  const isInitialLoading = podiumLoading && tableLoading;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col px-4 py-6 sm:px-6">
@@ -144,8 +187,6 @@ export default function CommunityLeaderboardPage() {
             <p className="text-zinc-500 text-xs">Ranked by avg test score</p>
           </div>
         </div>
-
-        {/* Stats chips */}
         <div className="hidden sm:flex items-center gap-3">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-xs text-zinc-400">
             <Users className="h-3.5 w-3.5" />
@@ -174,19 +215,23 @@ export default function CommunityLeaderboardPage() {
         </div>
       )}
 
-      {loading ? (
+      {isInitialLoading ? (
         <div className="flex flex-1 items-center justify-center py-24">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         </div>
-      ) : entries.length === 0 ? (
+      ) : top3.length === 0 && tableEntries.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-zinc-600">
           <Users className="h-12 w-12 opacity-20" />
           <p className="text-sm">No test results yet for this period.</p>
         </div>
       ) : (
         <>
-          {/* ── Podium (Top 3) ── */}
-          {top3.length > 0 && (
+          {/* ── Podium (Top 3) — always shown, never repaginated ── */}
+          {podiumLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+            </div>
+          ) : top3.length > 0 && (
             <div className="relative mb-10">
               <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent rounded-3xl pointer-events-none" />
               <div className="flex items-end justify-center gap-3 md:gap-8 pt-8 pb-6">
@@ -198,7 +243,7 @@ export default function CommunityLeaderboardPage() {
           )}
 
           {/* ── Divider ── */}
-          {allRest.length > 0 && (
+          {(tableEntries.length > 0 || tableLoading) && (
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px flex-1 bg-zinc-800/60" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Rankings</span>
@@ -206,8 +251,12 @@ export default function CommunityLeaderboardPage() {
             </div>
           )}
 
-          {/* ── List ── */}
-          {pagedList.length > 0 && (
+          {/* ── Rankings Table (rank 4 onward, paginated) ── */}
+          {tableLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-500/60" />
+            </div>
+          ) : tableEntries.length > 0 && (
             <div className="rounded-2xl overflow-hidden border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-sm">
               <div className="grid grid-cols-12 gap-4 px-5 py-3 text-[10px] font-bold text-zinc-600 uppercase tracking-wider border-b border-zinc-800/50">
                 <div className="col-span-1 text-center">#</div>
@@ -216,7 +265,7 @@ export default function CommunityLeaderboardPage() {
                 <div className="col-span-2 text-right hidden sm:block">Tests</div>
               </div>
               <div className="divide-y divide-zinc-800/30">
-                {pagedList.map((entry) => (
+                {tableEntries.map((entry) => (
                   <LeaderboardRow key={entry.userId} entry={entry} isMe={entry.userId === myStats?.userId} />
                 ))}
               </div>
@@ -224,20 +273,28 @@ export default function CommunityLeaderboardPage() {
           )}
 
           {/* ── Pagination ── */}
-          {totalPages > 1 && (
+          {totalTablePages > 1 && (
             <div className="flex items-center justify-between mt-4 px-1">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <button
+                onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                disabled={tablePage === 1}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
                 <ChevronLeft className="h-4 w-4" /> Previous
               </button>
-              <span className="text-xs text-zinc-600 font-mono">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <span className="text-xs text-zinc-600 font-mono">Page {tablePage} of {totalTablePages}</span>
+              <button
+                onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))}
+                disabled={tablePage === totalTablePages}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}
 
-          {/* ── Pinned user row if not visible ── */}
-          {!isMeInTop3 && !isMeInPagedList && myStats && (
+          {/* ── Pinned user row if not visible in current view ── */}
+          {!isMeInTop3 && !isMeInTable && myStats && (
             <div className="mt-4">
               <div className="flex justify-center mb-2">
                 <div className="inline-flex items-center gap-1.5 text-zinc-700 text-xs">
@@ -248,7 +305,14 @@ export default function CommunityLeaderboardPage() {
               </div>
               <div className="rounded-2xl overflow-hidden border border-zinc-800/50 bg-zinc-900/20">
                 <LeaderboardRow
-                  entry={{ userId: myStats.userId, displayName: myStats.displayName, avatarUrl: myStats.avatarUrl, score: myStats.averageScore, rank: myStats.rank, testCount: myStats.testCount }}
+                  entry={{
+                    userId: myStats.userId,
+                    displayName: myStats.displayName,
+                    avatarUrl: myStats.avatarUrl,
+                    score: myStats.averageScore,
+                    rank: myStats.rank,
+                    testCount: myStats.testCount,
+                  }}
                   isMe={true}
                 />
               </div>

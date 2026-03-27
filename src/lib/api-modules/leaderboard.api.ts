@@ -26,6 +26,7 @@ export interface CommunityAverageLeaderboardMe {
 export interface CommunityAverageLeaderboardResponse {
   leaderboard: LeaderboardEntry[];
   availableYears: number[];
+  total: number;
   summary: {
     participants: number;
     testsConsidered: number;
