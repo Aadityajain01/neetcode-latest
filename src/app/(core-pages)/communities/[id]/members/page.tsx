@@ -17,12 +17,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+type MemberActionDialogState =
+  | { type: "remove"; userId: string; memberName: string }
+  | { type: "transfer"; userId: string; memberName: string }
+  | null;
 
 export default function MembersPage() {
   const { community, isMember, userRole } = useCommunity();
   const { user } = useAuthStore();
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberActionDialog, setMemberActionDialog] = useState<MemberActionDialogState>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const isOwner = userRole === "owner";
 
   const fetchMembers = async () => {
@@ -57,7 +74,6 @@ export default function MembersPage() {
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if(!confirm("Remove this user?")) return;
     try {
       await communityApi.removeMember(community!._id, userId);
       toast.success("Member removed");
@@ -68,7 +84,6 @@ export default function MembersPage() {
   };
 
   const handleTransferOwnership = async (userId: string) => {
-    if(!confirm("Transfer ownership? You will become a regular member.")) return;
     try {
       await communityApi.transferOwnership(community!._id, userId);
       toast.success("Ownership transferred");
@@ -86,6 +101,23 @@ export default function MembersPage() {
      } catch(e) {
        toast.error("Failed to toggle mute state");
      }
+  };
+
+  const handleConfirmMemberAction = async () => {
+    if (!memberActionDialog) return;
+
+    setActionLoading(true);
+    try {
+      if (memberActionDialog.type === "remove") {
+        await handleRemoveMember(memberActionDialog.userId);
+      } else {
+        await handleTransferOwnership(memberActionDialog.userId);
+      }
+
+      setMemberActionDialog(null);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   if (loading) return (
@@ -193,7 +225,16 @@ export default function MembersPage() {
                              )}
                              
                              {canRoleManage && (
-                               <DropdownMenuItem onClick={() => handleTransferOwnership(userData._id)} className="focus:bg-amber-500/10 focus:text-amber-500 cursor-pointer">
+                               <DropdownMenuItem
+                                 onClick={() =>
+                                   setMemberActionDialog({
+                                     type: "transfer",
+                                     userId: userData._id,
+                                     memberName: userData?.displayName || "this member",
+                                   })
+                                 }
+                                 className="focus:bg-amber-500/10 focus:text-amber-500 cursor-pointer"
+                               >
                                  <ArrowRightLeft className="w-4 h-4 mr-2" /> Transfer Ownership
                                </DropdownMenuItem>
                              )}
@@ -210,7 +251,16 @@ export default function MembersPage() {
                              )}
 
                              {canModerate && (
-                               <DropdownMenuItem onClick={() => handleRemoveMember(userData._id)} className="focus:bg-red-500/10 focus:text-red-500 text-red-400 cursor-pointer">
+                               <DropdownMenuItem
+                                 onClick={() =>
+                                   setMemberActionDialog({
+                                     type: "remove",
+                                     userId: userData._id,
+                                     memberName: userData?.displayName || "this member",
+                                   })
+                                 }
+                                 className="focus:bg-red-500/10 focus:text-red-500 text-red-400 cursor-pointer"
+                               >
                                  <UserX className="w-4 h-4 mr-2" /> Remove Member
                                </DropdownMenuItem>
                              )}
@@ -222,6 +272,38 @@ export default function MembersPage() {
             })}
          </div>
       )}
+
+      <AlertDialog open={!!memberActionDialog} onOpenChange={(open) => !open && setMemberActionDialog(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {memberActionDialog?.type === "remove" ? "Remove Member" : "Transfer Ownership"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              {memberActionDialog?.type === "remove"
+                ? `Remove ${memberActionDialog.memberName} from this community?`
+                : `Transfer ownership to ${memberActionDialog?.memberName}? You will become a regular member.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-zinc-800 bg-transparent text-zinc-300 hover:bg-zinc-900">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmMemberAction}
+              disabled={actionLoading}
+              className={
+                memberActionDialog?.type === "remove"
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-amber-500 hover:bg-amber-600 text-zinc-900"
+              }
+            >
+              {actionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {memberActionDialog?.type === "remove" ? "Remove" : "Transfer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -20,9 +20,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { ArrowRightLeft, Crown, Loader2, Mic, MicOff, Shield, UserX } from "lucide-react";
+import { ArrowRightLeft, Crown, Loader2, Mic, MicOff, MoreVertical, Shield, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type MemberActionType = "remove" | "transfer" | "mute";
+
+interface MemberActionDialogState {
+  type: MemberActionType;
+  userId: string;
+  memberName: string;
+  isMuted?: boolean;
+}
 
 export default function SettingsPage() {
   const { community, userRole, refreshCommunity } = useCommunity();
@@ -39,6 +66,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [memberActionDialog, setMemberActionDialog] = useState<MemberActionDialogState | null>(null);
+  const [memberActionLoading, setMemberActionLoading] = useState(false);
 
   const isAdmin = userRole === "admin" || userRole === "owner";
   const isOwner = userRole === "owner";
@@ -96,7 +125,6 @@ export default function SettingsPage() {
 
   const handleRemoveMember = async (userId: string) => {
     if (!community) return;
-    if (!confirm("Remove this member?")) return;
     try {
       await communityApi.removeMember(community._id, userId);
       toast.success("Member removed");
@@ -134,7 +162,6 @@ export default function SettingsPage() {
 
   const handleTransferOwnership = async (newOwnerId: string) => {
     if (!community || !isOwner) return;
-    if (!confirm("Transfer ownership? You will become a regular member.")) return;
     try {
       await communityApi.transferOwnership(community._id, newOwnerId);
       toast.success("Ownership transferred");
@@ -142,6 +169,57 @@ export default function SettingsPage() {
       fetchMembers();
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to transfer ownership");
+    }
+  };
+
+  const getDialogCopy = () => {
+    if (!memberActionDialog) return null;
+
+    if (memberActionDialog.type === "remove") {
+      return {
+        title: "Remove Member",
+        description: `Remove ${memberActionDialog.memberName} from this community? This action can be reversed only if they join again.`,
+        actionLabel: "Remove",
+        actionClassName: "bg-red-500 hover:bg-red-600 text-white border-0",
+      };
+    }
+
+    if (memberActionDialog.type === "transfer") {
+      return {
+        title: "Transfer Ownership",
+        description: `Transfer ownership to ${memberActionDialog.memberName}? You will become a regular member.`,
+        actionLabel: "Transfer",
+        actionClassName: "bg-amber-500 hover:bg-amber-600 text-[#111b21] border-0",
+      };
+    }
+
+    const muting = !memberActionDialog.isMuted;
+    return {
+      title: muting ? "Mute Member" : "Unmute Member",
+      description: muting
+        ? `${memberActionDialog.memberName} will not be able to send chat messages.`
+        : `${memberActionDialog.memberName} will be able to send chat messages again.`,
+      actionLabel: muting ? "Mute" : "Unmute",
+      actionClassName: "bg-[#00a884] hover:bg-[#029074] text-[#111b21] border-0",
+    };
+  };
+
+  const handleConfirmMemberAction = async () => {
+    if (!memberActionDialog || !community) return;
+
+    setMemberActionLoading(true);
+    try {
+      if (memberActionDialog.type === "remove") {
+        await handleRemoveMember(memberActionDialog.userId);
+      } else if (memberActionDialog.type === "transfer") {
+        await handleTransferOwnership(memberActionDialog.userId);
+      } else {
+        await handleMuteToggle(memberActionDialog.userId, !!memberActionDialog.isMuted);
+      }
+
+      setMemberActionDialog(null);
+    } finally {
+      setMemberActionLoading(false);
     }
   };
 
@@ -285,83 +363,106 @@ export default function SettingsPage() {
                       </Link>
 
                       {canManage && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          {canRoleManage && member.role === "member" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="sm"
-                              onClick={() => handleRoleUpdate(userData._id, "subadmin", "Member promoted to subadmin")}
-                              className="rounded-lg h-8 text-sky-300 hover:bg-sky-500/10 hover:text-sky-200"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg text-[#8696a0] hover:bg-[#202c33] hover:text-[#d1d7db]"
                             >
-                              <Shield className="mr-2 h-4 w-4" />
-                              To Subadmin
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
-                          )}
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52 border-[#2a3942] bg-[#111b21] text-[#d1d7db]">
+                            <DropdownMenuLabel>Manage Member</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-[#2a3942]" />
 
-                          {canRoleManage && member.role === "subadmin" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRoleUpdate(userData._id, "admin", "Subadmin promoted to admin")}
-                              className="rounded-lg h-8 text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
-                            >
-                              <Shield className="mr-2 h-4 w-4" />
-                              To Admin
-                            </Button>
-                          )}
-
-                          {canRoleManage && (member.role === "admin" || member.role === "subadmin") && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRoleUpdate(userData._id, "member", "Role changed to member")}
-                              className="rounded-lg h-8 text-orange-300 hover:bg-orange-500/10 hover:text-orange-200"
-                            >
-                              <UserX className="mr-2 h-4 w-4" />
-                              Demote
-                            </Button>
-                          )}
-
-                          {canRoleManage && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleTransferOwnership(userData._id)}
-                              className="rounded-lg h-8 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
-                            >
-                              <ArrowRightLeft className="mr-2 h-4 w-4" />
-                              Handover
-                            </Button>
-                          )}
-
-                          {canModerate && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMuteToggle(userData._id, !!member.isMuted)}
-                            className="rounded-lg h-8 text-[#8696a0] hover:bg-[#202c33] hover:text-[#d1d7db]"
-                          >
-                            {member.isMuted ? (
-                              <Mic className="mr-2 h-4 w-4" />
-                            ) : (
-                              <MicOff className="mr-2 h-4 w-4" />
+                            {canRoleManage && member.role === "member" && (
+                              <DropdownMenuItem
+                                onClick={() => handleRoleUpdate(userData._id, "subadmin", "Member promoted to subadmin")}
+                                className="cursor-pointer focus:bg-sky-500/10 focus:text-sky-300"
+                              >
+                                <Shield className="mr-2 h-4 w-4" />
+                                Promote to Subadmin
+                              </DropdownMenuItem>
                             )}
-                            {member.isMuted ? "Unmute" : "Mute"}
-                          </Button>
-                          )}
 
-                          {canModerate && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveMember(userData._id)}
-                            className="rounded-lg h-8 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                          >
-                            <UserX className="mr-2 h-4 w-4" />
-                            Remove
-                          </Button>
-                          )}
-                        </div>
+                            {canRoleManage && member.role === "subadmin" && (
+                              <DropdownMenuItem
+                                onClick={() => handleRoleUpdate(userData._id, "admin", "Subadmin promoted to admin")}
+                                className="cursor-pointer focus:bg-indigo-500/10 focus:text-indigo-300"
+                              >
+                                <Shield className="mr-2 h-4 w-4" />
+                                Promote to Admin
+                              </DropdownMenuItem>
+                            )}
+
+                            {canRoleManage && (member.role === "admin" || member.role === "subadmin") && (
+                              <DropdownMenuItem
+                                onClick={() => handleRoleUpdate(userData._id, "member", "Role changed to member")}
+                                className="cursor-pointer focus:bg-orange-500/10 focus:text-orange-300"
+                              >
+                                <UserX className="mr-2 h-4 w-4" />
+                                Demote to Member
+                              </DropdownMenuItem>
+                            )}
+
+                            {canRoleManage && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setMemberActionDialog({
+                                    type: "transfer",
+                                    userId: userData._id,
+                                    memberName: userData?.displayName || "this member",
+                                  })
+                                }
+                                className="cursor-pointer focus:bg-amber-500/10 focus:text-amber-300"
+                              >
+                                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                Handover Ownership
+                              </DropdownMenuItem>
+                            )}
+
+                            {canModerate && <DropdownMenuSeparator className="bg-[#2a3942]" />}
+
+                            {canModerate && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setMemberActionDialog({
+                                    type: "mute",
+                                    userId: userData._id,
+                                    memberName: userData?.displayName || "this member",
+                                    isMuted: !!member.isMuted,
+                                  })
+                                }
+                                className="cursor-pointer focus:bg-[#202c33]"
+                              >
+                                {member.isMuted ? (
+                                  <Mic className="mr-2 h-4 w-4" />
+                                ) : (
+                                  <MicOff className="mr-2 h-4 w-4" />
+                                )}
+                                {member.isMuted ? "Unmute" : "Mute"}
+                              </DropdownMenuItem>
+                            )}
+
+                            {canModerate && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setMemberActionDialog({
+                                    type: "remove",
+                                    userId: userData._id,
+                                    memberName: userData?.displayName || "this member",
+                                  })
+                                }
+                                className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300"
+                              >
+                                <UserX className="mr-2 h-4 w-4" />
+                                Remove Member
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                   );
@@ -411,6 +512,30 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!memberActionDialog} onOpenChange={(open) => !open && setMemberActionDialog(null)}>
+        <AlertDialogContent className="border-[#2a3942] bg-[#233138] text-[#e9edef]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{getDialogCopy()?.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#8696a0]">
+              {getDialogCopy()?.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-[#2a3942] bg-transparent text-[#aebac1] hover:bg-[#111b21] hover:text-[#d1d7db]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmMemberAction}
+              disabled={memberActionLoading}
+              className={getDialogCopy()?.actionClassName}
+            >
+              {memberActionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {getDialogCopy()?.actionLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
