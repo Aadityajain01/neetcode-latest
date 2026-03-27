@@ -217,7 +217,7 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 min-h-0 bg-zinc-950/80 relative overflow-hidden flex flex-col w-full h-full">
+          <main className="flex-1 min-h-0 bg-zinc-950/80 relative overflow-y-auto flex flex-col w-full h-full">
             <div className="relative z-10 w-full h-full flex flex-col flex-1">
             {!isMember ? (
               <div className="flex h-full flex-col items-center justify-center gap-4 p-10 text-center text-zinc-400 bg-zinc-950/70">

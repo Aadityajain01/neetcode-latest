@@ -132,7 +132,7 @@ export default function CommunityLeaderboardPage() {
   };
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 py-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col px-4 py-6 sm:px-6">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
