@@ -17,7 +17,7 @@ interface CommunityOption {
   name: string;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 7;
 
 // ── Podium Card for Top 3 (no box border) ──
 function PodiumCard({
