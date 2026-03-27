@@ -35,7 +35,8 @@ import {
   MoreVertical,
   Settings,
   Trophy,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from "lucide-react";
 
 export function CommunityLayout({ children }: { children: React.ReactNode }) {
@@ -77,6 +78,12 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
       path: `${basePath}/tests`,
       icon: FileText,
       show: true,
+    },
+    {
+      name: "Members",
+      path: `${basePath}/members`,
+      icon: Users,
+      show: isMember,
     },
     {
       name: "Analytics",

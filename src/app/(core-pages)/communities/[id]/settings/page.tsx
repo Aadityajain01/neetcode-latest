@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCommunity } from "@/components/communities/CommunityContext";
 import { communityApi } from "@/lib/api-modules";
+import { useAuthStore } from "@/store/auth-store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Crown, Loader2, Mic, MicOff, Shield, UserX } from "lucide-react";
+import { ArrowRightLeft, Crown, Loader2, Mic, MicOff, Shield, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { community, userRole, refreshCommunity } = useCommunity();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -115,6 +117,34 @@ export default function SettingsPage() {
     }
   };
 
+  const handleRoleUpdate = async (
+    userId: string,
+    targetRole: "member" | "subadmin" | "admin",
+    successMessage: string
+  ) => {
+    if (!community) return;
+    try {
+      await communityApi.updateMemberRole(community._id, userId, targetRole);
+      toast.success(successMessage);
+      fetchMembers();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to update role");
+    }
+  };
+
+  const handleTransferOwnership = async (newOwnerId: string) => {
+    if (!community || !isOwner) return;
+    if (!confirm("Transfer ownership? You will become a regular member.")) return;
+    try {
+      await communityApi.transferOwnership(community._id, newOwnerId);
+      toast.success("Ownership transferred");
+      await refreshCommunity();
+      fetchMembers();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to transfer ownership");
+    }
+  };
+
   return (
     <div className="flex w-full flex-col px-4 py-6 sm:px-8 max-w-4xl mx-auto h-full overflow-y-auto">
       <div className="mb-6">
@@ -186,6 +216,9 @@ export default function SettingsPage() {
         <div className="rounded-2xl bg-[#111b21] shadow-sm border border-transparent flex flex-col min-h-[300px]">
           <div className="border-b border-[#202c33] px-5 py-4 shrink-0">
             <h3 className="text-lg font-semibold text-[#e9edef]">Members</h3>
+            <p className="mt-1 text-xs text-[#8696a0]">
+              Mute blocks only chat messages. Owners can promote, demote, and transfer ownership here.
+            </p>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -204,7 +237,14 @@ export default function SettingsPage() {
                   const isUserOwner = member.role === "owner";
                   const isUserAdmin = member.role === "admin";
                   const isUserSubadmin = member.role === "subadmin";
-                  const canManage = isAdmin && !isUserOwner;
+                  const isMe = userData?._id === user?.id;
+                  const canRoleManage = isOwner && !isUserOwner && !isMe;
+                  const canModerate = isOwner
+                    ? !isUserOwner && !isMe
+                    : userRole === "admin"
+                      ? !isUserOwner && member.role !== "admin" && !isMe
+                      : false;
+                  const canManage = canRoleManage || canModerate;
 
                   return (
                     <div
@@ -245,7 +285,56 @@ export default function SettingsPage() {
                       </Link>
 
                       {canManage && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {canRoleManage && member.role === "member" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleUpdate(userData._id, "subadmin", "Member promoted to subadmin")}
+                              className="rounded-lg h-8 text-sky-300 hover:bg-sky-500/10 hover:text-sky-200"
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              To Subadmin
+                            </Button>
+                          )}
+
+                          {canRoleManage && member.role === "subadmin" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleUpdate(userData._id, "admin", "Subadmin promoted to admin")}
+                              className="rounded-lg h-8 text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              To Admin
+                            </Button>
+                          )}
+
+                          {canRoleManage && (member.role === "admin" || member.role === "subadmin") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleUpdate(userData._id, "member", "Role changed to member")}
+                              className="rounded-lg h-8 text-orange-300 hover:bg-orange-500/10 hover:text-orange-200"
+                            >
+                              <UserX className="mr-2 h-4 w-4" />
+                              Demote
+                            </Button>
+                          )}
+
+                          {canRoleManage && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleTransferOwnership(userData._id)}
+                              className="rounded-lg h-8 text-amber-300 hover:bg-amber-500/10 hover:text-amber-200"
+                            >
+                              <ArrowRightLeft className="mr-2 h-4 w-4" />
+                              Handover
+                            </Button>
+                          )}
+
+                          {canModerate && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -259,6 +348,9 @@ export default function SettingsPage() {
                             )}
                             {member.isMuted ? "Unmute" : "Mute"}
                           </Button>
+                          )}
+
+                          {canModerate && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -268,6 +360,7 @@ export default function SettingsPage() {
                             <UserX className="mr-2 h-4 w-4" />
                             Remove
                           </Button>
+                          )}
                         </div>
                       )}
                     </div>
