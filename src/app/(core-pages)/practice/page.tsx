@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layouts/main-layout";
 import { mcqApi, problemApi, MCQ, Problem } from "@/lib/api-modules";
+import { useAuthStore } from "@/store/auth-store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Code2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ProblemsPageSkeleton } from "@/components/skeletons/site-skeletons";
+import { toast } from "sonner";
 
 type LanguageMeta = {
   name: string;
@@ -19,12 +21,15 @@ type LanguageMeta = {
 
 const ITEMS_PER_PAGE = 5;
 
-function normalizeLanguage(value: string): string {
+function normalizeLanguage(value?: string | null): string {
+  if (typeof value !== "string") return "";
   return value.trim().toLowerCase();
 }
 
 export default function PracticeLanguagePage() {
   const router = useRouter();
+  const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const isAuthReady = initialized && !authLoading;
   const [loading, setLoading] = useState(true);
   const [languages, setLanguages] = useState<LanguageMeta[]>([]);
   const [search, setSearch] = useState("");
@@ -35,13 +40,18 @@ export default function PracticeLanguagePage() {
   const [selectedDifficulties, setSelectedDifficulties] = useState<Record<string, string>>({}); // { langName: difficulty }
 
   useEffect(() => {
+    if (!isAuthReady) return;
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
     fetchLanguages();
-  }, []);
+  }, [isAuthReady, isAuthenticated, router]);
 
   const fetchLanguages = async () => {
     try {
       setLoading(true);
-      const [mcqMetaRes, mcqListRes, dsaProblemsRes, practiceProblemsRes] = await Promise.all([
+      const [mcqMetaRes, mcqListRes, dsaProblemsRes, practiceProblemsRes] = await Promise.allSettled([
         mcqApi.getMeta(),
         mcqApi.getMCQs({ limit: 2000 }),
         problemApi.getProblems({ type: "dsa", limit: 2000 }),
@@ -63,18 +73,25 @@ export default function PracticeLanguagePage() {
         }
       };
 
-      (mcqMetaRes.data.languages || []).forEach((lang) => {
-        ensureLanguage(lang);
-      });
+      if (mcqMetaRes.status === "fulfilled") {
+        (mcqMetaRes.value.data.languages || []).forEach((lang) => {
+          ensureLanguage(lang);
+        });
+      }
 
-      (mcqListRes.mcqs || []).forEach((mcq: MCQ) => {
-        const lang = normalizeLanguage(mcq.language);
-        if (!map.has(lang)) {
-          map.set(lang, { name: lang, difficulties: new Set(), tags: new Set() });
-        }
-        map.get(lang)!.difficulties.add(mcq.difficulty);
-        mcq.tags?.forEach((t) => map.get(lang)!.tags.add(t));
-      });
+      if (mcqListRes.status === "fulfilled") {
+        (mcqListRes.value.mcqs || []).forEach((mcq: MCQ) => {
+          const lang = normalizeLanguage(mcq.language);
+          if (!lang) return;
+          if (!map.has(lang)) {
+            map.set(lang, { name: lang, difficulties: new Set(), tags: new Set() });
+          }
+          if (mcq.difficulty) {
+            map.get(lang)!.difficulties.add(mcq.difficulty);
+          }
+          mcq.tags?.forEach((t) => map.get(lang)!.tags.add(t));
+        });
+      }
 
       const addProblemLanguages = (problem: Problem) => {
         (problem.languages || []).forEach((lang) => {
@@ -82,10 +99,25 @@ export default function PracticeLanguagePage() {
         });
       };
 
-      (dsaProblemsRes.problems || []).forEach(addProblemLanguages);
-      (practiceProblemsRes.problems || []).forEach(addProblemLanguages);
+      if (dsaProblemsRes.status === "fulfilled") {
+        (dsaProblemsRes.value.problems || []).forEach(addProblemLanguages);
+      }
+      if (practiceProblemsRes.status === "fulfilled") {
+        (practiceProblemsRes.value.problems || []).forEach(addProblemLanguages);
+      }
+
+      const failures = [mcqMetaRes, mcqListRes, dsaProblemsRes, practiceProblemsRes].filter(
+        (result) => result.status === "rejected"
+      ).length;
+
+      if (failures > 0 && map.size > 0) {
+        toast.warning("Some language sources failed to load. Showing available results.");
+      }
       
       const langs = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+      if (langs.length === 0) {
+        throw new Error("No language data available from API responses.");
+      }
       setLanguages(langs);
       
       // Initialize default difficulty 'all' for each language
@@ -97,6 +129,7 @@ export default function PracticeLanguagePage() {
       
     } catch (e) {
       console.error(e);
+      toast.error("Failed to load languages. Please refresh the page.");
     } finally {
       setLoading(false);
     }
@@ -143,7 +176,7 @@ export default function PracticeLanguagePage() {
     }
   };
 
-  if (loading) {
+  if (!isAuthReady || (isAuthenticated && loading)) {
     return (
       <MainLayout>
         <ProblemsPageSkeleton />
