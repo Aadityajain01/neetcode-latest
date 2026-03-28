@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
-import { useUIStore } from '@/store/ui-store'; // ✅ Import UI Store
+import { useUIStore } from '@/store/ui-store';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { TutorialGuide } from '@/components/TutorialGuide';
-import logo from '../../../public/logo.png'
+
 interface MainLayoutProps {
   children: React.ReactNode;
 }
@@ -17,10 +16,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const { logout } = useAuthStore();
-
-  // ✅ Use global store for Tutorial state
   const { isTutorialOpen, closeTutorial, openTutorial } = useUIStore();
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -29,7 +25,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
+    <div className="flex h-screen h-[100dvh] bg-zinc-950 overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
 
       {/* Mobile Menu Overlay */}
       {sidebarOpen && (
@@ -44,14 +40,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}
-        onShowTutorial={openTutorial} // ✅ Connect to store action
+        onShowTutorial={openTutorial}
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 transition-all duration-300">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 transition-all duration-300 h-full overflow-hidden">
 
         {/* Mobile Header */}
-        <div className="lg:hidden h-16 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-30">
+        <div className="lg:hidden h-14 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-900/50 backdrop-blur-md z-30 shrink-0">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-zinc-300" />
           </Button>
@@ -59,20 +55,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Premium Deep Radial Background */}
-        <div className="absolute inset-0 bg-zinc-950">
+        <div className="absolute inset-0 bg-zinc-950 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.1),rgba(255,255,255,0))]" />
         </div>
 
-        {/* Content Scroll Area */}
-        <ScrollArea className="flex-1 scrollbar-emerald">
-          <div className="container mx-auto p-4 lg:p-8 max-w-7xl relative z-10 ">
-            {children}
-          </div>
-        </ScrollArea>
+        {/* Content Area — NO scroll, children manage their own layout */}
+        <div className="flex-1 min-h-0 relative z-10 overflow-hidden">
+          {children}
+        </div>
       </main>
 
       {/* GLOBAL TUTORIAL OVERLAY */}
-      {/* Controlled entirely by the store now */}
       {isTutorialOpen && (
         <TutorialGuide onClose={closeTutorial} />
       )}

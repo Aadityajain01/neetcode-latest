@@ -105,7 +105,9 @@ export default function ProfilePage() {
 
   return (
     <MainLayout>
-      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4">
+      {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
+      <div className="h-full overflow-y-auto scrollbar-emerald">
+      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {loading && (
           <ProfilePageSkeleton />
@@ -298,6 +300,7 @@ export default function ProfilePage() {
         {isEditOpen && data && (
           <EditProfileModal user={data.details} onClose={() => setIsEditOpen(false)} onUpdate={() => { profileQuery.refetch(); setIsEditOpen(false); }} />
         )}
+      </div>
       </div>
     </MainLayout>
   );

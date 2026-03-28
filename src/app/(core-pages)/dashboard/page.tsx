@@ -118,8 +118,6 @@ export default function DashboardPage() {
   const dsaHard = stats?.dsaSolvedBreakdown?.hard || 0;
 
   // ─── Graph Data Formats ───
-  
-  // Custom Pie Colors: Easy (Emerald), Medium (Amber), Hard (Red)
   const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
   
   const dsaPieData = [
@@ -134,11 +132,9 @@ export default function DashboardPage() {
     { name: 'Hard', value: mcqHard, fill: COLORS[2] },
   ].filter(d => d.value > 0);
 
-  // Fallback data if 0 solves
   if (dsaPieData.length === 0) dsaPieData.push({ name: 'Unsolved', value: 1, fill: '#27272a' });
   if (mcqPieData.length === 0) mcqPieData.push({ name: 'Unsolved', value: 1, fill: '#27272a' });
 
-  // Comparison Bar Chart
   const comparisonData = [
     { name: 'Easy', DSA: dsaEasy, MCQ: mcqEasy },
     { name: 'Medium', DSA: dsaMedium, MCQ: mcqMedium },
@@ -154,10 +150,11 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <div className="h-[calc(100vh-80px)] overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Viewport-locked dashboard — fills exactly the available space */}
+      <div className="h-full overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* ── Header ────────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 shrink-0">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Platform Active
@@ -179,7 +176,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Main Layout Box ──────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0 overflow-hidden">
           
           {/* Left Column (Stats + Nav) */}
           <div className="flex flex-col gap-3 xl:gap-4 w-full lg:w-[320px] xl:w-[340px] shrink-0 min-h-0">
@@ -192,9 +189,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Links */}
-            <div className="flex-1 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-2.5 xl:p-3 flex flex-col min-h-0 shadow-sm">
+            <div className="flex-1 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-2.5 xl:p-3 flex flex-col min-h-0 shadow-sm overflow-hidden">
               <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5 shrink-0 px-1">Quick Navigation</h3>
-              <div className="flex-1 flex flex-col justify-around min-h-0 overflow-y-auto custom-scrollbar pr-1">
+              <div className="flex-1 flex flex-col justify-around min-h-0 overflow-hidden pr-1">
                 {quickLinks.map((link) => (
                   <Link key={link.href} href={link.href} className="group outline-none">
                     <div className={cn("bg-zinc-900/40 rounded-xl p-2.5 xl:p-3 flex items-center gap-3 transition-all duration-300 border border-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]", link.hoverBg)}>
@@ -213,7 +210,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column (Charts + Wide Banner) */}
-          <div className="flex-1 flex flex-col gap-3 xl:gap-4 min-w-0 min-h-0">
+          <div className="flex-1 flex flex-col gap-3 xl:gap-4 min-w-0 min-h-0 overflow-hidden">
              
              {/* Top Row: 3 Square-ish Charts */}
              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xl:gap-4 flex-[3] min-h-0 overflow-hidden">
@@ -307,8 +304,8 @@ export default function DashboardPage() {
                </div>
              </div>
 
-             {/* Bottom Row: Realistic Performance / Mastery Tile */}
-             <div className="flex-none bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 xl:p-5 relative overflow-hidden flex flex-col justify-center shadow-sm w-full">
+             {/* Bottom Row: Mastery Tile */}
+             <div className="shrink-0 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-4 xl:p-5 relative overflow-hidden flex flex-col justify-center shadow-sm w-full">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
                  
                  <div className="relative z-10 flex flex-row items-end justify-between w-full mb-3 gap-3">

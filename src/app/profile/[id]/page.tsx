@@ -110,7 +110,9 @@ export default function PublicProfilePage() {
 
   return (
     <MainLayout>
-      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4">
+      {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
+      <div className="h-full overflow-y-auto scrollbar-emerald">
+      <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {/* Back Button */}
         <button onClick={() => router.back()} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4 text-xs font-bold uppercase tracking-widest outline-none">
@@ -297,6 +299,7 @@ export default function PublicProfilePage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </MainLayout>
   );
