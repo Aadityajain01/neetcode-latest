@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { LeaderboardPageSkeleton } from '@/components/skeletons/site-skeletons';
 
 interface CommunityOption { id: string; name: string; }
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 9;
 
 function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; position: 1 | 2 | 3; isMe: boolean }) {
   const config = {

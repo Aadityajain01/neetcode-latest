@@ -44,7 +44,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 transition-all duration-300 h-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 lg:pr-14 lg:p-2 transition-all duration-300 h-full overflow-hidden">
 
         {/* Mobile Header */}
         <div className="lg:hidden h-14 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-900/50 backdrop-blur-md z-30 shrink-0">
