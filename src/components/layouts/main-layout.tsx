@@ -25,7 +25,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen h-[100dvh] bg-zinc-950 overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
+    <div className="flex min-h-screen min-h-[100dvh] lg:h-screen lg:h-[100dvh] bg-zinc-950 overflow-x-hidden lg:overflow-hidden text-zinc-100 font-sans selection:bg-emerald-500/30">
 
       {/* Mobile Menu Overlay */}
       {sidebarOpen && (
@@ -44,7 +44,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 lg:pr-14 lg:p-2 transition-all duration-300 h-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 lg:pr-14 lg:p-2 transition-all duration-300 min-h-0 lg:h-full overflow-x-hidden lg:overflow-hidden">
 
         {/* Mobile Header */}
         <div className="lg:hidden h-14 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-900/50 backdrop-blur-md z-30 shrink-0">
@@ -60,7 +60,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Content Area — NO scroll, children manage their own layout */}
-        <div className="flex-1 min-h-0 relative z-10 overflow-hidden">
+        <div className="flex-1 min-h-0 relative z-10 overflow-x-hidden overflow-y-auto lg:overflow-hidden">
           {children}
         </div>
       </main>

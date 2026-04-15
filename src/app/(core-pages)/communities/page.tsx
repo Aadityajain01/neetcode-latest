@@ -19,7 +19,6 @@ import {
   Search, Loader2, Users, Plus, ArrowRight, UserPlus, Sparkles, Shield, Hash, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import MainLayout from "@/components/layouts/main-layout";
 
 function normalizeDomainInput(value: string): string {
   const trimmed = value.trim().toLowerCase();
@@ -122,8 +121,8 @@ export default function CommunitiesPage() {
   if (!initialized) return null;
 
   return (
-    <MainLayout>
-      <div className="h-full flex flex-col font-sans px-4 sm:px-6 md:px-8 py-4 overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 animate-in fade-in duration-500">
+    <>
+      <div className="h-auto lg:h-full flex flex-col font-sans px-4 sm:px-6 md:px-8 py-4 overflow-visible lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 animate-in fade-in duration-500">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         
         {/* Header */}
@@ -297,6 +296,6 @@ export default function CommunitiesPage() {
           )}
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }

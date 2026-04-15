@@ -66,24 +66,24 @@ export default function Neetcode150Page() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-zinc-950 p-6 md:p-12 font-sans text-zinc-200">
+      <div className="h-full overflow-y-auto scrollbar-emerald bg-zinc-950 p-4 md:p-6 lg:p-12 font-sans text-zinc-200">
         <div className="max-w-5xl mx-auto space-y-12">
           
           {/* HEADER SECTION */}
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 border-b border-zinc-800 pb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 md:gap-6 border-b border-zinc-800 pb-6 md:pb-8">
             <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
                   NeetCode 150
                 </span>
               </h1>
-              <p className="text-zinc-400 text-lg max-w-2xl">
+              <p className="text-zinc-400 text-base md:text-lg max-w-2xl">
                 The ultimate structured path to crack coding interviews.
               </p>
             </div>
 
             {/* Total Progress Card */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex items-center gap-6 shadow-xl">
+            <div className="bg-zinc-900 border border-zinc-800 p-4 md:p-6 rounded-2xl flex items-center gap-4 md:gap-6 shadow-xl w-full md:w-auto shrink-0">
               <div className="p-3 bg-emerald-500/10 rounded-full">
                 <Trophy className="w-8 h-8 text-emerald-500" />
               </div>
@@ -106,17 +106,17 @@ export default function Neetcode150Page() {
                   className="border border-zinc-800 bg-zinc-900/30 rounded-xl overflow-hidden px-2 data-[state=open]:bg-zinc-900/50 transition-all"
                 >
                   <AccordionTrigger className="px-6 py-5 hover:no-underline hover:bg-zinc-900/50 rounded-xl group">
-                    <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center justify-between w-full pr-4 gap-4">
                       
                       {/* Category Title */}
-                      <span className="text-xl font-bold text-zinc-200 group-hover:text-white transition-colors">
+                      <span className="text-base md:text-xl font-bold text-zinc-200 group-hover:text-white transition-colors truncate min-w-0 flex-1">
                         {category.title}
                       </span>
 
                       {/* Right Side: Progress Bar */}
-                      <div className="flex items-center gap-4 min-w-[150px]">
+                      <div className="flex items-center gap-2 md:gap-4 shrink-0">
                         {/* Custom Progress Bar */}
-                        <div className="h-2 w-32 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-2 w-16 md:w-32 bg-zinc-800 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-emerald-500 transition-all duration-500" 
                             style={{ width: `${(category.solvedCount / category.total) * 100}%` }}

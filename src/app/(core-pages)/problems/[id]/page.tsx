@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/layouts/main-layout";
 import { problemApi, Problem, TestCase } from "@/lib/api-modules";
 import { toast } from "sonner";
@@ -10,8 +10,6 @@ import { cn } from "@/lib/utils";
 import { BackButton } from "@/components/BackButton";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-// ✅ Import the new component
-// ✅ Import the new component
 import { CodeExecutor } from "@/components/code-execution";
 import { SplitViewSkeleton } from "@/components/skeletons/site-skeletons";
 import {
@@ -20,89 +18,105 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-function shuffleArray(arr: string[]) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export default function ProblemDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const problemId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
 
-  // --- STATE ---
+  const selectedDifficulty = searchParams.get("difficulty") || "";
+  const selectedPage = searchParams.get("page") || "";
+  const returnParams = new URLSearchParams({
+    ...(selectedDifficulty ? { difficulty: selectedDifficulty } : {}),
+    ...(selectedPage ? { page: selectedPage } : {}),
+  });
+  const returnQuery = returnParams.toString();
+  const backHref = returnQuery ? `/problems?${returnQuery}` : "/problems";
+
   const [loading, setLoading] = useState(true);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [sampleTestCases, setSampleTestCases] = useState<TestCase[]>([]);
   const [sessionProblems, setSessionProblems] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-  // --- 1. SESSION MANAGEMENT ---
-  const startNewSession = async (difficulty: string) => {
-    try {
-      const res = await problemApi.getProblems({ type: "dsa", difficulty, limit: 500 });
-      const ids = res.problems.map((p: Problem) => p._id);
-      const shuffled = shuffleArray(ids);
-      sessionStorage.setItem(`dsa-session-${difficulty}`, JSON.stringify({ list: shuffled, index: 0 }));
-      setSessionProblems(shuffled);
-      setCurrentIndex(0);
-      router.replace(`/problems/${shuffled[0]}`);
-    } catch { toast.error("Failed to start session"); }
-  };
-
-  useEffect(() => {
-    if (!problem?.difficulty) return;
-    const key = `dsa-session-${problem.difficulty}`;
-    const stored = sessionStorage.getItem(key);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setSessionProblems(parsed.list);
-      const idx = parsed.list.indexOf(problemId);
-      if (idx !== -1) setCurrentIndex(idx);
-      else setCurrentIndex(parsed.index);
-    } else {
-      startNewSession(problem.difficulty);
-    }
-  }, [problem?.difficulty, problemId]);
-
-  // --- 2. FETCH PROBLEM ---
   useEffect(() => {
     const fetchProblem = async () => {
-        if (!problemId) return;
-        try {
-          setLoading(true);
-          const data = await problemApi.getProblemById(problemId);
-          const prob = data?.problem;
-          if (!prob) throw new Error("Problem data is missing");
-    
-          setProblem(prob);
-          setSampleTestCases(data?.sampleTestCases || []);
-        } catch (error) {
-          toast.error("Failed to load problem");
-          router.push("/problems");
-        } finally {
-          setLoading(false);
-        }
-      };
-    if (problemId) fetchProblem();
-  }, [problemId]);
+      if (!problemId) return;
 
+      try {
+        setLoading(true);
+        const data = await problemApi.getProblemById(problemId);
+        const prob = data?.problem;
+        if (!prob) throw new Error("Problem data is missing");
 
-  const goToNextProblem = () => {
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= sessionProblems.length) {
-      toast.success("🎉 You have completed all questions!");
-      sessionStorage.removeItem(`dsa-session-${problem?.difficulty}`);
+        setProblem(prob);
+        setSampleTestCases(data?.sampleTestCases || []);
+      } catch {
+        toast.error("Failed to load problem");
+        router.push("/problems");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProblem();
+  }, [problemId, router]);
+
+  useEffect(() => {
+    const loadSiblingProblems = async () => {
+      if (!problem?.difficulty || !problemId) return;
+
+      try {
+        const res = await problemApi.getProblems({
+          type: "dsa",
+          difficulty: problem.difficulty,
+          limit: 500,
+        });
+        const ids = (res?.problems || []).map((p: Problem) => p._id);
+        setSessionProblems(ids);
+        const idx = ids.indexOf(problemId);
+        setCurrentIndex(idx >= 0 ? idx : 0);
+      } catch {
+        setSessionProblems([]);
+        setCurrentIndex(0);
+      }
+    };
+
+    loadSiblingProblems();
+  }, [problem?.difficulty, problemId]);
+
+  const goToNextProblem = async () => {
+    if (!problem?.difficulty) return;
+
+    let problemIds = sessionProblems;
+    let index = currentIndex;
+
+    if (!problemIds.length) {
+      try {
+        const res = await problemApi.getProblems({
+          type: "dsa",
+          difficulty: problem.difficulty,
+          limit: 500,
+        });
+        problemIds = (res?.problems || []).map((p: Problem) => p._id);
+        setSessionProblems(problemIds);
+        index = problemIds.indexOf(problem._id);
+        setCurrentIndex(index >= 0 ? index : 0);
+      } catch {
+        toast.error("Failed to load the next problem");
+        return;
+      }
+    }
+
+    const nextIndex = index + 1;
+    if (nextIndex >= problemIds.length) {
+      toast.success("You have completed all questions!");
       return;
     }
-    const key = `dsa-session-${problem?.difficulty}`;
-    sessionStorage.setItem(key, JSON.stringify({ list: sessionProblems, index: nextIndex }));
+
     setCurrentIndex(nextIndex);
-    router.push(`/problems/${sessionProblems[nextIndex]}`);
+    const nextProblemId = problemIds[nextIndex];
+    router.push(returnQuery ? `/problems/${nextProblemId}?${returnQuery}` : `/problems/${nextProblemId}`);
   };
 
   if (loading) return <MainLayout><SplitViewSkeleton /></MainLayout>;
@@ -112,17 +126,15 @@ export default function ProblemDetailPage() {
     <MainLayout>
       <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
         <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
-          
-          {/* LEFT PANEL: Description */}
           <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
              <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-               <BackButton href="/problems" label="Back to List" className="mb-2" />
+               <BackButton href={backHref} label="Back to List" className="mb-2" />
                <div className="flex items-center justify-between mb-2">
                   <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>
                   <div className="flex gap-2 shrink-0">
-                    <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide", 
-                      problem.difficulty === 'easy' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-                      problem.difficulty === 'medium' ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" : 
+                    <span className={cn("px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wide",
+                      problem.difficulty === "easy" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                      problem.difficulty === "medium" ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20" :
                       "bg-red-500/10 text-red-500 border border-red-500/20"
                     )}>
                       {problem.difficulty}
@@ -141,12 +153,13 @@ export default function ProblemDetailPage() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle className="bg-transparent" />
+          <ResizableHandle
+            withHandle
+            className="w-3 bg-transparent before:absolute before:left-1/2 before:top-0 before:h-full before:w-px before:-translate-x-1/2 before:bg-zinc-800 after:hidden [&>div]:h-10 [&>div]:w-[0.2px] [&>div]:rounded-xs [&>div]:bg-zinc-700 [&>div]:opacity-50 [&>div>svg]:size-1 [&>div>svg]:text-zinc-500"
+          />
 
-          {/* RIGHT PANEL: The Reusable Code Executor */}
           <ResizablePanel defaultSize={60} minSize={40} className="h-full">
-            {/* ✅ THE MAGIC HAPPENS HERE */}
-            <CodeExecutor 
+            <CodeExecutor
               problem={problem}
               problemType="dsa"
               sampleTestCases={sampleTestCases}

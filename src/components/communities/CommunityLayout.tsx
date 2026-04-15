@@ -69,11 +69,11 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans">
+    <div className="relative flex h-auto lg:h-full w-full min-h-0 flex-col overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans">
       <div className="pointer-events-none absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
 
       <div className="relative z-10 mx-auto flex h-full min-h-0 w-full max-w-[1500px] flex-col px-3 py-3 sm:px-4 sm:py-4 lg:w-[90%]">
-        <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[1.5rem] border border-zinc-800/60 bg-zinc-900/35 backdrop-blur-xl shadow-xl">
+        <section className="flex h-auto lg:h-full min-h-0 flex-col overflow-visible lg:overflow-hidden rounded-[1.5rem] border border-zinc-800/60 bg-zinc-900/35 backdrop-blur-xl shadow-xl">
       {/* ── Top Header Bar ─────────────────────────────────────── */}
       <header className="h-[60px] shrink-0 flex items-center justify-between px-4 md:px-6 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/80 z-30">
         {/* Left: back + community info */}
@@ -176,7 +176,7 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* ── Content Area ──────────────────────────────────────────── */}
-      <main className="flex flex-1 min-h-0 flex-col overflow-hidden bg-transparent">
+      <main className="flex flex-1 min-h-0 flex-col overflow-visible lg:overflow-hidden bg-transparent">
         {!isMember ? (
           <div className="h-full flex flex-col items-center justify-center gap-5 p-10 text-center">
             <div className="w-20 h-20 rounded-3xl bg-zinc-900 flex items-center justify-center mb-2 shadow-inner border border-zinc-800">

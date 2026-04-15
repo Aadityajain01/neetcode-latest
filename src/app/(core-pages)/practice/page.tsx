@@ -100,11 +100,11 @@ export default function PracticeLanguagePage() {
 
   return (
     <MainLayout>
-      <div className="h-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
+      <div className="h-auto lg:h-full overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
         
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5 relative z-10 flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
           {/* Header */}
           <div className="flex flex-col items-center text-center gap-2 mb-4 shrink-0">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm">Practice Area</h1>

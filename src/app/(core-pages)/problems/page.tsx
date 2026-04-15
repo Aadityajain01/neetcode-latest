@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { problemApi, Problem } from '@/lib/api-modules';
@@ -20,12 +20,20 @@ const ITEMS_PER_PAGE = 10;
 
 export default function ProblemsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [totalProblems, setTotalProblems] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const page = Number(searchParams.get('page') || '1');
+    return Number.isFinite(page) && page > 0 ? page : 1;
+  });
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ type: 'dsa', difficulty: '', search: '' });
+  const [filters, setFilters] = useState({
+    type: 'dsa',
+    difficulty: searchParams.get('difficulty') || '',
+    search: '',
+  });
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -38,6 +46,18 @@ export default function ProblemsPage() {
     };
     initData();
   }, [initialized, isAuthenticated, authLoading, router, currentPage, filters.type, filters.difficulty]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.difficulty) params.set('difficulty', filters.difficulty);
+    if (currentPage > 1) params.set('page', String(currentPage));
+
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery !== currentQuery) {
+      router.replace(nextQuery ? `/problems?${nextQuery}` : '/problems', { scroll: false });
+    }
+  }, [filters.difficulty, currentPage, router, searchParams]);
 
   const fetchProblems = async () => {
     try {
@@ -70,7 +90,7 @@ export default function ProblemsPage() {
 
   return (
     <MainLayout>
-      <div className="h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col font-sans animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
+      <div className="h-auto lg:h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col font-sans animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-visible lg:overflow-hidden">
         {/* Header & Filters */}
         <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-4 md:p-5 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
@@ -135,7 +155,17 @@ export default function ProblemsPage() {
                 {problems.map((problem) => {
                   const isSolved = solvedProblems.has(problem._id);
                   return (
-                    <Link key={problem._id} href={`/problems/${problem._id}`} className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 md:px-8 md:py-3.5 hover:bg-zinc-800/40 transition-all duration-300 gap-3 sm:gap-0">
+                    <Link
+                      key={problem._id}
+                      href={{
+                        pathname: `/problems/${problem._id}`,
+                        query: {
+                          ...(filters.difficulty ? { difficulty: filters.difficulty } : {}),
+                          ...(currentPage > 1 ? { page: String(currentPage) } : {}),
+                        },
+                      }}
+                      className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 md:px-8 md:py-3.5 hover:bg-zinc-800/40 transition-all duration-300 gap-3 sm:gap-0"
+                    >
                       <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                       <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0 flex-1 relative z-10 w-full">
                         <div className="shrink-0 pt-0.5 sm:pt-0">

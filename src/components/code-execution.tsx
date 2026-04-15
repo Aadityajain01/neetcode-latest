@@ -391,7 +391,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     <div className="h-full w-full">
       <ResizablePanelGroup direction="vertical" className="h-full w-full gap-2">
         {/* EDITOR */}
-        <ResizablePanel defaultSize={20} minSize={20} className="flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+        <ResizablePanel defaultSize={65} minSize={35} className="flex flex-col bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
             <div className="h-12 flex items-center justify-between px-4 border-b border-zinc-800 bg-zinc-950 flex-none">
               
               {/* Title with Help Tooltip */}
@@ -451,10 +451,13 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
             </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle className="bg-transparent" />
+        <ResizableHandle
+          withHandle
+          className="h-3 w-full bg-transparent before:absolute before:left-0 before:top-1/2 before:h-px before:w-full before:-translate-y-1/2 before:bg-zinc-800 after:hidden [&>div]:h-10 [&>div]:w-[0.2px] [&>div]:rounded-xs [&>div]:bg-zinc-700 [&>div]:opacity-50 [&>div>svg]:size-1 [&>div>svg]:rotate-90 [&>div>svg]:text-zinc-500"
+        />
 
         {/* TERMINAL / OUTPUT */}
-        <ResizablePanel defaultSize={10} minSize={10} className="flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-inner">
+        <ResizablePanel defaultSize={35} minSize={20} className="flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-inner">
             <div className="flex border-b border-zinc-800 bg-zinc-900/50 flex-none">
               <button onClick={() => setActiveTab('custom_input')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'custom_input' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Input (Stdin)</button>
               <button onClick={() => setActiveTab('output')} className={cn("px-4 py-2 text-xs font-bold uppercase tracking-wider border-r border-zinc-800 transition-colors", activeTab === 'output' ? "bg-zinc-950 text-emerald-500" : "text-zinc-500 hover:text-zinc-300")}>Output / Verdict</button>

@@ -151,7 +151,7 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       {/* Viewport-locked dashboard — fills exactly the available space */}
-      <div className="h-full overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="h-auto lg:h-full overflow-y-auto lg:overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* ── Header ────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 shrink-0">
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Main Layout Box ──────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0 overflow-visible lg:overflow-hidden">
           
           {/* Left Column (Stats + Nav) */}
           <div className="flex flex-col gap-3 xl:gap-4 w-full lg:w-[320px] xl:w-[340px] shrink-0 min-h-0">
@@ -210,10 +210,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column (Charts + Wide Banner) */}
-          <div className="flex-1 flex flex-col gap-3 xl:gap-4 min-w-0 min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-3 xl:gap-4 min-w-0 min-h-0 overflow-visible lg:overflow-hidden">
              
              {/* Top Row: 3 Square-ish Charts */}
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xl:gap-4 flex-[3] min-h-0 overflow-hidden">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 xl:gap-4 lg:flex-[3] min-h-0 overflow-visible lg:overflow-hidden">
                {/* 1. DSA Pie Chart */}
                <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl py-3 px-3 xl:p-4 relative overflow-hidden flex flex-col items-center min-h-0 shadow-sm">
                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px] rounded-full pointer-events-none" />
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                    <h3 className="text-[9px] font-bold text-zinc-400 tracking-widest uppercase">DSA</h3>
                  </div>
                  
-                 <div className="w-full flex-1 relative min-h-0">
+                 <div className="w-full flex-1 relative min-h-[140px] lg:min-h-0">
                    <ResponsiveContainer width="100%" height="100%">
                      <PieChart>
                        <RechartsTooltip content={<CustomPieTooltip />} />
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                   </div>
                   <p className="text-[8px] text-zinc-500 mb-0.5 shrink-0 z-10">DSA vs MCQ difficulties</p>
 
-                 <div className="w-full flex-1 relative min-h-0 ml-[-10px]">
+                 <div className="w-full flex-1 relative min-h-[180px] lg:min-h-0 ml-[-10px]">
                    <ResponsiveContainer width="100%" height="100%">
                      <BarChart data={comparisonData} margin={{ top: 10, right: 0, left: -20, bottom: -5 }} barGap={2} barSize={8}>
                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                    <h3 className="text-[9px] font-bold text-zinc-400 tracking-widest uppercase">MCQ</h3>
                  </div>
                  
-                 <div className="w-full flex-1 relative min-h-0">
+                 <div className="w-full flex-1 relative min-h-[140px] lg:min-h-0">
                    <ResponsiveContainer width="100%" height="100%">
                      <PieChart>
                        <RechartsTooltip content={<CustomPieTooltip />} />
