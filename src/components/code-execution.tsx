@@ -15,190 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { submissionApi, Submission, Problem, TestCase } from "@/lib/api-modules";
 import { useUIStore } from "@/store/ui-store";
-
-// --- 1. USER-FRIENDLY TEMPLATES (Self-Documenting) ---
-const LANGUAGE_TEMPLATES: Record<string, string> = {
-  python: `class Solution:
-    def solve(self, args):
-        """
-        :param args: list - Contains the input values
-        :return: The result of your calculation
-        
-        Usage:
-        - args[0] is the first input, args[1] is the second, etc.
-        - Do NOT use input(). We handle reading for you.
-        - Return your answer. Do NOT print() it.
-        """
-        
-        # Example: For 'Sum of Two Numbers' (Input: 3 5)
-        # val1 = int(args[0])
-        # val2 = int(args[1])
-        # return val1 + val2
-        
-        return None`,
-
-  javascript: `class Solution {
-    /**
-     * @param {any[]} args - The input arguments from the test case
-     * @returns {any} - The result
-     */
-    solve(args) {
-        // Usage:
-        // - args[0] is the first input line.
-        // - Do NOT use process.stdin. We handle it.
-        // - Return the result.
-        
-        // Example:
-        // const num = parseInt(args[0]);
-        // return num % 2 === 0 ? "Even" : "Odd";
-        
-        return null;
-    }
-}`,
-
-  java: `// Java Solution
-import java.util.Scanner;
-
-public class Main {
-    public static void main(String[] args) {
-        // For Java, standard input is still the best way
-        Scanner scanner = new Scanner(System.in);
-        
-        // 1. Read Input
-        // int a = scanner.nextInt();
-        
-        // 2. Process logic...
-        
-        // 3. Print Output
-        // System.out.println(a);
-        
-        scanner.close();
-    }
-}`,
-
-  cpp: `// C++ Solution
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-
-using namespace std;
-
-int main() {
-    // Optimize I/O operations
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-
-    // 1. Read Input
-    // int a;
-    // cin >> a;
-
-    // 2. Process logic...
-
-    // 3. Print Output
-    // cout << a;
-
-    return 0;
-}`,
-
-  c: `// C Solution
-#include <stdio.h>
-#include <stdlib.h>
-
-int main() {
-    // 1. Read Input
-    // int a;
-    // scanf("%d", &a);
-
-    // 2. Process logic...
-
-    // 3. Print Output
-    // printf("%d", a);
-
-    return 0;
-}`,
-};
-
-// --- 2. HIDDEN DRIVER CODE (Handles the "Magic") ---
-// This code is appended to the user's code before execution.
-// It reads stdin, parses it, calls the user's class, and prints the result.
-const DRIVER_CODE: Record<string, string> = {
-  python: `
-# --- DRIVER CODE (HIDDEN) ---
-import sys, json
-
-if __name__ == "__main__":
-    try:
-        # 1. Read all input from standard input
-        input_str = sys.stdin.read().strip()
-        
-        # 2. Parse Input: Try JSON first (for arrays/objects), else split by spaces
-        try:
-            args = [json.loads(x) for x in input_str.splitlines() if x]
-        except:
-            args = input_str.split()
-
-        # 3. Call the User's Solution
-        sol = Solution()
-        if hasattr(sol, 'solve'):
-            result = sol.solve(args)
-            
-            # 4. Print Result (JSON formatted if possible)
-            if result is not None:
-                try:
-                    print(json.dumps(result))
-                except:
-                    print(result)
-    except Exception as e:
-        print(f"Runtime Error: {e}")
-`,
-
-  javascript: `
-// --- DRIVER CODE (HIDDEN) ---
-const fs = require('fs');
-
-try {
-    // 1. Read Input
-    const input = fs.readFileSync(0, 'utf-8').trim();
-    
-    // 2. Parse Input (Try JSON line by line)
-    const lines = input ? input.split('\\n') : [];
-    const args = lines.map(line => {
-        try { return JSON.parse(line); } catch(e) { return line; }
-    });
-
-    // 3. Call User's Solution
-    const sol = new Solution();
-    if (typeof sol.solve === 'function') {
-        const result = sol.solve(args);
-        
-        // 4. Print Result
-        if (result !== undefined && result !== null) {
-            console.log(JSON.stringify(result));
-        }
-    }
-} catch (e) {
-    console.error("Runtime Error:", e);
-}
-`
-};
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  javascript: "JavaScript",
-  python: "Python",
-  java: "Java",
-  cpp: "C++",
-  c: "C",
-};
-
-const JUDGE0_LANGUAGE_MAP: Record<string, number> = {
-  javascript: 63,
-  python: 71,
-  java: 62,
-  cpp: 54,
-  c: 11,
-  typescript: 74,
-};
+import {
+  getEditorSnippet,
+  isFunctionBasedProblem,
+  JUDGE0_LANGUAGE_MAP,
+  LANGUAGE_NAMES,
+  normalizeExecutionLanguage,
+} from "@/lib/execution/snippets";
 
 interface CodeExecutorProps {
   problem: Problem;
@@ -237,10 +60,10 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     triggerTutorial();
 
     if (problem.languages && problem.languages.length > 0) {
-      const firstLang = initialLanguage || problem.languages[0].toLowerCase();
+      const firstLang = normalizeExecutionLanguage(initialLanguage || problem.languages[0]);
       setLanguage(firstLang);
       
-      const defaultCode = initialCode || LANGUAGE_TEMPLATES[firstLang] || "";
+      const defaultCode = initialCode || getEditorSnippet(problem, firstLang);
       setCode(defaultCode);
       
       // Update parent immediately on mount
@@ -252,7 +75,17 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     if (sampleTestCases?.[0]?.input) {
         setCustomInput(sampleTestCases[0].input);
     }
-  }, [problem.languages, sampleTestCases]);
+  }, [
+    initialCode,
+    initialLanguage,
+    onCodeChange,
+    onLanguageChange,
+    problem.codeSnippets,
+    problem.functionName,
+    problem.languages,
+    sampleTestCases,
+    triggerTutorial,
+  ]);
 
   // Sync from props if they change externally
   useEffect(() => {
@@ -262,8 +95,11 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
   }, [initialCode]);
 
   useEffect(() => {
-    if (initialLanguage !== undefined && initialLanguage !== language) {
-      setLanguage(initialLanguage);
+    if (initialLanguage !== undefined) {
+      const normalizedLanguage = normalizeExecutionLanguage(initialLanguage);
+      if (normalizedLanguage !== language) {
+        setLanguage(normalizedLanguage);
+      }
     }
   }, [initialLanguage]);
 
@@ -289,9 +125,10 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
 
   // --- HANDLERS ---
   const handleLanguageChange = (newLanguage: string) => {
-    setLanguage(newLanguage);
-    onLanguageChange?.(newLanguage);
-    const newCode = LANGUAGE_TEMPLATES[newLanguage] || code;
+    const normalizedLanguage = normalizeExecutionLanguage(newLanguage);
+    setLanguage(normalizedLanguage);
+    onLanguageChange?.(normalizedLanguage);
+    const newCode = getEditorSnippet(problem, normalizedLanguage) || code;
     setCode(newCode);
     onCodeChange?.(newCode);
   };
@@ -300,14 +137,6 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     const newVal = v || "";
     setCode(newVal);
     onCodeChange?.(newVal);
-  };
-
-  // Helper: Combines User Code + Hidden Driver
-  const getExecutableCode = () => {
-    if (DRIVER_CODE[language]) {
-        return code + "\n" + DRIVER_CODE[language];
-    }
-    return code;
   };
 
   const handleRunCode = async () => {
@@ -320,7 +149,8 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     try {
       const user = auth.currentUser;
       const idToken = await user?.getIdToken();
-      const languageId = JUDGE0_LANGUAGE_MAP[language];
+      const normalizedLanguage = normalizeExecutionLanguage(language);
+      const languageId = JUDGE0_LANGUAGE_MAP[normalizedLanguage];
       
       if (!languageId) {
         toast.error(`Language not supported: ${language}`);
@@ -328,16 +158,15 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
         return;
       }
 
-      // Inject driver code before sending
-      const sourceCode = getExecutableCode();
-
       const submitRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/execute/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ 
-            source_code: sourceCode, 
+            source_code: code,
             language_id: languageId, 
-            stdin: customInput || sampleTestCases[0]?.input || "" 
+            stdin: customInput || sampleTestCases[0]?.input || "",
+            problemId: problem._id,
+            language: normalizedLanguage,
         }),
       });
 
@@ -368,12 +197,10 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
     setActiveTab('output');
 
     try {
-      const sourceCode = getExecutableCode();
-
       const submission = await submissionApi.submitCode({ 
           problemId: problem._id, 
-          code: sourceCode, // Send code + driver
-          language 
+          code,
+          language: normalizeExecutionLanguage(language),
       });
 
       setCurrentSubmission(submission);
@@ -403,11 +230,11 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                         <HelpCircle className="h-4 w-4 text-zinc-600 hover:text-zinc-400 cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent className="bg-zinc-900 border-zinc-700 text-zinc-300 max-w-xs p-3">
-                        <p className="font-semibold text-emerald-400 mb-1">How inputs work:</p>
+                        <p className="font-semibold text-emerald-400 mb-1">How execution works:</p>
                         <p className="text-xs">
-                          For Python/JS, we use a hidden wrapper.<br/>
-                          Use the <code>args</code> variable to access inputs.<br/>
-                          Do NOT read standard input manually.
+                          {isFunctionBasedProblem(problem)
+                            ? "Use the provided function signature and return the answer. Hidden driver code handles stdin/stdout for execution."
+                            : "This is a classic stdin/stdout problem. Read input manually and print output from your program."}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -418,7 +245,7 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
                 <SelectTrigger className="w-36 h-7 bg-zinc-900 border-zinc-700 text-zinc-300 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-300">
                   {problem.languages.map(l => (
-                    <SelectItem key={l} value={l.toLowerCase()} className="text-xs">{LANGUAGE_NAMES[l.toLowerCase()] || l}</SelectItem>
+                    <SelectItem key={l} value={normalizeExecutionLanguage(l)} className="text-xs">{LANGUAGE_NAMES[normalizeExecutionLanguage(l)] || l}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

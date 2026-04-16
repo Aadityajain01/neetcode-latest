@@ -21,6 +21,11 @@ export interface Submission {
   totalTestCases?: number;
   executionTime?: number;
   memoryUsed?: number;
+  failureDetails?: {
+    input: string;
+    expected: string;
+    output: string;
+  };
   score?: number;
   createdAt: string;
   completedAt?: string;

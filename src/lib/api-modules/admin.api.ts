@@ -11,6 +11,10 @@ export const adminApi = {
     timeLimit?: number;
     memoryLimit?: number;
     languages?: string[];
+    functionName?: string;
+    returnType?: string;
+    parameters?: Array<{ name: string; type: string }>;
+    codeSnippets?: Record<string, string>;
   }) => {
     const response = await api.post<{ problem: any }>('/admin/problems', data);
     return response.data.problem;

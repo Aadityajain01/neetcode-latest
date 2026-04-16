@@ -11,6 +11,10 @@ export interface Problem {
   timeLimit: number;
   memoryLimit: number;
   languages: string[];
+  functionName?: string;
+  returnType?: string;
+  parameters?: Array<{ name: string; type: string }>;
+  codeSnippets?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
