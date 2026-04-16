@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityCalendar } from "react-activity-calendar";
 import { useQuery } from "@tanstack/react-query";
 import {
-  MapPin, Calendar, Github, Linkedin, Globe, Twitter,
+  MapPin, Calendar, Globe, X,
   Flame, Trophy, Target, Zap, Users, Crown,
   ChevronRight, Hash, TrendingUp, Send, BarChart3, Activity, ArrowLeft
 } from "lucide-react";
@@ -13,6 +13,7 @@ import { useRouter, useParams } from "next/navigation";
 import { profileApi } from "@/lib/api-modules/profile.api";
 import { problemApi } from "@/lib/api-modules";
 import MainLayout from "@/components/layouts/main-layout";
+import { GitHubIcon, LinkedInIcon, XIcon as BrandXIcon } from "@/components/icons/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
@@ -182,13 +183,13 @@ export default function PublicProfilePage() {
                       <Calendar size={12} /> Joined {format(new Date(data.details.createdAt), "MMM yyyy")}
                     </div>
                     {data.details.socialLinks?.github && (
-                      <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><Github size={12} /> GitHub</a>
+                      <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><GitHubIcon className="h-3 w-3" /> GitHub</a>
                     )}
                     {data.details.socialLinks?.linkedin && (
-                      <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><Linkedin size={12} /> LinkedIn</a>
+                      <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><LinkedInIcon className="h-3 w-3" /> LinkedIn</a>
                     )}
                     {data.details.socialLinks?.twitter && (
-                      <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><Twitter size={12} /> Twitter</a>
+                      <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><BrandXIcon className="h-3 w-3" /> Twitter</a>
                     )}
                     {data.details.socialLinks?.website && (
                       <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-colors text-xs font-medium"><Globe size={12} /> Website</a>
