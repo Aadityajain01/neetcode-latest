@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Search, CheckCircle2, Circle, ChevronLeft, ChevronRight, BrainCircuit, Code2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProblemsPageSkeleton } from '@/components/skeletons/site-skeletons';
+import { ProblemsTableSkeleton } from '@/components/skeletons/inline-skeletons';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -84,9 +84,7 @@ export default function ProblemsPage() {
 
   const totalPages = Math.ceil(totalProblems / ITEMS_PER_PAGE);
 
-  if (!initialized) {
-    return (<MainLayout><ProblemsPageSkeleton /></MainLayout>);
-  }
+  if (!initialized) return null;
 
   return (
     <MainLayout>
@@ -132,18 +130,7 @@ export default function ProblemsPage() {
 
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
             {loading ? (
-              <div className="divide-y divide-zinc-800/30">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-5 px-8 py-3.5">
-                    <div className="h-10 w-10 rounded-xl bg-zinc-800/50 shrink-0 skeleton-shimmer" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-4 w-3/5 bg-zinc-800/60 rounded-lg skeleton-shimmer" />
-                      <div className="flex gap-2"><div className="h-3 w-14 bg-zinc-800/30 rounded-full skeleton-shimmer" /><div className="h-3 w-14 bg-zinc-800/30 rounded-full skeleton-shimmer" /></div>
-                    </div>
-                    <div className="h-6 w-16 bg-zinc-800/50 rounded-lg shrink-0 skeleton-shimmer" />
-                  </div>
-                ))}
-              </div>
+              <ProblemsTableSkeleton />
             ) : problems.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-10">
                 <div className="h-20 w-20 rounded-[1.5rem] bg-zinc-900/50 flex items-center justify-center mb-5 border border-zinc-800 shadow-inner"><BrainCircuit className="h-10 w-10 text-zinc-700" /></div>

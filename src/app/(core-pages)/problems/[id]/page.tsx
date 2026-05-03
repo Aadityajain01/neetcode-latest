@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { problemApi, Problem, TestCase } from "@/lib/api-modules";
 import { toast } from "sonner";
 import { Clock, Database } from "lucide-react";
@@ -119,11 +119,11 @@ export default function ProblemDetailPage() {
     router.push(returnQuery ? `/problems/${nextProblemId}?${returnQuery}` : `/problems/${nextProblemId}`);
   };
 
-  if (loading) return <MainLayout><SplitViewSkeleton /></MainLayout>;
+  if (loading) return <SplitViewSkeleton />;
   if (!problem) return null;
 
   return (
-    <MainLayout>
+    <>
       <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
         <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
           <ResizablePanel defaultSize={40} minSize={30} className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
@@ -168,6 +168,6 @@ export default function ProblemDetailPage() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </MainLayout>
+    </>
   );
 }

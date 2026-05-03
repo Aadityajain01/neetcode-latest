@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { CommunityTableSkeleton } from "@/components/skeletons/inline-skeletons";
+
 function normalizeDomainInput(value: string): string {
   const trimmed = value.trim().toLowerCase();
   if (!trimmed) return "";
@@ -200,23 +202,11 @@ export default function CommunitiesPage() {
 
           {/* List Body — scrollable if needed */}
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
+            {loading ? (
+              <CommunityTableSkeleton />
+            ) : (
             <div className="divide-y divide-zinc-800/40">
-              {loading ? (
-                Array.from({ length: 8 }).map((_, idx) => (
-                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-4 px-4 md:px-6 py-3.5 items-center">
-                    <div className="col-span-6 flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-zinc-800/50 shrink-0 skeleton-shimmer" />
-                      <div className="space-y-2 flex-1 w-full max-w-[250px]">
-                        <div className="h-4 w-3/4 bg-zinc-800/50 rounded skeleton-shimmer" />
-                        <div className="h-3 w-full bg-zinc-800/30 rounded skeleton-shimmer" />
-                      </div>
-                    </div>
-                    <div className="hidden sm:flex col-span-2 justify-center"><div className="h-5 w-16 bg-zinc-800/40 rounded skeleton-shimmer" /></div>
-                    <div className="hidden sm:flex col-span-2 justify-center"><div className="h-4 w-10 bg-zinc-800/40 rounded skeleton-shimmer" /></div>
-                    <div className="col-span-12 sm:col-span-2 flex justify-end"><div className="h-9 w-20 rounded-lg bg-zinc-800/50 skeleton-shimmer" /></div>
-                  </div>
-                ))
-              ) : paginatedCommunities.length > 0 ? (
+              {paginatedCommunities.length > 0 ? (
                 paginatedCommunities.map((c) => {
                   const isJoined = joinedCommunityIds.has(c._id);
                   const isJoining = joiningCommunityId === c._id;
@@ -269,6 +259,7 @@ export default function CommunitiesPage() {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Pagination Footer */}

@@ -6,14 +6,14 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { userApi, DashboardPayload } from '@/lib/api-modules/user.api';
-import MainLayout from '@/components/layouts/main-layout';
+
 import { toast } from 'sonner';
 import {
   Code2, Trophy, Target, Users,
   Zap, Flame, TrendingUp, Award, BarChart3, Send, CheckCircle2, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DashboardPageSkeleton } from '@/components/skeletons/site-skeletons';
+import { DashboardContentSkeleton } from '@/components/skeletons/inline-skeletons';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
@@ -72,8 +72,7 @@ export default function DashboardPage() {
   const { user, initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const isAuthReady = initialized && !authLoading;
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -94,17 +93,17 @@ export default function DashboardPage() {
 
   const getStreak = (s: any) => s?.currentStreak || s?.streak || s?.dailyStreak || s?.days || 0;
 
-  if (!isAuthReady || (isAuthenticated && dashboardQuery.isLoading) || !mounted) {
-    return (
-      <MainLayout>
-        <DashboardPageSkeleton />
-      </MainLayout>
-    );
-  }
+  if (!isAuthReady) return null;
+  if (!isAuthenticated) return null;
 
-  if (!isAuthenticated || !dashboardQuery.data) return null;
+  const isLoading = dashboardQuery.isLoading;
+  if (!isLoading && !dashboardQuery.data) return null;
 
-  const { stats, totalProblems, dsaCounts, mcqCounts } = dashboardQuery.data;
+  const data = dashboardQuery.data;
+  const stats = data?.stats;
+  const totalProblems = data?.totalProblems;
+  const dsaCounts = data?.dsaCounts;
+  const mcqCounts = data?.mcqCounts;
   const currentStreak = getStreak(stats);
   const solved = stats?.problemsSolved || 0;
 
@@ -149,7 +148,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <MainLayout>
+    <>
       {/* Viewport-locked dashboard — fills exactly the available space */}
       <div className="h-auto lg:h-full overflow-y-auto lg:overflow-hidden font-sans max-w-7xl mx-auto p-3 sm:p-4 md:p-5 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -176,6 +175,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Main Layout Box ──────────────────────────────────────── */}
+        {isLoading ? <DashboardContentSkeleton /> : (
         <div className="flex-1 flex flex-col lg:flex-row gap-3 xl:gap-4 min-h-0 overflow-visible lg:overflow-hidden">
           
           {/* Left Column (Stats + Nav) */}
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                    </ResponsiveContainer>
                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                      <span className="text-xl xl:text-2xl font-black text-white tracking-tighter drop-shadow-md leading-none">{mcqTotal}</span>
-                     <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {mcqCounts.total || 1}</span>
+                     <span className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">/ {mcqCounts?.total || 1}</span>
                    </div>
                  </div>
 
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                     
                     <div className="text-right shrink-0">
                        <p className="text-3xl font-black text-emerald-400 tracking-tighter leading-none">
-                          {totalProblems > 0 ? Math.round((solved / totalProblems) * 100) : 0}<span className="text-base text-emerald-500/50 ml-0.5">%</span>
+                          {(totalProblems ?? 0) > 0 ? Math.round((solved / (totalProblems ?? 0)) * 100) : 0}<span className="text-base text-emerald-500/50 ml-0.5">%</span>
                        </p>
                     </div>
                  </div>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                  <div className="relative z-10 w-full h-3 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/80 mb-1.5 shadow-inner">
                     <div 
                       className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                      style={{ width: `${totalProblems > 0 ? Math.max(0, (solved / totalProblems) * 100) : 0}%` }}
+                      style={{ width: `${(totalProblems ?? 0) > 0 ? Math.max(0, (solved / (totalProblems ?? 0)) * 100) : 0}%` }}
                     />
                  </div>
                  
@@ -344,8 +344,9 @@ export default function DashboardPage() {
 
           </div>
         </div>
+        )}
       </div>
-    </MainLayout>
+    </>
   );
 }
 

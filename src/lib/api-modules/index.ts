@@ -7,6 +7,7 @@ export { mcqApi } from './mcq.api';
 export { authApi } from './auth.api';
 export { adminApi } from './admin.api';
 export { messageApi } from './message.api';
+export { profileApi } from './profile.api';
 
 export type { User, UserStats } from './user.api';
 export type { Problem, TestCase } from './problem.api';

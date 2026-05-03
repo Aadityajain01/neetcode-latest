@@ -3,9 +3,10 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { mcqApi, MCQ } from "@/lib/api-modules";
 import { Button } from "@/components/ui/button";
+import { PracticePageSkeleton } from "@/components/skeletons/site-skeletons";
 import {
   Loader2,
   CheckCircle2,
@@ -233,11 +234,7 @@ function MCQSessionContent() {
 
   // ── Loading ──
   if (loading)
-    return (
-      <div className="h-[50vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-      </div>
-    );
+    return <PracticePageSkeleton />;
 
   // ── No MCQs ──
   if (mcqs.length === 0)
@@ -514,10 +511,8 @@ function MCQSessionContent() {
 
 export default function MCQSessionPage() {
   return (
-    <MainLayout>
-      <Suspense fallback={<div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>}>
-        <MCQSessionContent />
-      </Suspense>
-    </MainLayout>
+    <Suspense fallback={<PracticePageSkeleton />}>
+      <MCQSessionContent />
+    </Suspense>
   );
 }

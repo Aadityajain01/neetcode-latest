@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { mcqApi, problemApi, MCQ, Problem } from "@/lib/api-modules";
 import { useAuthStore } from "@/store/auth-store";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Code2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PracticePageSkeleton } from "@/components/skeletons/site-skeletons";
+import { PracticeTableSkeleton } from "@/components/skeletons/inline-skeletons";
 import { toast } from "sonner";
 
 type LanguageMeta = { name: string; difficulties: Set<string>; tags: Set<string>; };
@@ -94,12 +94,10 @@ export default function PracticeLanguagePage() {
     }
   };
 
-  if (!isAuthReady || (isAuthenticated && loading)) {
-    return (<MainLayout><PracticePageSkeleton /></MainLayout>);
-  }
+  if (!isAuthReady) return null;
 
   return (
-    <MainLayout>
+    <>
       <div className="h-auto lg:h-full overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
@@ -131,7 +129,9 @@ export default function PracticeLanguagePage() {
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
-              {visibleLanguages.length > 0 ? (
+              {loading ? (
+                <PracticeTableSkeleton />
+              ) : visibleLanguages.length > 0 ? (
                 <div className="divide-y divide-zinc-800/40">
                   {visibleLanguages.map((lang) => (
                     <div key={lang.name} className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-3 md:px-6 hover:bg-zinc-800/40 transition-all duration-300 gap-3 sm:gap-0">
@@ -184,6 +184,6 @@ export default function PracticeLanguagePage() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }

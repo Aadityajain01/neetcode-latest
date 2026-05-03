@@ -12,12 +12,12 @@ import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
 import { useRouter } from "next/navigation";
 import { profileApi } from "@/lib/api-modules/profile.api";
 import { problemApi } from "@/lib/api-modules";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { GitHubIcon, LinkedInIcon, XIcon as BrandXIcon } from "@/components/icons/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { ProfilePageSkeleton } from "@/components/skeletons/site-skeletons";
+import { ProfileContentSkeleton } from '@/components/skeletons/inline-skeletons';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip
@@ -105,13 +105,13 @@ export default function ProfilePage() {
   ] : [];
 
   return (
-    <MainLayout>
+    <>
       {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
       <div className="h-full overflow-y-auto scrollbar-emerald">
       <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {loading && (
-          <ProfilePageSkeleton />
+          <ProfileContentSkeleton />
         )}
 
         {!loading && !data && (
@@ -303,7 +303,7 @@ export default function ProfilePage() {
         )}
       </div>
       </div>
-    </MainLayout>
+    </>
   );
 }
 

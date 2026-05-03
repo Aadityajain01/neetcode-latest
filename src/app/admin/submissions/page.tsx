@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { adminApi, submissionApi } from '@/lib/api-modules';
 import { Submission } from '@/lib/api-modules';
-import MainLayout from '@/components/layouts/main-layout';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,6 +27,7 @@ import {
   ChevronRight,
   Filter,
 } from 'lucide-react';
+import { AdminPanelSkeleton } from '@/components/skeletons/site-skeletons';
 
 export default function AdminSubmissionsPage() {
   const router = useRouter();
@@ -158,16 +159,12 @@ export default function AdminSubmissionsPage() {
     return 'Unknown';
   };
 
-  if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-      </div>
-    );
+  if (!initialized || loading) {
+    return <AdminPanelSkeleton />;
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#E5E7EB] mb-2">
           Rejudge Submissions
@@ -251,11 +248,7 @@ export default function AdminSubmissionsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-            </div>
-          ) : submissions.length === 0 ? (
+          {submissions.length === 0 ? (
             <div className="text-center py-12">
               <Shield className="h-12 w-12 text-[#9CA3AF] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-[#E5E7EB] mb-2">
@@ -469,6 +462,6 @@ export default function AdminSubmissionsPage() {
           </DialogContent>
         </Dialog>
       )}
-    </MainLayout>
+    </>
   );
 }

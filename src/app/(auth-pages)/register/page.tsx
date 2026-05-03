@@ -121,9 +121,9 @@ export default function RegisterPage() {
 
          <div className="relative z-10 text-right">
            <div className="flex items-center justify-end gap-2 text-white font-bold text-xl mb-12">
-             <span className="text-zinc-200">NeetCode</span>
+             <span className="text-zinc-200">Neetcode</span>
               <div className="p-1.5 shadow-lg shadow-emerald-500/20">
-              <Image src={logo} alt="NeetCode" width={40} height={40} />
+              <Image src={logo} alt="Neetcode" width={40} height={40} />
             </div>
            </div>
            

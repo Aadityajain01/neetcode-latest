@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { problemApi, Problem } from "@/lib/api-modules";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -225,12 +225,10 @@ function ProblemListContent() {
 
 export default function PracticeProblemSelectPage() {
   return (
-    <MainLayout>
-      <div className="min-h-screen p-6 md:p-12">
-        <Suspense fallback={<div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>}>
-            <ProblemListContent />
-        </Suspense>
-      </div>
-    </MainLayout>
+    <div className="min-h-screen p-6 md:p-12">
+      <Suspense fallback={<div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>}>
+        <ProblemListContent />
+      </Suspense>
+    </div>
   );
 }

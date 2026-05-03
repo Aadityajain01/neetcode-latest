@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import MainLayout from "@/components/layouts/main-layout";
+
 import { problemApi, Problem, TestCase } from "@/lib/api-modules";
 import { toast } from "sonner";
 import { Clock, Database } from "lucide-react";
@@ -136,18 +136,13 @@ export default function PracticeDetailPage() {
 
   // --- RENDER ---
   if (loading) {
-    return (
-      <MainLayout>
-        <SplitViewSkeleton />
-      </MainLayout>
-    );
+    return <SplitViewSkeleton />;
   }
 
   if (!problem) return null;
 
   return (
-    <MainLayout>
-      <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
+    <div className="h-[calc(100vh-80px)] max-w-[1920px] mx-auto p-4">
         <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl gap-2">
           
           {/* --- LEFT PANEL: DESCRIPTION --- */}
@@ -197,8 +192,7 @@ export default function PracticeDetailPage() {
               onNextProblem={goToNextProblem}
             />
           </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    </MainLayout>
+      </ResizablePanelGroup>
+    </div>
   );
 }

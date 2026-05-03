@@ -74,7 +74,7 @@ export default function Neetcode150Page() {
             <div className="space-y-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
-                  NeetCode 150
+                  Neetcode 150
                 </span>
               </h1>
               <p className="text-zinc-400 text-base md:text-lg max-w-2xl">

@@ -51,7 +51,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-zinc-300" />
           </Button>
-          <span className="font-semibold text-white">NeetCode</span>
+          <span className="font-semibold text-white">Neetcode</span>
         </div>
 
         {/* Premium Deep Radial Background */}

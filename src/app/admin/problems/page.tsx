@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { adminApi, problemApi } from '@/lib/api-modules';
 import { Problem } from '@/lib/api-modules';
-import MainLayout from '@/components/layouts/main-layout';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,6 +25,7 @@ import {
   Clock,
   Database,
 } from 'lucide-react';
+import { AdminPanelSkeleton } from '@/components/skeletons/site-skeletons';
 
 export default function AdminProblemsPage() {
   const router = useRouter();
@@ -220,16 +221,12 @@ export default function AdminProblemsPage() {
     }
   };
 
-  if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0F172A]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-      </div>
-    );
+  if (!initialized || loading) {
+    return <AdminPanelSkeleton />;
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#E5E7EB] mb-2">
           Manage Problems
@@ -271,11 +268,7 @@ export default function AdminProblemsPage() {
       {/* Problems List */}
       <Card className="bg-[#1E293B] border-[#334155]">
         <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#22C55E]" />
-            </div>
-          ) : problems.length === 0 ? (
+          {problems.length === 0 ? (
             <div className="text-center py-12">
               <Code2 className="h-12 w-12 text-[#9CA3AF] mx-auto mb-4" />
               <p className="text-[#9CA3AF]">No problems found. Create your first problem!</p>
@@ -525,6 +518,6 @@ export default function AdminProblemsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </MainLayout>
+    </>
   );
 }

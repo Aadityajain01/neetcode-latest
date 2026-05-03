@@ -6,11 +6,12 @@ import { useCommunity } from "@/components/communities/CommunityContext";
 import { communityApi, CommunityTest } from "@/lib/api-modules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, ArrowRight, Calendar, Clock, FileText } from "lucide-react";
+import { Search, ArrowRight, Calendar, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, isPast } from "date-fns";
 import { TestBuilder } from "@/components/communities/TestBuilder";
 import { cn } from "@/lib/utils";
+import { CommunityTestsSkeleton } from "@/components/skeletons/site-skeletons";
 
 const PAGE_SIZE = 5;
 
@@ -58,6 +59,10 @@ export default function TestsPage() {
   const totalPages = Math.max(1, Math.ceil(filteredTests.length / PAGE_SIZE));
   const visibleTests = filteredTests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  if (loading) {
+    return <CommunityTestsSkeleton />;
+  }
+
   return (
     <div className="flex h-full w-full flex-col px-4 py-6 sm:px-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -81,11 +86,7 @@ export default function TestsPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto pr-2">
-        {loading ? (
-          <div className="flex h-full items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#00a884]" />
-          </div>
-        ) : visibleTests.length === 0 ? (
+        {visibleTests.length === 0 ? (
           <div className="flex flex-col h-full items-center py-20 text-[#8696a0]">
             <div className="bg-[#111b21] p-6 rounded-full mb-4 shadow hover:bg-[#202c33] transition">
                <FileText className="w-12 h-12 text-[#8696a0]" />

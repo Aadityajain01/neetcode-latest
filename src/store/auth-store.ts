@@ -79,9 +79,8 @@ onAuthStateChanged(auth, async (firebaseUser) => {
   let activeUser = firebaseUser;
 
   // Firebase can transiently emit null during hydration on refresh.
-  // Give it a brief window before treating the session as signed out.
+  // Check the synchronous currentUser first before treating as signed out.
   if (!activeUser) {
-    await new Promise((resolve) => setTimeout(resolve, 400));
     activeUser = auth.currentUser;
   }
 
@@ -138,7 +137,12 @@ onAuthStateChanged(auth, async (firebaseUser) => {
         email: res.user.email,
       });
       store.setUser(res.user);
-    } catch {
+    } catch (firstErr: any) {
+      const status = firstErr?.response?.status;
+      // If the backend explicitly rejected auth (401/403), don't retry.
+      if (status === 401 || status === 403) {
+        throw firstErr;
+      }
       // Retry once with a fresh token in case the cached token just expired.
       const freshToken = await activeUser.getIdToken(true);
       store.setToken(freshToken);
@@ -149,9 +153,14 @@ onAuthStateChanged(auth, async (firebaseUser) => {
       });
       store.setUser(res.user);
     }
-  } catch (err) {
-    console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: auth_state_sync_failed");
-    console.error("Auth state sync failed:", err);
+  } catch (err: any) {
+    const status = err?.response?.status;
+    if (status === 401 || status === 403) {
+      console.info("[AUTH_CHECKPOINT] AUTO_LOGOUT: backend_auth_rejected", { status });
+    } else {
+      console.warn("[AUTH_CHECKPOINT] AUTO_LOGOUT: auth_state_sync_failed");
+      console.error("Auth state sync failed:", err);
+    }
     store.setUser(null);
     store.setFirebaseUser(null);
     store.setToken(null);

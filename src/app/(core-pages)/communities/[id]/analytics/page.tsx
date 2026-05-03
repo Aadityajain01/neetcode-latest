@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useCommunity } from "@/components/communities/CommunityContext";
 import { communityApi, CommunityTest } from "@/lib/api-modules";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { CommunityAnalyticsSkeleton } from "@/components/skeletons/site-skeletons";
 
 interface AnalyticsData {
   analytics: {
@@ -65,12 +65,8 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-emerald-500" />
-      </div>
-    );
+  if (loading || dataLoading) {
+    return <CommunityAnalyticsSkeleton />;
   }
 
   return (
@@ -101,10 +97,6 @@ export default function AnalyticsPage() {
         {tests.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-[#8696a0]">
             No tests to analyze yet.
-          </div>
-        ) : dataLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#00a884]" />
           </div>
         ) : !data?.analytics ? (
           <div className="flex h-full items-center justify-center text-sm text-[#8696a0]">

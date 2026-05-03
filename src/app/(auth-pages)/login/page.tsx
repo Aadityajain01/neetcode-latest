@@ -110,9 +110,9 @@ export default function LoginPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 text-white font-bold text-xl mb-12">
             <div className="p-1.5 shadow-lg shadow-emerald-500/20">
-              <Image src={logo} alt="NeetCode" width={40} height={40} />
+              <Image src={logo} alt="Neetcode" width={40} height={40} />
             </div>
-            NeetCode
+            Neetcode
           </div>
 
           <h1 className="text-5xl font-black text-white tracking-tight leading-[1.1] mb-6">
@@ -140,7 +140,7 @@ export default function LoginPage() {
             <div className="space-y-2 font-mono text-sm">
               <div className="flex gap-2">
                 <span className="text-emerald-500">➜</span>
-                <span className="text-blue-400">~/neetcode</span>
+                <span className="text-blue-400">~/Neetcode</span>
                 <span className="text-zinc-100">git commit -m "Solved Hard DP"</span>
               </div>
               <div className="text-zinc-500 text-xs py-1 pl-4 border-l-2 border-zinc-800">
@@ -149,7 +149,7 @@ export default function LoginPage() {
               </div>
               <div className="flex gap-2 pt-1">
                 <span className="text-emerald-500">➜</span>
-                <span className="text-blue-400">~/neetcode</span>
+                <span className="text-blue-400">~/Neetcode</span>
                 <span className="text-zinc-100 animate-pulse">_</span>
               </div>
             </div>

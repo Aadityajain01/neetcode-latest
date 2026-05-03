@@ -44,7 +44,7 @@ export default function HomePage() {
   if (!initialized) return <AppRouteSkeleton />;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-200 selection:bg-emerald-500/30 font-sans overflow-y-scroll scrollbar-emerald">
+    <div className="h-screen min-h-screen bg-zinc-950 text-zinc-200 selection:bg-emerald-500/30 font-sans overflow-y-scroll scrollbar-emerald">
       
       {/* ── NAVBAR ────────────────────────────────────────────────────────── */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${
@@ -54,9 +54,9 @@ export default function HomePage() {
           
           <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight cursor-pointer" onClick={() => window.scrollTo(0,0)}>
             <div className="rounded-lg p-1.5 shadow-lg inverted">
-              <Image src={logo} width={40} height={40} alt="NeetCode Logo" />
+              <Image src={logo} width={40} height={40} alt="Neetcode Logo" />
             </div>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">NeetCode</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">Neetcode</span>
           </div>
 
           <div className="hidden lg:flex items-center gap-8">
@@ -337,7 +337,7 @@ export default function HomePage() {
       <footer className="py-12 border-t border-zinc-900 bg-zinc-950 text-zinc-500 text-sm">
         <div className="container mx-auto px-6 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2 text-white font-bold text-lg">
-             <Image src={logo} width={24} height={24} alt="Logo" className="inverted" /> NeetCode
+             <Image src={logo} width={24} height={24} alt="Logo" className="inverted" /> Neetcode
           </div>
           <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-widest">
             <Link href="/problems" className="hover:text-white transition-colors">Problems</Link>
@@ -345,7 +345,7 @@ export default function HomePage() {
             <Link href="/communities" className="hover:text-white transition-colors">Communities</Link>
           </div>
           <div className="text-[11px] tracking-widest uppercase">
-            &copy; {new Date().getFullYear()} NeetCode
+            &copy; {new Date().getFullYear()} Neetcode
           </div>
         </div>
       </footer>

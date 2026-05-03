@@ -6,12 +6,12 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { leaderboardApi, userApi, LeaderboardEntry } from '@/lib/api-modules';
-import MainLayout from '@/components/layouts/main-layout';
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from 'sonner';
 import { Trophy, Globe, Users, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LeaderboardPageSkeleton } from '@/components/skeletons/site-skeletons';
+import { LeaderboardContentSkeleton } from '@/components/skeletons/inline-skeletons';
 
 interface CommunityOption { id: string; name: string; }
 const PAGE_SIZE = 9;
@@ -157,13 +157,11 @@ export default function LeaderboardPage() {
   const isMeInTop3 = useMemo(() => top3.some((e) => e.userId === user?.id), [top3, user]);
   const isMeInPagedList = useMemo(() => pagedList.some((e) => e.userId === user?.id), [pagedList, user]);
 
-  if (!isAuthReady || (isAuthenticated && communitiesQuery.isLoading)) {
-    return (<MainLayout><LeaderboardPageSkeleton /></MainLayout>);
-  }
+  if (!isAuthReady) return null;
   if (!isAuthenticated) return null;
 
   return (
-    <MainLayout>
+    <>
       <div className="h-auto lg:h-full overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         
@@ -179,8 +177,8 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          {rankingsQuery.isLoading ? (
-            <LeaderboardPageSkeleton />
+          {(rankingsQuery.isLoading || communitiesQuery.isLoading) ? (
+            <LeaderboardContentSkeleton />
           ) : leaderboard.length === 0 ? (
             <div className="flex flex-col items-center justify-center flex-1 text-zinc-600 gap-4 border border-dashed border-zinc-800/80 rounded-3xl bg-zinc-900/10 backdrop-blur-sm w-full">
               <Users className="h-16 w-16 opacity-20" /><p className="text-base font-medium">No rankings found yet.</p>
@@ -254,6 +252,6 @@ export default function LeaderboardPage() {
           )}
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }

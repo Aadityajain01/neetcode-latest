@@ -105,11 +105,11 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       <div className="h-24 flex items-center gap-4 px-6 shrink-0 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
         <div className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden group-hover/sidebar:scale-105 transition-transform duration-500">
-          <Image src={logo} alt="NeetCode Logo" fill sizes="40px" className="object-cover" />
+          <Image src={logo} alt="Neetcode Logo" fill sizes="40px" className="object-cover" />
         </div>
         <div className="overflow-hidden transition-all duration-500 lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-auto lg:group-hover/sidebar:opacity-100">
           <h1 className="font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 whitespace-nowrap">
-            NeetCode
+            Neetcode
           </h1>
         </div>
         <Button variant="ghost" size="icon" className="lg:hidden ml-auto shrink-0 text-zinc-400 hover:text-white" onClick={onClose}>

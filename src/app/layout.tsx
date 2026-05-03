@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+
 import { Toaster as SonnerToaster } from "sonner";
 
 const geistSans = Geist({
@@ -17,12 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NeetCode - Competitive Coding Platform",
-  description: "Solve DSA problems, practice programming, and climb the leaderboard on NeetCode - a modern competitive coding platform.",
-  keywords: ["NeetCode", "DSA", "Algorithms", "Data Structures", "Programming", "Competitive Coding"],
-  authors: [{ name: "NeetCode Team" }],
+  title: "Neetcode - Competitive Coding Platform",
+  description: "Solve DSA problems, practice programming, and climb the leaderboard on Neetcode - a modern competitive coding platform.",
+  keywords: ["Neetcode", "DSA", "Algorithms", "Data Structures", "Programming", "Competitive Coding"],
+  authors: [{ name: "Neetcode Team" }],
   openGraph: {
-    title: "NeetCode",
+    title: "Neetcode",
     description: "Competitive coding platform for mastering algorithms and data structures",
     type: "website",
   },
@@ -37,13 +38,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0F172A] text-[#E5E7EB] scrollbar-emerald overflow-y-scroll`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-200 overflow-hidden`}
       >
         <QueryProvider>
           <AuthProvider>
-            {children}
+              {children}
           </AuthProvider>
         </QueryProvider>
         <Toaster />

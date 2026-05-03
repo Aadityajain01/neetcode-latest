@@ -23,7 +23,12 @@ node_modules
 # misc
 .DS_Store
 *.pem
-
+__tests__
+.swc
+mocks
+test-utils
+.github
+jest.*.*
 # debug
 npm-debug.log*
 yarn-debug.log*
