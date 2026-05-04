@@ -38,8 +38,8 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/problems', label: 'Problem Set', icon: Code2 },
     { href: '/practice', label: 'Practice Arena', icon: Zap },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/communities', label: 'Communities', icon: Users },
+    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { href: '/profile', label: 'My Profile', icon: User },
   ];
 

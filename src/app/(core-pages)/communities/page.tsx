@@ -124,29 +124,34 @@ export default function CommunitiesPage() {
 
   return (
     <>
-      <div className="h-auto lg:h-full flex flex-col font-sans px-4 sm:px-6 md:px-8 py-4 overflow-visible lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 animate-in fade-in duration-500">
+      <div className="h-auto lg:h-full flex flex-col items-center font-sans overflow-visible lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 animate-in fade-in duration-500 relative">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         
+        <div className="w-full max-w-7xl px-4 sm:px-6 md:px-8 py-4 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 shrink-0 mb-3 z-10 relative">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase tracking-widest mb-1 border border-emerald-500/20 shadow-sm">
-              <Sparkles className="h-2.5 w-2.5" /><span>Discover Communities</span>
+        <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full max-w-5xl mx-auto">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold uppercase tracking-widest mb-1 border border-emerald-500/20 shadow-sm">
+                <Sparkles className="h-3 w-3" /><span>Discover Communities</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">Communities</h1>
+              <p className="text-zinc-400 text-[13px] md:text-sm max-w-md font-medium">Join groups of like-minded developers, share knowledge, and collaborate.</p>
             </div>
-            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight leading-none">Communities</h1>
-            <p className="text-zinc-400 text-xs max-w-sm leading-tight mt-0.5">Join groups of like-minded developers, share knowledge, and collaborate.</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-            <div className="relative w-full sm:w-64 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search communities..." className="pl-9 h-9 bg-zinc-900/40 backdrop-blur-md border-zinc-800/80 text-xs rounded-lg focus-visible:ring-1 focus-visible:ring-emerald-500 transition-all text-zinc-200" />
-            </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 h-9 px-4 rounded-lg font-bold text-xs w-full sm:w-auto transition-all shadow-sm border-0">
-                  <Plus className="mr-1.5 h-3.5 w-3.5" /> Create
-                </Button>
-              </DialogTrigger>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl shadow-inner w-full md:w-auto">
+              <div className="relative flex-1 group min-w-[200px] w-full sm:w-64">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search communities..." className="bg-transparent border-0 text-zinc-100 pl-11 h-10 text-xs focus-visible:ring-0 shadow-none placeholder:text-zinc-600 w-full" />
+              </div>
+              <div className="h-6 w-[1px] bg-zinc-800 hidden sm:block shrink-0" />
+              <div className="w-full sm:w-auto px-1 pb-1 sm:pb-0 sm:px-1 shrink-0">
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 h-10 px-4 rounded-xl font-bold text-xs transition-all shadow-sm border-0">
+                      <Plus className="mr-1.5 h-3.5 w-3.5" /> Create
+                    </Button>
+                  </DialogTrigger>
               <DialogContent className="bg-zinc-950 border border-zinc-800 rounded-2xl sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-white">Create Community</DialogTitle>
@@ -189,9 +194,11 @@ export default function CommunitiesPage() {
             </Dialog>
           </div>
         </div>
+      </div>
+    </div>
 
         {/* Table — fills remaining viewport */}
-        <div className="flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative z-10 w-full">
+        <div className="flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative z-10 w-full max-w-5xl mx-auto">
           {/* Table Header */}
           <div className="hidden sm:grid grid-cols-12 gap-3 px-4 md:px-6 py-3 text-[10px] md:text-xs font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/80 border-b border-zinc-800/60 shrink-0 z-20">
             <div className="col-span-6 flex items-center">Community Name</div>
@@ -285,6 +292,7 @@ export default function CommunitiesPage() {
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </>
