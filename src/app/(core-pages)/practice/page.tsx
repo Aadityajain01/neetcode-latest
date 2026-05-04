@@ -102,9 +102,9 @@ export default function PracticeLanguagePage() {
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
         
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
           {/* Header & Controls */}
-          <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full max-w-5xl mx-auto">
+          <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full">
             <div className={cn("absolute top-0 right-0 w-64 h-64 blur-[50px] rounded-full pointer-events-none transition-colors duration-1000", activeTab === 'mcq' ? "bg-emerald-500/5" : "bg-blue-500/5")} />
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
               <div className="space-y-1 text-left">
@@ -130,7 +130,7 @@ export default function PracticeLanguagePage() {
           </div>
 
           {/* Language Table — fills remaining space */}
-          <div className="w-full max-w-5xl mx-auto flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative">
+          <div className="w-full flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative">
             <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 text-[9px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/80 border-b border-zinc-800/60 shrink-0 z-20">
               <div className="col-span-5 flex items-center">Language Domain</div>
               <div className="col-span-7 flex items-center justify-end pr-2">Actions</div>
@@ -148,7 +148,7 @@ export default function PracticeLanguagePage() {
                         <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-zinc-950 flex items-center justify-center border border-zinc-800/80 shadow-inner group-hover:scale-105 transition-transform">
                           <Code2 className="h-5 w-5 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
                         </div>
-                        <h3 className="text-base font-bold text-white capitalize truncate">{lang.name}</h3>
+                        <h3 className="text-sm font-medium text-[#F5F5F5] capitalize truncate">{lang.name}</h3>
                       </div>
                       <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 relative z-10 w-full sm:w-auto">
                         <Select value={selectedDifficulties[lang.name] || "all"} onValueChange={(val) => handleDifficultyChange(lang.name, val)}>

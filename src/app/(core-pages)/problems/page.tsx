@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth-store';
 import { problemApi, Problem } from '@/lib/api-modules';
 import { api } from '@/lib/api';
-import MainLayout from '@/components/layouts/main-layout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -87,7 +86,7 @@ export default function ProblemsPage() {
   if (!initialized) return null;
 
   return (
-    <MainLayout>
+    <>
       <div className="h-auto lg:h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col font-sans animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-visible lg:overflow-hidden">
         {/* Header & Filters */}
         <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-4 md:p-5 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden">
@@ -163,7 +162,7 @@ export default function ProblemsPage() {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors text-[15px] md:text-base truncate pr-4">{problem.title}</h3>
+                          <h3 className="text-sm font-medium text-[#F5F5F5] group-hover:text-emerald-400 transition-colors truncate pr-4">{problem.title}</h3>
                           {problem.tags && problem.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-1.5 hidden sm:flex">
                               {problem.tags.slice(0, 3).map(tag => (
@@ -209,6 +208,6 @@ export default function ProblemsPage() {
           )}
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }
