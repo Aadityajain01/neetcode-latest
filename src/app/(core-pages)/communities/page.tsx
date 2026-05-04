@@ -127,9 +127,9 @@ export default function CommunitiesPage() {
       <div className="h-auto lg:h-full flex flex-col items-center font-sans overflow-visible lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 animate-in fade-in duration-500 relative">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
         
-        <div className="w-full max-w-7xl px-4 sm:px-6 md:px-8 py-4 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full max-w-5xl mx-auto">
+        <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
             <div className="space-y-1">
@@ -198,7 +198,7 @@ export default function CommunitiesPage() {
     </div>
 
         {/* Table — fills remaining viewport */}
-        <div className="flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative z-10 w-full max-w-5xl mx-auto">
+        <div className="flex-1 min-h-0 flex flex-col bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[1.5rem] shadow-xl overflow-hidden relative z-10 w-full">
           {/* Table Header */}
           <div className="hidden sm:grid grid-cols-12 gap-3 px-4 md:px-6 py-3 text-[10px] md:text-xs font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/80 border-b border-zinc-800/60 shrink-0 z-20">
             <div className="col-span-6 flex items-center">Community Name</div>
@@ -225,7 +225,7 @@ export default function CommunitiesPage() {
                           {c.type === "domain_restricted" ? <Shield className="h-4 w-4" /> : <Hash className="h-4 w-4" />}
                         </div>
                         <div className="min-w-0 flex-1 flex flex-col justify-center">
-                          <h3 className="text-base font-bold text-zinc-100 truncate leading-tight group-hover:text-white transition-colors">{c.name}</h3>
+                          <h3 className="text-sm font-medium text-[#F5F5F5] truncate leading-tight group-hover:text-white transition-colors">{c.name}</h3>
                           <p className="text-xs text-zinc-400 truncate leading-tight mt-0.5 group-hover:text-zinc-300 transition-colors">{c.description}</p>
                         </div>
                       </div>

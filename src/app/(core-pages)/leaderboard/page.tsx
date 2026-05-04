@@ -12,32 +12,39 @@ import { toast } from 'sonner';
 import { Trophy, Globe, Users, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LeaderboardContentSkeleton } from '@/components/skeletons/inline-skeletons';
+import { CustomTrophy } from './custom-trophy';
 
 interface CommunityOption { id: string; name: string; }
 const PAGE_SIZE = 9;
 
 function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; position: 1 | 2 | 3; isMe: boolean }) {
   const config = {
-    1: { size: 'h-14 w-14 md:h-18 md:w-18', ring: 'ring-amber-400 ring-4', badge: '🥇', badgeBg: 'bg-gradient-to-br from-amber-300 to-amber-600 shadow-amber-500/50', order: 'order-2 z-10', height: 'md:-translate-y-4', scoreColor: 'text-amber-400', nameColor: 'text-amber-300', glow: 'shadow-[0_0_30px_rgba(251,191,36,0.15)]' },
-    2: { size: 'h-12 w-12 md:h-14 md:w-14', ring: 'ring-slate-300 ring-[3px]', badge: '🥈', badgeBg: 'bg-gradient-to-br from-slate-300 to-slate-500 shadow-slate-400/50', order: 'order-1', height: '', scoreColor: 'text-slate-300', nameColor: 'text-slate-200', glow: 'shadow-[0_0_20px_rgba(148,163,184,0.1)]' },
-    3: { size: 'h-12 w-12 md:h-14 md:w-14', ring: 'ring-amber-700/80 ring-[3px]', badge: '🥉', badgeBg: 'bg-gradient-to-br from-amber-600 to-amber-800 shadow-amber-700/50', order: 'order-3', height: '', scoreColor: 'text-amber-600', nameColor: 'text-amber-700', glow: 'shadow-[0_0_20px_rgba(180,83,9,0.15)]' },
+    1: { size: 'h-10 w-10 md:h-12 md:w-12', ring: 'ring-amber-400 ring-4', badge: '🥇', badgeBg: 'bg-gradient-to-br from-amber-300 to-amber-600 shadow-amber-500/50', order: 'order-2 z-10', height: 'md:-translate-y-4', scoreColor: 'text-amber-400', nameColor: 'text-amber-300', trophyColor: 'gold', trophySize: 'h-16 w-16 md:h-24 md:w-24 mb-4' },
+    2: { size: 'h-8 w-8 md:h-10 md:w-10', ring: 'ring-slate-300 ring-[3px]', badge: '🥈', badgeBg: 'bg-gradient-to-br from-slate-300 to-slate-500 shadow-slate-400/50', order: 'order-1', height: '', scoreColor: 'text-slate-300', nameColor: 'text-slate-200', trophyColor: 'silver', trophySize: 'h-12 w-12 md:h-20 md:w-20 mb-3' },
+    3: { size: 'h-8 w-8 md:h-10 md:w-10', ring: 'ring-amber-700/80 ring-[3px]', badge: '🥉', badgeBg: 'bg-gradient-to-br from-amber-600 to-amber-800 shadow-amber-700/50', order: 'order-3', height: '', scoreColor: 'text-amber-600', nameColor: 'text-amber-700', trophyColor: 'bronze', trophySize: 'h-12 w-12 md:h-20 md:w-20 mb-3' },
   }[position];
+
+  const firstName = entry.displayName ? entry.displayName.trim().split(' ')[0] : 'Unknown';
 
   return (
     <Link href={`/profile/${entry.userId}`} className={cn('block flex-1 max-w-[150px]', config.order)}>
-      <div className={cn('group relative flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 p-3 md:p-4 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 hover:bg-zinc-800/60 hover:border-zinc-700/50 backdrop-blur-md', config.glow, config.height)}>
+      <div className={cn('group relative flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1', config.height)}>
+        <CustomTrophy color={config.trophyColor as 'gold' | 'silver' | 'bronze'} className={cn('drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-110 duration-300', config.trophySize)} />
+
         <div className="relative mb-2">
           <Avatar className={cn(config.size, config.ring, 'ring-offset-2 ring-offset-zinc-900 shadow-xl transition-transform group-hover:scale-105')}>
             <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-            <AvatarFallback className={cn('font-bold text-base flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-300')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className={cn('font-bold text-xs flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-300')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div className={cn('absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-xl text-xs border border-white/20', config.badgeBg)}>{config.badge}</div>
+          <div className={cn('absolute -bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full shadow-xl text-[10px] border border-white/20', config.badgeBg)}>{config.badge}</div>
         </div>
-        <p className={cn('font-bold text-sm truncate max-w-full mt-1 relative z-10', isMe ? 'text-emerald-400' : config.nameColor)}>{entry.displayName}</p>
-        <div className="mt-2 px-3 py-1 rounded-xl bg-black/20 border border-white/5 shadow-inner relative z-10 w-full group-hover:bg-black/30 transition-colors">
+
+        <div className="mt-1 flex flex-col items-center mb-2">
           <p className={cn('text-lg md:text-xl font-black tracking-tighter leading-none', config.scoreColor)}>{entry.score}</p>
           <p className="text-[8px] text-zinc-500 uppercase tracking-widest mt-0.5 font-bold">Points</p>
         </div>
+
+        <p className={cn('font-bold text-sm md:text-base truncate max-w-full relative z-10', isMe ? 'text-emerald-400' : config.nameColor)}>{firstName}</p>
       </div>
     </Link>
   );
@@ -164,7 +171,7 @@ export default function LeaderboardPage() {
     <>
       <div className="h-auto lg:h-full overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
-        
+
         <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative z-10 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 shrink-0">
