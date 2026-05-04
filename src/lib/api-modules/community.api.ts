@@ -178,7 +178,16 @@ export const communityApi = {
   },
 
   getTestById: async (communityId: string, testId: string) => {
-    const response = await api.get<{ test: CommunityTest, questions: TestQuestion[], hasSubmitted: boolean, evaluationComplete: boolean, resultHidden: boolean, result: TestResult | null }>(`/communities/${communityId}/tests/${testId}`);
+    const response = await api.get<{
+      test: CommunityTest;
+      questions: TestQuestion[];
+      hasSubmitted: boolean;
+      evaluationComplete: boolean;
+      resultHidden: boolean;
+      result: TestResult | null;
+      strikeCount?: number;
+      violationLog?: string[];
+    }>(`/communities/${communityId}/tests/${testId}`);
     return response.data;
   },
 
@@ -230,6 +239,11 @@ export const communityApi = {
     }
 
     const response = await api.post(`/communities/${communityId}/tests/${testId}/submit`, data);
+    return response.data;
+  },
+
+  logViolation: async (communityId: string, testId: string, reason: string, strikeCount: number) => {
+    const response = await api.post(`/communities/${communityId}/tests/${testId}/violation`, { reason, strikeCount });
     return response.data;
   },
 

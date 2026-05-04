@@ -103,21 +103,29 @@ export default function PracticeLanguagePage() {
         <div className={cn("absolute -top-[500px] left-[50%] -translate-x-1/2 w-[1000px] h-[500px] opacity-10 pointer-events-none blur-3xl transition-colors duration-1000", activeTab === 'mcq' ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent" : "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500 via-transparent to-transparent")} />
         
         <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-5 relative z-10 flex flex-col flex-1 min-h-0 overflow-visible lg:overflow-hidden">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center gap-2 mb-4 shrink-0">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm">Practice Area</h1>
-            <p className="text-zinc-400 text-sm font-medium max-w-lg">Select your domain, choose a language, and hone your engineering skills.</p>
-          </div>
+          {/* Header & Controls */}
+          <div className="flex flex-col gap-3 shrink-0 mb-3 bg-zinc-900/40 rounded-3xl p-3 md:p-4 border border-zinc-800/50 backdrop-blur-md shadow-sm relative overflow-hidden w-full max-w-5xl mx-auto">
+            <div className={cn("absolute top-0 right-0 w-64 h-64 blur-[50px] rounded-full pointer-events-none transition-colors duration-1000", activeTab === 'mcq' ? "bg-emerald-500/5" : "bg-blue-500/5")} />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+              <div className="space-y-1 text-left">
+                <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest mb-1 border shadow-sm transition-colors duration-300", activeTab === 'mcq' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20")}>
+                  <Code2 className="h-3 w-3" /><span>Practice Arena</span>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm">Practice Area</h1>
+                <p className="text-zinc-400 text-[13px] md:text-sm font-medium max-w-md">Select your domain, choose a language, and hone your engineering skills.</p>
+              </div>
 
-          {/* Controls */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 mb-4 shrink-0 w-full max-w-5xl mx-auto">
-            <div className="flex bg-zinc-900/40 backdrop-blur-md rounded-2xl p-1.5 border border-zinc-800/80 shadow-sm w-full md:w-auto shrink-0">
-               <button onClick={() => { setActiveTab('mcq'); setPage(1); }} className={cn("flex-1 md:w-40 py-2.5 text-center font-bold text-sm rounded-xl transition-all duration-300", activeTab === 'mcq' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent")}>Multiple Choice</button>
-               <button onClick={() => { setActiveTab('programming'); setPage(1); }} className={cn("flex-1 md:w-48 py-2.5 text-center font-bold text-sm rounded-xl transition-all duration-300", activeTab === 'programming' ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent")}>Programming</button>
-            </div>
-            <div className="relative w-full md:w-96 group">
-              <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors", activeTab === 'mcq' ? "group-focus-within:text-emerald-500 text-zinc-500" : "group-focus-within:text-blue-500 text-zinc-500")} />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search languages..." className="pl-12 h-12 bg-zinc-900/40 backdrop-blur-md border-zinc-800/80 text-zinc-100 rounded-2xl focus:ring-1 focus:ring-zinc-700 focus:border-zinc-700 transition-all text-base shadow-sm placeholder:text-zinc-600" />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 bg-zinc-950/80 border border-zinc-800/80 rounded-2xl shadow-inner w-full md:w-auto">
+                <div className="flex bg-transparent rounded-xl w-full sm:w-auto shrink-0">
+                  <button onClick={() => { setActiveTab('mcq'); setPage(1); }} className={cn("flex-1 sm:w-32 py-2 text-center font-bold text-xs rounded-lg transition-all duration-300", activeTab === 'mcq' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent")}>Multiple Choice</button>
+                  <button onClick={() => { setActiveTab('programming'); setPage(1); }} className={cn("flex-1 sm:w-32 py-2 text-center font-bold text-xs rounded-lg transition-all duration-300", activeTab === 'programming' ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.15)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent")}>Programming</button>
+                </div>
+                <div className="h-6 w-[1px] bg-zinc-800 hidden sm:block shrink-0 mx-1" />
+                <div className="relative flex-1 group min-w-[200px] w-full sm:w-48">
+                  <Search className={cn("absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors", activeTab === 'mcq' ? "group-focus-within:text-emerald-500 text-zinc-500" : "group-focus-within:text-blue-500 text-zinc-500")} />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search languages..." className="bg-transparent border-0 text-zinc-100 pl-11 h-10 text-xs focus-visible:ring-0 shadow-none placeholder:text-zinc-600 w-full" />
+                </div>
+              </div>
             </div>
           </div>
 
