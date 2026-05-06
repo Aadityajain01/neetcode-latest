@@ -1,0 +1,13 @@
+{
+  "breakpoints": [375, 768, 1280],
+  "out": "./src/boneyard-bones",
+  "color": "var(--boneyard-skeleton-base)",
+  "darkColor": "var(--boneyard-skeleton-base-dark)",
+  "animate": "shimmer",
+  "shimmerColor": "var(--boneyard-skeleton-shimmer)",
+  "darkShimmerColor": "var(--boneyard-skeleton-shimmer-dark)",
+  "speed": "1.8s",
+  "shimmerAngle": 110,
+  "stagger": false,
+  "transition": 180
+}

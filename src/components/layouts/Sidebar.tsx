@@ -7,10 +7,18 @@ import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Code2, Trophy, Users, Shield,
-  X, LogOut, ChevronRight, Zap, User, HelpCircle
+  X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass
 } from 'lucide-react';
 import Image from 'next/image';
 import logo from '../../../public/logo.png';
@@ -39,8 +47,8 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
     { href: '/problems', label: 'Problem Set', icon: Code2 },
     { href: '/practice', label: 'Practice Arena', icon: Zap },
     { href: '/communities', label: 'Communities', icon: Users },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-    { href: '/profile', label: 'My Profile', icon: User },
+    { href: '/tech-opportunities', label: 'Opportunities', icon: TrendingUp },
+    { href: '/roadmap', label: 'Roadmap', icon: Compass },
   ];
 
   const adminNavItems = [
@@ -49,65 +57,49 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
   ];
 
   const SidebarItem = ({ item, isActive, isAdminItem = false }: { item: any, isActive: boolean, isAdminItem?: boolean }) => {
-    const activeColorStr = isAdminItem ? 'purple' : 'emerald';
-    
     return (
-      <Link href={item.href} onClick={onClose} className="block outline-none">
-        <div className={cn(
-          "group flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-300 mx-3 mb-1.5 relative overflow-hidden",
-          isActive 
-            ? isAdminItem 
-              ? "bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_15px_-5px_rgba(168,85,247,0.4)]" 
-              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.4)]"
-            : "text-zinc-400 border border-transparent hover:text-zinc-100 hover:bg-zinc-800/40 hover:border-zinc-700/50"
-        )}>
-          {/* Subtle Glow on Active */}
-          {isActive && (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link href={item.href} onClick={onClose} className="block outline-none relative group/item">
             <div className={cn(
-              "absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full blur-[20px] pointer-events-none",
-              isAdminItem ? "bg-purple-500/40" : "bg-emerald-500/40"
-            )} />
-          )}
-          
-          <item.icon className={cn(
-            "h-[22px] w-[22px] shrink-0 transition-transform duration-300 group-hover:scale-110",
-            isActive ? (isAdminItem ? "text-purple-400" : "text-emerald-400") : "text-zinc-500 group-hover:text-zinc-300"
-          )} />
-          
-          <span className={cn(
-            "font-semibold tracking-wide text-[13px] transition-all duration-300 whitespace-nowrap opacity-100",
-            "lg:opacity-0 lg:w-0 lg:group-hover/sidebar:opacity-100 lg:group-hover/sidebar:w-auto",
-            "ml-2" 
-          )}>
-            {item.label}
-          </span>
-          
-          {isActive && (
-            <ChevronRight className={cn(
-              "ml-auto h-4 w-4 shrink-0 transition-opacity whitespace-nowrap lg:opacity-0 lg:group-hover/sidebar:opacity-50",
-              isAdminItem ? "text-purple-400" : "text-emerald-400"
-            )} />
-          )}
-        </div>
-      </Link>
+              "flex items-center lg:justify-center h-11 w-[calc(100%-24px)] lg:h-9 lg:w-9 mx-3 lg:mx-auto px-3 lg:px-0 rounded-[14px] lg:rounded-[8px] transition-all duration-300 relative bg-transparent",
+              isActive 
+                ? isAdminItem ? "text-purple-400" : "text-emerald-400"
+                : "text-zinc-400 hover:text-zinc-100"
+            )}>
+              <item.icon className={cn(
+                "h-[18px] w-[18px] shrink-0 transition-transform duration-300 group-hover/item:scale-110"
+              )} />
+              
+              {/* Mobile Label */}
+              <span className="lg:hidden ml-3 font-semibold text-[13px]">
+                {item.label}
+              </span>
+            </div>
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={10} hideArrow={true} className="hidden lg:flex px-2.5 py-1.5 bg-zinc-800/90 backdrop-blur-sm border border-zinc-700/50 text-zinc-200 text-xs font-medium rounded-md shadow-lg">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
   return (
     <aside className={cn(
-      "group/sidebar fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-out",
+      "fixed inset-y-0 left-0 z-50 flex flex-col transition-transform duration-500 ease-out",
       "bg-zinc-950/60 backdrop-blur-2xl border-r border-white/5 shadow-2xl lg:shadow-none",
-      "w-72 lg:w-[88px] hover:w-72 overflow-hidden",
+      "w-72 lg:w-[72px] overflow-visible",
       isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
     )}>
       
       {/* ── Logo Area ── */}
-      <div className="h-24 flex items-center gap-4 px-6 shrink-0 relative">
+      <div className="h-24 flex items-center justify-start lg:justify-center px-6 lg:px-0 shrink-0 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
-        <div className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden group-hover/sidebar:scale-105 transition-transform duration-500">
+        <Link href="/dashboard" onClick={onClose} className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 outline-none">
           <Image src={logo} alt="Neetcode Logo" fill sizes="40px" className="object-cover" />
-        </div>
-        <div className="overflow-hidden transition-all duration-500 lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-auto lg:group-hover/sidebar:opacity-100">
+        </Link>
+        <div className="lg:hidden ml-4 flex-1">
           <h1 className="font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 whitespace-nowrap">
             Neetcode
           </h1>
@@ -118,11 +110,8 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       </div>
 
       {/* ── Scrollable Nav ── */}
-      <ScrollArea className="flex-1 py-4">
-        <div className="mb-4 px-6 text-[10px] font-bold text-zinc-500/70 uppercase tracking-widest overflow-hidden lg:h-0 lg:opacity-0 lg:group-hover/sidebar:h-auto lg:group-hover/sidebar:opacity-100 transition-all duration-500 whitespace-nowrap">
-          Platform
-        </div>
-        <nav className="space-y-1">
+      <ScrollArea className="flex-1 py-4 [&_[data-radix-scroll-area-scrollbar]]:!hidden">
+        <nav className="space-y-1 flex flex-col items-stretch lg:items-center">
           {navItems.map((item) => (
             <SidebarItem 
               key={item.href} 
@@ -133,11 +122,9 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
         </nav>
 
         {isAdmin && (
-          <div className="mt-10 animate-in fade-in slide-in-from-left-4 duration-700">
-            <div className="mb-4 px-6 flex items-center gap-2 text-[10px] font-bold text-purple-500/70 uppercase tracking-widest overflow-hidden lg:h-0 lg:opacity-0 lg:group-hover/sidebar:h-auto lg:group-hover/sidebar:opacity-100 transition-all duration-500 whitespace-nowrap">
-              <Shield className="h-3.5 w-3.5 shrink-0" /> Admin Zone
-            </div>
-            <nav className="space-y-1">
+          <div className="mt-8 animate-in fade-in slide-in-from-left-4 duration-700 flex flex-col items-stretch lg:items-center">
+            <div className="w-8 h-[1px] bg-white/10 mb-4 mx-auto" />
+            <nav className="space-y-1 flex flex-col items-stretch lg:items-center">
               {adminNavItems.map((item) => (
                 <SidebarItem 
                   key={item.href} 
@@ -152,57 +139,93 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       </ScrollArea>
 
       {/* ── Footer Area ── */}
-      <div className="shrink-0 pb-6 pt-4 px-3 bg-gradient-to-t from-zinc-950/80 to-transparent">
+      <div className="shrink-0 pb-6 pt-4 px-2 lg:px-0 flex flex-col items-center bg-gradient-to-t from-zinc-950/80 to-transparent">
         
         {/* Help / Tutorial Button */}
-        <div className="mb-4 px-2">
-          <button 
-            onClick={onShowTutorial}
-            className="flex items-center justify-center lg:justify-start gap-3 w-full px-2 py-2.5 text-[13px] font-semibold text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-300 group outline-none"
-          >
-            <HelpCircle className="h-[22px] w-[22px] shrink-0 group-hover:scale-110 transition-transform duration-300" />
-            <span className="lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-auto lg:group-hover/sidebar:opacity-100 transition-all duration-500 whitespace-nowrap">
+        <div className="mb-4 w-full flex justify-center relative group/item px-3 lg:px-0">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                onClick={onShowTutorial}
+                className="flex items-center justify-start lg:justify-center h-11 w-full lg:w-9 lg:h-9 lg:mx-auto px-3 lg:px-0 text-zinc-500 hover:text-emerald-400 bg-transparent rounded-[14px] lg:rounded-[8px] transition-all duration-300 outline-none relative"
+              >
+                <HelpCircle className="h-[18px] w-[18px] shrink-0 group-hover/item:scale-110 transition-transform duration-300" />
+                <span className="lg:hidden ml-3 font-semibold text-[13px]">
+                  How to use
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10} hideArrow={true} className="hidden lg:flex px-2.5 py-1.5 bg-zinc-800/90 backdrop-blur-sm border border-zinc-700/50 text-zinc-200 text-xs font-medium rounded-md shadow-lg">
               How to use
-            </span>
-          </button>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
-        {/* User Profile */}
-        <div className="overflow-hidden">
-          <div className="flex items-center lg:justify-center group-hover/sidebar:justify-start gap-3 p-2 rounded-2xl bg-zinc-900/50 border border-white/5 hover:border-zinc-700/50 hover:bg-zinc-800/50 transition-all duration-500 group relative">
-            <Link href="/profile" className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer outline-none">
-              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] relative overflow-hidden group-hover:shadow-[0_0_15px_-3px_rgba(16,185,129,0.5)] transition-shadow duration-300">
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-                <Avatar className="h-full w-full rounded-[11px] bg-zinc-950">
+        {/* User Profile Popover */}
+        <div className="relative mb-2 w-full px-3 lg:px-0 flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="outline-none flex items-center w-full lg:w-auto">
+              <div className="h-10 w-10 lg:h-9 lg:w-9 shrink-0 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] relative transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+                <Avatar className="h-full w-full rounded-full bg-zinc-950 border-[2px] border-zinc-950">
                   <AvatarImage
                     src={profileImageUrl}
                     alt={user?.displayName || user?.email || 'User avatar'}
-                    className="h-full w-full rounded-[11px] object-cover"
+                    className="h-full w-full rounded-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <AvatarFallback className="rounded-[11px] bg-zinc-950 text-emerald-400 font-bold text-sm">
+                  <AvatarFallback className="rounded-full bg-zinc-950 text-emerald-400 font-bold text-xs lg:text-[10px]">
                     {profileInitial}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="flex-1 min-w-0 lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-auto lg:group-hover/sidebar:opacity-100 transition-all duration-500">
-                <p className="text-[13px] font-bold text-white truncate group-hover:text-emerald-400 transition-colors">
+              <div className="lg:hidden ml-3 text-left">
+                <p className="text-[13px] font-bold text-white truncate max-w-[140px]">
                   {user?.displayName || 'Developer'}
                 </p>
-                <p className="text-[11px] font-medium text-zinc-500 truncate mt-0.5">{user?.email}</p>
+                <p className="text-[11px] text-zinc-500 truncate max-w-[140px]">
+                  {user?.email}
+                </p>
               </div>
-            </Link>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-10 w-10 shrink-0 text-zinc-500 hover:text-white hover:bg-red-500 hover:shadow-[0_0_15px_-3px_rgba(239,68,68,0.5)] rounded-xl transition-all duration-300 lg:w-0 lg:opacity-0 lg:group-hover/sidebar:w-10 lg:group-hover/sidebar:opacity-100 z-10 overflow-hidden"
-              onClick={onLogout}
-              title="Logout"
-            >
-              <LogOut className="h-[18px] w-[18px] shrink-0" />
-            </Button>
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="end" sideOffset={20} className="w-56 bg-zinc-900 border border-white/10 text-zinc-300 rounded-xl shadow-2xl p-1 z-[100]">
+              <div className="flex flex-col space-y-1 px-2 py-2.5 border-b border-white/5 mb-1">
+                <p className="text-sm font-semibold text-white truncate">
+                  {user?.displayName || 'Developer'}
+                </p>
+                <p className="text-xs text-zinc-500 truncate">
+                  {user?.email}
+                </p>
+              </div>
+              
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2 mt-1">
+                <Link href="/dashboard" onClick={onClose} className="flex items-center w-full">
+                  <LayoutDashboard className="mr-2.5 h-[15px] w-[15px]" />
+                  <span className="font-medium text-sm">Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2">
+                <Link href="/profile" onClick={onClose} className="flex items-center w-full">
+                  <User className="mr-2.5 h-[15px] w-[15px]" />
+                  <span className="font-medium text-sm">Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2">
+                <Link href="/leaderboard" onClick={onClose} className="flex items-center w-full">
+                  <Trophy className="mr-2.5 h-[15px] w-[15px]" />
+                  <span className="font-medium text-sm">Leaderboard</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator className="bg-white/5 my-1" />
+              
+              <DropdownMenuItem onClick={() => { onClose(); onLogout(); }} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors py-2 px-2 mb-0.5">
+                <LogOut className="mr-2.5 h-[15px] w-[15px]" />
+                <span className="font-medium text-sm">Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
