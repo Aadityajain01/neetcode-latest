@@ -107,7 +107,7 @@ export default function ProfilePage() {
   return (
     <>
       {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
-      <div className="h-full overflow-y-auto scrollbar-emerald">
+      <div className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {loading && (
