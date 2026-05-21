@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/problems', label: 'Problem Set', icon: Code2 },
     { href: '/practice', label: 'Practice Arena', icon: Zap },
-    { href: '/communities', label: 'Communities', icon: Users },
+    // { href: '/communities', label: 'Communities', icon: Users },
     // { href: '/tech-opportunities', label: 'Opportunities', icon: TrendingUp },
     // { href: '/roadmap', label: 'Roadmap', icon: Compass },
   ];
