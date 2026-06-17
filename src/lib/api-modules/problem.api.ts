@@ -51,6 +51,7 @@ export const problemApi = {
     search?: string;
     limit?: number;
     offset?: number;
+    tags?: string | string[];
   }) => {
     // Matches backend response structure
     const response = await api.get<{

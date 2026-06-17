@@ -12,6 +12,7 @@ export interface LeaderboardEntry {
   averageScore?: number;
   totalScore?: number;
   testCount?: number;
+  solvedCount?: number;
 }
 
 export interface CommunityAverageLeaderboardMe {
@@ -103,5 +104,39 @@ export const leaderboardApi = {
       { params: queryParams }
     );
     return response.data.me;
+  },
+
+  getGroup: async (
+    groupId: string,
+    params?: { limit?: number; offset?: number }
+  ) => {
+    const response = await api.get<{ leaderboard: LeaderboardEntry[] }>(
+      `/leaderboard/group/${groupId}`,
+      { params }
+    );
+    return response.data.leaderboard;
+  },
+
+  getGroupMe: async (groupId: string) => {
+    const response = await api.get<{
+      me: { userId: string; score: number; solvedCount: number; rank: number };
+    }>(`/leaderboard/group/${groupId}/me`);
+    return response.data.me;
+  },
+
+  getGroupRankings: async (communityId: string) => {
+    const response = await api.get<{
+      groupRankings: {
+        groupId: string;
+        name: string;
+        description: string;
+        isDefault: boolean;
+        memberCount: number;
+        totalScore: number;
+        averageScore: number;
+        rank: number;
+      }[];
+    }>(`/leaderboard/community/${communityId}/groups`);
+    return response.data.groupRankings;
   },
 };
