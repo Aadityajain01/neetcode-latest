@@ -95,7 +95,7 @@ export default function RegisterPage() {
       useAuthStore.getState().setToken(token);
       
       toast.success("Account created successfully!");
-      router.push("/dashboard");
+      router.push("/");
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Google registration failed");
