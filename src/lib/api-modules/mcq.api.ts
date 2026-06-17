@@ -48,6 +48,8 @@ export const mcqApi = {
     offset?: number;
     excludeSolved?: string;
     unsolvedFirst?: string;
+    unsolvedOnly?: string;
+    tags?: string | string[];
   }) => {
     // Expecting backend to return: { mcqs: [], pagination: {}, meta?: {} }
     const response = await api.get<{

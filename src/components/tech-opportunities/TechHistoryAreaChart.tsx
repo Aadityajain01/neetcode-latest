@@ -56,7 +56,7 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
                 className={[
                   "px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] transition-colors",
                   active
-                    ? "bg-emerald-500/15 text-emerald-300"
+                    ? "bg-white/10 text-white"
                     : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/70",
                 ].join(" ")}
               >
@@ -72,8 +72,8 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
           <AreaChart data={history} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="salaryGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.45} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.03} />
+                <stop offset="5%" stopColor="#ffffff" stopOpacity={0.45} />
+                <stop offset="95%" stopColor="#ffffff" stopOpacity={0.03} />
               </linearGradient>
               <linearGradient id="demandGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
@@ -90,7 +90,7 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
             />
             <YAxis
               yAxisId="salary"
-              stroke="#10b981"
+              stroke="#ffffff"
               tickLine={false}
               axisLine={false}
               fontSize={11}
@@ -115,7 +115,7 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
                 color: "#fff",
                 fontSize: "12px",
               }}
-              formatter={(value: number, name: string) => {
+              formatter={(value: any, name: any) => {
                 if (name === "averageSalary") {
                   return [`₹${value} LPA`, "Average Salary"];
                 }
@@ -128,7 +128,7 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
                 yAxisId="salary"
                 type="monotone"
                 dataKey="averageSalary"
-                stroke="#10b981"
+                stroke="#ffffff"
                 fill="url(#salaryGradient)"
                 strokeWidth={2}
                 activeDot={{ r: 4 }}
@@ -151,7 +151,7 @@ export default function TechHistoryAreaChart({ history }: TechHistoryAreaChartPr
 
       <div className="flex flex-wrap gap-6 text-xs uppercase tracking-[0.22em] text-zinc-500">
         <span className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 bg-emerald-500" />
+          <span className="h-2.5 w-2.5 bg-white" />
           Average Salary
         </span>
         <span className="flex items-center gap-2">

@@ -41,7 +41,7 @@ export function Edge({ fromNode, toNode, isHovered, style = 'solid', emphasis = 
   const c2y = horizontalBias ? endY : endY - (endY - startY) / 2;
 
   const pathData = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`;
-  const strokeColor = isHovered ? '#34d399' : emphasis ? '#10b981' : '#3f3f46';
+  const strokeColor = isHovered ? '#ffffff' : emphasis ? '#e4e4e7' : '#3f3f46';
   const strokeWidth = isHovered ? 3.25 : emphasis ? 2.75 : 1.9;
 
   return (
@@ -61,7 +61,7 @@ export function Edge({ fromNode, toNode, isHovered, style = 'solid', emphasis = 
         strokeLinecap="round"
         className="transition-all duration-300"
         style={{
-          filter: isHovered || emphasis ? 'drop-shadow(0 0 10px rgba(16,185,129,0.18))' : 'none'
+          filter: isHovered || emphasis ? 'drop-shadow(0 0 10px rgba(255,255,255,0.08))' : 'none'
         }}
       />
     </g>

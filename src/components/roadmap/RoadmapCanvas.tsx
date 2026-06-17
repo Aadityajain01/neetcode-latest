@@ -11,7 +11,7 @@ export function RoadmapCanvas({ roadmap }: { roadmap: RoadmapGraph }) {
 
   return (
     <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-zinc-950/70 shadow-[0_35px_90px_rgba(0,0,0,0.35)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.16),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.12),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.02),transparent_30%)]" />
 
       <div className="relative z-10 flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4">
         <div>

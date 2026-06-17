@@ -14,4 +14,4 @@ export type { Problem, TestCase } from './problem.api';
 export type { Submission } from './submission.api';
 export type { LeaderboardEntry, CommunityAverageLeaderboardMe, CommunityAverageLeaderboardResponse } from './leaderboard.api';
 export type { Community, CommunityMember, CommunityTest, TestQuestion, TestResult } from './community.api';
-export type { MCQ } from './mcq.api';
+export type { MCQ, SubmissionResult } from './mcq.api';
