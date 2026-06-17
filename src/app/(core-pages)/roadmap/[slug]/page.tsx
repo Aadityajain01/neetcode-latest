@@ -36,7 +36,7 @@ export default async function RoadmapDetailPage({
             href="/roadmap"
             className="text-emerald-400 hover:text-emerald-300 font-medium"
           >
-          ? resolvedParams.slug[0]
+            ? resolvedParams.slug[0]
           </Link>
         </div>
       </div>

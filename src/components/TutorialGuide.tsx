@@ -9,13 +9,13 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   {
     title: "Welcome to the Arena",
-    icon: <LayoutDashboard className="w-12 h-12 text-emerald-500" />,
+    icon: <LayoutDashboard className="w-12 h-12 text-zinc-200" />,
     content: (
       <div className="space-y-3">
         <p>This platform is designed to simulate a real competitive programming environment.</p>
         <p>Unlike some platforms where you just complete a function, here you interact with the <strong>System IO</strong>.</p>
         <div className="bg-zinc-900 p-3 rounded border border-zinc-700 text-xs text-zinc-400">
-          <span className="text-emerald-400 font-bold">Goal:</span> Read raw input, process it, and print the result.
+          <span className="text-zinc-200 font-bold">Goal:</span> Read raw input, process it, and print the result.
         </div>
       </div>
     ),
@@ -77,7 +77,7 @@ const STEPS = [
         <div className="bg-red-500/10 border border-red-500/20 p-2 rounded text-xs text-red-300">
           ❌ return a + b; <span className="opacity-50">(Will not work)</span>
         </div>
-        <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded text-xs text-emerald-300">
+        <div className="bg-zinc-800/40 border border-zinc-700/60 p-2 rounded text-xs text-zinc-200">
           ✅ print(a + b) <span className="opacity-50">(Python)</span><br/>
           ✅ std::cout &lt;&lt; a + b; <span className="opacity-50">(C++)</span>
         </div>
@@ -94,7 +94,7 @@ const STEPS = [
           Executes your code against the <em>Custom Input</em> or Sample Cases. Use this to debug.
         </li>
         <li>
-          <strong className="text-emerald-400"><Send className="w-3 h-3 inline mr-1"/> Submit:</strong> 
+          <strong className="text-zinc-200"><Send className="w-3 h-3 inline mr-1"/> Submit:</strong> 
           Runs your code against hidden test cases to grade your solution.
         </li>
       </ul>
@@ -102,7 +102,7 @@ const STEPS = [
   },
   {
     title: "Ready to Code?",
-    icon: <Send className="w-12 h-12 text-emerald-500" />,
+    icon: <Send className="w-12 h-12 text-zinc-200" />,
     content: (
       <div className="text-center space-y-4">
         <p>You are all set. Select a problem from the dashboard and start your streak!</p>
@@ -155,7 +155,7 @@ export function TutorialGuide({ onClose }: { onClose?: () => void }) {
         {/* Progress Bar */}
         <div className="h-1 bg-zinc-900 w-full">
           <div 
-            className="h-full bg-emerald-500 transition-all duration-300" 
+            className="h-full bg-white transition-all duration-300" 
             style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -202,7 +202,7 @@ export function TutorialGuide({ onClose }: { onClose?: () => void }) {
             
             <Button 
               onClick={handleNext}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white min-w-[100px]"
+              className="bg-white hover:bg-zinc-200 text-zinc-950 min-w-[100px]"
             >
               {currentStep === STEPS.length - 1 ? "Finish" : "Next"}
               {currentStep !== STEPS.length - 1 && <ChevronRight size={16} className="ml-1" />}
