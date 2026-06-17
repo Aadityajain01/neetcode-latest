@@ -76,7 +76,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isAuthReady) return;
-    if (!isAuthenticated) router.push('/login');
+    if (!isAuthenticated) {
+      router.push('/login');
+    } else {
+      router.replace('/');
+    }
   }, [isAuthReady, isAuthenticated, router]);
 
   const dashboardQuery = useQuery<DashboardPayload>({

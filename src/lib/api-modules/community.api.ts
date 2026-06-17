@@ -172,8 +172,9 @@ export const communityApi = {
     return response.data;
   },
 
-  getTests: async (communityId: string): Promise<CommunityTest[]> => {
-    const response = await api.get<{ tests: CommunityTest[] }>(`/communities/${communityId}/tests`);
+  getTests: async (communityId: string, groupId?: string): Promise<CommunityTest[]> => {
+    const query = groupId ? `?groupId=${groupId}` : '';
+    const response = await api.get<{ tests: CommunityTest[] }>(`/communities/${communityId}/tests${query}`);
     return response.data.tests ?? [];
   },
 
@@ -249,6 +250,61 @@ export const communityApi = {
 
   getTestAnalytics: async (communityId: string, testId: string) => {
     const response = await api.get(`/communities/${communityId}/tests/${testId}/analytics`);
+    return response.data;
+  },
+
+  getGroups: async (communityId: string): Promise<any[]> => {
+    const response = await api.get<{ groups: any[] }>(`/communities/${communityId}/groups`);
+    return response.data.groups ?? [];
+  },
+
+  getGroupById: async (communityId: string, groupId: string) => {
+    const response = await api.get(`/communities/${communityId}/groups/${groupId}`);
+    return response.data;
+  },
+
+  createGroup: async (communityId: string, data: { name: string; description?: string; type?: string; settings?: { requireApproval: boolean; allowChat: boolean } }) => {
+    const response = await api.post(`/communities/${communityId}/groups`, data);
+    return response.data.group;
+  },
+
+  updateGroupSettings: async (communityId: string, groupId: string, data: any) => {
+    const response = await api.patch(`/communities/${communityId}/groups/${groupId}/settings`, data);
+    return response.data;
+  },
+
+  joinGroup: async (communityId: string, groupId: string) => {
+    const response = await api.post(`/communities/${communityId}/groups/${groupId}/join`);
+    return response.data;
+  },
+
+  leaveGroup: async (communityId: string, groupId: string) => {
+    const response = await api.post(`/communities/${communityId}/groups/${groupId}/leave`);
+    return response.data;
+  },
+
+  getGroupMembers: async (communityId: string, groupId: string) => {
+    const response = await api.get(`/communities/${communityId}/groups/${groupId}/members`);
+    return response.data.members ?? [];
+  },
+
+  getGroupJoinRequests: async (communityId: string, groupId: string) => {
+    const response = await api.get(`/communities/${communityId}/groups/${groupId}/join-requests`);
+    return response.data.requests ?? [];
+  },
+
+  resolveGroupJoinRequest: async (communityId: string, groupId: string, requestId: string, action: 'approve' | 'reject') => {
+    const response = await api.post(`/communities/${communityId}/groups/${groupId}/join-requests/${requestId}/resolve`, { action });
+    return response.data;
+  },
+
+  getGroupNotifications: async (communityId: string) => {
+    const response = await api.get<{ notifications: Record<string, number> }>(`/communities/${communityId}/groups/notifications`);
+    return response.data.notifications ?? {};
+  },
+
+  updateGroupMemberRole: async (communityId: string, groupId: string, userId: string, role: string) => {
+    const response = await api.patch(`/communities/${communityId}/groups/${groupId}/members/${userId}/role`, { role });
     return response.data;
   },
 };

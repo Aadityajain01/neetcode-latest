@@ -109,7 +109,7 @@ export default function PracticeDetailPage() {
 
     } catch (error) {
       toast.error("Failed to load problem");
-      router.push("/practice");
+      router.push("/practice/code");
     } finally {
       setLoading(false);
     }
@@ -150,7 +150,7 @@ export default function PracticeDetailPage() {
             
             {/* Header */}
             <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-                <BackButton href="/practice" label="Back to List" className="mb-2" />
+                <BackButton href="/practice/code" label="Back to List" className="mb-2" />
                 
                 <div className="flex items-center justify-between mb-2">
                   <h1 className="text-xl font-bold text-white truncate pr-4">{problem.title}</h1>

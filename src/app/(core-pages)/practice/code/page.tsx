@@ -1,35 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useAuthStore } from '@/store/auth-store';
-import { problemApi, Problem } from '@/lib/api-modules';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { Search, CheckCircle2, Circle, ChevronLeft, ChevronRight, BrainCircuit, Code2, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ProblemsTableSkeleton } from '@/components/skeletons/inline-skeletons';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState, useMemo, useRef, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
-const ITEMS_PER_PAGE = 10;
+import { problemApi, Problem, mcqApi } from "@/lib/api-modules";
+import { api } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Search, CheckCircle2, Circle, ChevronLeft, ChevronRight, BrainCircuit, Zap, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ProblemsTableSkeleton } from "@/components/skeletons/inline-skeletons";
+import { toast } from "sonner";
 
-export default function ProblemsPage() {
+const ITEMS_PER_PAGE = 8;
+
+function ProgrammingPracticeContent() {
+  const params = useSearchParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { initialized, isAuthenticated, isLoading: authLoading, user, firebaseUser } = useAuthStore();
   
-  // Loading & Problems states
+  // Parse lang parameter using the C++ bug fix
+  const rawLang = params.get("lang");
+  const lang = rawLang && rawLang.includes(" ") ? rawLang.replace(/\s+/g, "+") : rawLang;
+  
+  // --- STATE ---
+  const [loading, setLoading] = useState(true);
   const [allProblems, setAllProblems] = useState<Problem[]>([]);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
-  const [profileStats, setProfileStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
+  const [languages, setLanguages] = useState<string[]>([]);
+  
+  // Client-side filters
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,31 +39,42 @@ export default function ProblemsPage() {
   // Scroll ref for horizontal categories tags
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Sync initial difficulty from URL query params
+  // Sync initial difficulty if set in URL (or default to none)
   useEffect(() => {
-    const diff = searchParams.get('difficulty');
+    const diff = params.get("difficulty");
     if (diff === 'easy' || diff === 'medium' || diff === 'hard') {
       setSelectedDifficulty(diff);
-    } else {
-      setSelectedDifficulty(null);
     }
-  }, [searchParams]);
+  }, [params]);
 
-  // Fetch initial raw dataset
+  // Fetch languages metadata and handle language redirection fallback
   useEffect(() => {
-    if (!initialized || authLoading) return;
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    mcqApi.getMeta().then((res) => {
+      if (res?.data?.languages) {
+        setLanguages(res.data.languages);
+        if (!lang) {
+          const hasJs = res.data.languages.some((l: string) => l.toLowerCase() === 'javascript');
+          const defaultLang = hasJs ? 'javascript' : (res.data.languages[0] || 'javascript');
+          router.replace(`/practice/code?lang=${encodeURIComponent(defaultLang)}`);
+        }
+      }
+    }).catch(() => {
+      if (!lang) {
+        router.replace(`/practice/code?lang=javascript`);
+      }
+    });
+  }, [lang, router]);
+
+  // --- INITIAL DATA FETCH ---
+  useEffect(() => {
+    if (!lang) return;
 
     const initData = async () => {
       try {
         setLoading(true);
-        const [problemsRes, solvedRes, profileRes] = await Promise.all([
-          problemApi.getProblems({ limit: 1000, type: 'dsa' }),
-          api.get('/users/me/solved'),
-          api.get('/users/profile/me'),
+        const [problemsRes, solvedRes] = await Promise.all([
+          problemApi.getProblems({ limit: 1000, type: "practice" }),
+          api.get("/users/me/solved"),
         ]);
 
         if (problemsRes?.problems) {
@@ -70,24 +83,29 @@ export default function ProblemsPage() {
         if (Array.isArray(solvedRes?.data?.solved)) {
           setSolvedProblems(new Set(solvedRes.data.solved));
         }
-        if (profileRes?.data?.profile?.stats) {
-          setProfileStats(profileRes.data.profile.stats);
-        }
       } catch (error) {
-        console.error('Failed to load data', error);
-        toast.error('Failed to load problems dataset');
+        console.error("Failed to load practice data", error);
+        toast.error("Failed to load practice dataset");
       } finally {
         setLoading(false);
       }
     };
 
     initData();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [lang]);
 
-  // Extract unique categories (tags) and count their occurrences
+  // Filter problems by active language
+  const languageFilteredProblems = useMemo(() => {
+    if (!lang) return [];
+    return allProblems.filter((p) =>
+      p.languages?.some((l) => l.toLowerCase() === lang.toLowerCase())
+    );
+  }, [allProblems, lang]);
+
+  // Compute category tags dynamically based on the current language
   const categories = useMemo(() => {
     const counts: Record<string, number> = {};
-    allProblems.forEach((p) => {
+    languageFilteredProblems.forEach((p) => {
       if (p.tags) {
         p.tags.forEach((t) => {
           counts[t] = (counts[t] || 0) + 1;
@@ -98,13 +116,13 @@ export default function ProblemsPage() {
     return Object.entries(counts)
       .map(([name, count]) => {
         const label = name
-          .split('-')
+          .split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+          .join(" ");
         return { name, label, count };
       })
       .sort((a, b) => b.count - a.count);
-  }, [allProblems]);
+  }, [languageFilteredProblems]);
 
   // Horizontal scroll tags handler
   const scrollTags = (direction: 'left' | 'right') => {
@@ -117,9 +135,9 @@ export default function ProblemsPage() {
     }
   };
 
-  // Compose all filters (Search + Category Tag + Difficulty Card 25 Limit)
+  // Compose all filters (Search + Category Tag + Difficulty Card)
   const filteredProblems = useMemo(() => {
-    let result = [...allProblems];
+    let result = [...languageFilteredProblems];
 
     // 1. Search Query filter
     if (searchQuery.trim()) {
@@ -141,61 +159,38 @@ export default function ProblemsPage() {
       result = result.filter((p) => p.difficulty === selectedDifficulty);
     }
 
-    // 4. Cap limit to 25 when difficulty is selected
-    if (selectedDifficulty) {
-      result = result.slice(0, 25);
-    }
-
     return result;
-  }, [allProblems, searchQuery, selectedTag, selectedDifficulty]);
+  }, [languageFilteredProblems, searchQuery, selectedTag, selectedDifficulty]);
 
-  // Paginated set
+  // Pagination calculations
   const totalProblems = filteredProblems.length;
-  const totalPages = Math.ceil(totalProblems / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalProblems / ITEMS_PER_PAGE) || 1;
 
   const paginatedProblems = useMemo(() => {
-    if (selectedDifficulty) {
-      return filteredProblems; // Difficulty active filters are capped to 25, no pagination needed
-    }
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredProblems.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProblems, currentPage, selectedDifficulty]);
+  }, [filteredProblems, currentPage]);
 
-  // Handle difficulty selection toggling & query param update
+  // Handle difficulty selection toggling
   const handleDifficultyToggle = (diff: 'easy' | 'medium' | 'hard') => {
     const nextDiff = selectedDifficulty === diff ? null : diff;
     setSelectedDifficulty(nextDiff);
     setCurrentPage(1);
-
-    const params = new URLSearchParams(window.location.search);
-    if (nextDiff) {
-      params.set('difficulty', nextDiff);
-    } else {
-      params.delete('difficulty');
-    }
-    const queryString = params.toString();
-    router.replace(queryString ? `/problems?${queryString}` : '/problems', { scroll: false });
   };
 
-  // Profile photo/initial extraction
-  const profileImageUrl = user?.avatarUrl || firebaseUser?.photoURL || undefined;
-  const profileInitial =
-    user?.displayName?.[0]?.toUpperCase() ||
-    user?.email?.[0]?.toUpperCase() ||
-    firebaseUser?.displayName?.[0]?.toUpperCase() ||
-    firebaseUser?.email?.[0]?.toUpperCase() ||
-    'U';
+  // Handle language dropdown change
+  const handleLanguageChange = (newLang: string) => {
+    router.push(`/practice/code?lang=${encodeURIComponent(newLang)}${selectedDifficulty ? `&difficulty=${selectedDifficulty}` : ''}`);
+  };
 
-  // Calculate difficulty ratios for sidebar cards
-  const easyTotal = allProblems.filter((p) => p.difficulty === 'easy').length || 1;
-  const medTotal = allProblems.filter((p) => p.difficulty === 'medium').length || 1;
-  const hardTotal = allProblems.filter((p) => p.difficulty === 'hard').length || 1;
+  // Calculate difficulty counts & solved counts for language-specific stats
+  const easyTotal = languageFilteredProblems.filter((p) => p.difficulty === 'easy').length;
+  const medTotal = languageFilteredProblems.filter((p) => p.difficulty === 'medium').length;
+  const hardTotal = languageFilteredProblems.filter((p) => p.difficulty === 'hard').length;
 
-  const easySolved = allProblems.filter((p) => p.difficulty === 'easy' && solvedProblems.has(p._id)).length;
-  const medSolved = allProblems.filter((p) => p.difficulty === 'medium' && solvedProblems.has(p._id)).length;
-  const hardSolved = allProblems.filter((p) => p.difficulty === 'hard' && solvedProblems.has(p._id)).length;
-
-  if (!initialized) return null;
+  const easySolved = languageFilteredProblems.filter((p) => p.difficulty === 'easy' && solvedProblems.has(p._id)).length;
+  const medSolved = languageFilteredProblems.filter((p) => p.difficulty === 'medium' && solvedProblems.has(p._id)).length;
+  const hardSolved = languageFilteredProblems.filter((p) => p.difficulty === 'hard' && solvedProblems.has(p._id)).length;
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-6 p-4 md:p-6 min-h-0 overflow-y-auto lg:overflow-hidden font-sans text-zinc-100">
@@ -203,28 +198,45 @@ export default function ProblemsPage() {
       {/* ── LEFT MAIN CONTENT COLUMN ────────────────────────────────────────── */}
       <div className="flex-1 h-full flex flex-col gap-4 min-w-0">
         
-        {/* Header and Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        {/* Header and Selectors */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight leading-none">Problems</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight leading-none">Practise arena</h1>
             <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-wider mt-1.5">
-              Refine your problem-solving skills
+              Hone your skills with curated exercises
             </p>
           </div>
 
-          <div className="flex items-center gap-2 max-w-sm w-full sm:w-80 p-1 bg-zinc-900/40 rounded-2xl">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-white transition-colors" />
-              <Input
-                placeholder="Search problems..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-transparent border-0 text-zinc-100 pl-9 pr-3 h-8 text-xs focus-visible:ring-0 shadow-none placeholder:text-zinc-600 w-full"
-              />
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Language Dropdown */}
+            <Select value={lang || 'javascript'} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-[120px] bg-zinc-900 border-0 text-zinc-300 rounded-xl hover:bg-zinc-800 transition-colors text-xs shadow-none">
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-xl">
+                {languages.map((item) => (
+                  <SelectItem key={item} value={item} className="capitalize rounded-lg text-xs">
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Search bar */}
+        <div className="flex items-center gap-2 max-w-sm w-full p-1 bg-zinc-900/40 rounded-2xl shrink-0">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-white transition-colors" />
+            <Input
+              placeholder="Search problems..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-transparent border-0 text-zinc-100 pl-9 pr-3 h-8 text-xs focus-visible:ring-0 shadow-none placeholder:text-zinc-650 w-full"
+            />
           </div>
         </div>
 
@@ -259,7 +271,7 @@ export default function ProblemsPage() {
                 'text-[8px] px-1.5 py-0.5 rounded-full font-mono font-bold',
                 selectedTag === null ? 'bg-zinc-950 text-white' : 'bg-zinc-950 text-zinc-500'
               )}>
-                {allProblems.length}
+                {languageFilteredProblems.length}
               </span>
             </button>
 
@@ -300,7 +312,7 @@ export default function ProblemsPage() {
           </button>
         </div>
 
-        {/* Problems List Card Stack - Borderless */}
+        {/* Problems List Card Stack - Borderless & Internally Scrollable */}
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar py-1">
             {loading ? (
@@ -317,10 +329,10 @@ export default function ProblemsPage() {
                   const isSolved = solvedProblems.has(problem._id);
 
                   return (
-                    <Link
+                    <div
                       key={problem._id}
-                      href={`/problems/${problem._id}`}
-                      className="group relative flex items-center justify-between p-4 bg-zinc-900/20 hover:bg-zinc-900/40 rounded-2xl transition-all duration-300 gap-4"
+                      onClick={() => router.push(`/practice/${problem._id}`)}
+                      className="group relative flex items-center justify-between p-4 bg-zinc-900/20 hover:bg-zinc-900/40 rounded-2xl transition-all duration-300 gap-4 cursor-pointer"
                     >
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div className="shrink-0">
@@ -331,7 +343,7 @@ export default function ProblemsPage() {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-semibold text-zinc-300 group-hover:text-white transition-colors truncate">
+                          <h4 className="text-sm font-semibold text-zinc-350 group-hover:text-white transition-colors truncate">
                             {problem.title}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
@@ -395,9 +407,9 @@ export default function ProblemsPage() {
                             )}
                           />
                         </div>
-                        <ChevronRight className="h-4 w-4 text-zinc-650 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                        <ArrowRight className="h-4 w-4 text-zinc-650 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -405,7 +417,7 @@ export default function ProblemsPage() {
           </div>
 
           {/* Pagination Footer */}
-          {!selectedDifficulty && totalProblems > ITEMS_PER_PAGE && (
+          {totalProblems > ITEMS_PER_PAGE && (
             <div className="flex items-center justify-between gap-3 p-4 shrink-0 bg-zinc-950/20 rounded-2xl mt-2">
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                 Showing <span className="text-zinc-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> -{' '}
@@ -448,34 +460,6 @@ export default function ProblemsPage() {
         {/* Profile spacing offset */}
         <div className="hidden lg:block h-16 shrink-0" />
 
-        {/* Profile Card */}
-        {/* <div className="bg-zinc-900/20 backdrop-blur-md rounded-3xl p-5 flex items-center gap-4 relative overflow-hidden shrink-0">
-          <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-zinc-600 via-zinc-200 to-zinc-700 p-[1px] relative shrink-0">
-            <Avatar className="h-full w-full rounded-full bg-zinc-950 border border-zinc-950">
-              <AvatarImage
-                src={profileImageUrl}
-                alt={user?.displayName || user?.email || 'User avatar'}
-                className="h-full w-full rounded-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <AvatarFallback className="rounded-full bg-zinc-950 text-white font-bold text-sm flex items-center justify-center">
-                {profileInitial}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-white truncate">{user?.displayName || 'Developer'}</h3>
-            <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">{user?.email}</p>
-            {profileStats && (
-              <div className="flex items-center gap-2 mt-1.5 text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
-                <span>Rank #{profileStats.rank || '—'}</span>
-                <span className="text-zinc-700">•</span>
-                <span>{profileStats.score || 0} Points</span>
-              </div>
-            )}
-          </div>
-        </div> */}
-
         {/* Difficulty Filter Cards */}
         <div className="flex flex-col gap-3 shrink-0">
           
@@ -492,7 +476,7 @@ export default function ProblemsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className={cn('text-sm font-black tracking-tight', selectedDifficulty === 'easy' ? 'text-zinc-950' : 'text-white')}>
-                  Easy 25
+                  Easy
                 </h4>
                 <p className={cn('text-[9px] font-bold uppercase tracking-wider mt-0.5', selectedDifficulty === 'easy' ? 'text-zinc-600' : 'text-zinc-500')}>
                   Targeted fundamental practice
@@ -509,7 +493,7 @@ export default function ProblemsPage() {
               <div className={cn('h-1.5 w-full rounded-full overflow-hidden', selectedDifficulty === 'easy' ? 'bg-zinc-200' : 'bg-zinc-950')}>
                 <div
                   className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (easySolved / easyTotal) * 100)}%` }}
+                  style={{ width: `${easyTotal > 0 ? Math.min(100, (easySolved / easyTotal) * 100) : 0}%` }}
                 />
               </div>
             </div>
@@ -528,7 +512,7 @@ export default function ProblemsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className={cn('text-sm font-black tracking-tight', selectedDifficulty === 'medium' ? 'text-zinc-950' : 'text-white')}>
-                  Medium 25
+                  Medium
                 </h4>
                 <p className={cn('text-[9px] font-bold uppercase tracking-wider mt-0.5', selectedDifficulty === 'medium' ? 'text-zinc-600' : 'text-zinc-500')}>
                   Perfect core algorithms
@@ -545,7 +529,7 @@ export default function ProblemsPage() {
               <div className={cn('h-1.5 w-full rounded-full overflow-hidden', selectedDifficulty === 'medium' ? 'bg-zinc-200' : 'bg-zinc-950')}>
                 <div
                   className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (medSolved / medTotal) * 100)}%` }}
+                  style={{ width: `${medTotal > 0 ? Math.min(100, (medSolved / medTotal) * 100) : 0}%` }}
                 />
               </div>
             </div>
@@ -564,7 +548,7 @@ export default function ProblemsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h4 className={cn('text-sm font-black tracking-tight', selectedDifficulty === 'hard' ? 'text-zinc-950' : 'text-white')}>
-                  Hard 25
+                  Hard
                 </h4>
                 <p className={cn('text-[9px] font-bold uppercase tracking-wider mt-0.5', selectedDifficulty === 'hard' ? 'text-zinc-600' : 'text-zinc-500')}>
                   Optimize complex systems
@@ -581,7 +565,7 @@ export default function ProblemsPage() {
               <div className={cn('h-1.5 w-full rounded-full overflow-hidden', selectedDifficulty === 'hard' ? 'bg-zinc-200' : 'bg-zinc-950')}>
                 <div
                   className="h-full bg-red-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (hardSolved / hardTotal) * 100)}%` }}
+                  style={{ width: `${hardTotal > 0 ? Math.min(100, (hardSolved / hardTotal) * 100) : 0}%` }}
                 />
               </div>
             </div>
@@ -591,6 +575,16 @@ export default function ProblemsPage() {
 
       </div>
 
+    </div>
+  );
+}
+
+export default function ProgrammingPracticePage() {
+  return (
+    <div className="h-full flex flex-col min-h-0 overflow-hidden">
+      <Suspense fallback={<div className="h-[50vh] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>}>
+        <ProgrammingPracticeContent />
+      </Suspense>
     </div>
   );
 }

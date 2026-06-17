@@ -41,6 +41,42 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --color-emerald-50: var(--color-zinc-50);
+  --color-emerald-100: var(--color-zinc-100);
+  --color-emerald-200: var(--color-zinc-200);
+  --color-emerald-300: var(--color-zinc-300);
+  --color-emerald-400: var(--color-zinc-400);
+  --color-emerald-500: var(--color-zinc-500);
+  --color-emerald-600: var(--color-zinc-600);
+  --color-emerald-700: var(--color-zinc-700);
+  --color-emerald-800: var(--color-zinc-800);
+  --color-emerald-900: var(--color-zinc-900);
+  --color-emerald-950: var(--color-zinc-950);
+
+  --color-teal-50: var(--color-zinc-50);
+  --color-teal-100: var(--color-zinc-100);
+  --color-teal-200: var(--color-zinc-200);
+  --color-teal-300: var(--color-zinc-300);
+  --color-teal-400: var(--color-zinc-400);
+  --color-teal-500: var(--color-zinc-500);
+  --color-teal-600: var(--color-zinc-600);
+  --color-teal-700: var(--color-zinc-700);
+  --color-teal-800: var(--color-zinc-800);
+  --color-teal-900: var(--color-zinc-900);
+  --color-teal-950: var(--color-zinc-950);
+
+  --color-cyan-50: var(--color-zinc-50);
+  --color-cyan-100: var(--color-zinc-100);
+  --color-cyan-200: var(--color-zinc-200);
+  --color-cyan-300: var(--color-zinc-300);
+  --color-cyan-400: var(--color-zinc-400);
+  --color-cyan-500: var(--color-zinc-500);
+  --color-cyan-600: var(--color-zinc-600);
+  --color-cyan-700: var(--color-zinc-700);
+  --color-cyan-800: var(--color-zinc-800);
+  --color-cyan-900: var(--color-zinc-900);
+  --color-cyan-950: var(--color-zinc-950);
 }
 
 :root {
@@ -146,10 +182,10 @@
   scrollbar-width: none;     /* Firefox */
 }
 
-/* Community scroll styling: hide vertical, show thin horizontal in emerald */
+/* Community scroll styling: hide vertical, show thin horizontal in zinc */
 .scrollbar-emerald {
   scrollbar-width: thin;
-  scrollbar-color: rgba(16, 185, 129, 0.7) transparent;
+  scrollbar-color: rgba(161, 161, 170, 0.5) transparent;
 }
 
 .scrollbar-emerald::-webkit-scrollbar {
@@ -162,7 +198,7 @@
 }
 
 .scrollbar-emerald::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.6);
+  background: rgba(161, 161, 170, 0.4);
   border-radius: 999px;
 }
 
@@ -175,7 +211,7 @@
 }
 
 .scrollbar-emerald [data-slot="scroll-area-thumb"] {
-  background: rgba(16, 185, 129, 0.6);
+  background: rgba(161, 161, 170, 0.4);
   border-radius: 999px;
 }
 

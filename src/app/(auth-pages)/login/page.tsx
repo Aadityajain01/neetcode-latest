@@ -62,7 +62,7 @@ export default function LoginPage() {
       useAuthStore.getState().setToken(token);
 
       toast.success("Login successful!");
-      router.push("/dashboard");
+      router.push("/");
     } catch (error: any) {
       if (error.code === "auth/invalid-credential") {
         toast.error("Invalid email or password");
@@ -84,7 +84,7 @@ export default function LoginPage() {
       useAuthStore.getState().setUser(res.user);
       useAuthStore.getState().setToken(token);
       toast.success("Login successful!");
-      router.push("/dashboard");
+      router.push("/");
     } catch (error: any) {
       toast.error(error.message || "Google login failed");
     } finally {

@@ -56,8 +56,8 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs shadow-xl">
         <p className="font-bold text-zinc-300">{payload[0].payload.subject}</p>
-        <p className="text-emerald-400 font-mono mt-1">DSA Solved: {payload[0].value}</p>
-        {payload[1] && <p className="text-purple-400 font-mono">MCQ Solved: {payload[1].value}</p>}
+        <p className="text-white font-mono mt-1">DSA Solved: {payload[0].value}</p>
+        {payload[1] && <p className="text-zinc-400 font-mono">MCQ Solved: {payload[1].value}</p>}
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default function ProfilePage() {
   return (
     <>
       {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
-      <div className="h-full overflow-y-auto scrollbar-emerald">
+      <div className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {loading && (
@@ -124,11 +124,11 @@ export default function ProfilePage() {
             {/* ── Header ──────────────────────────────────────────── */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-white/5">
               <div className="flex items-center gap-5">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[2px] shadow-lg shadow-emerald-500/10">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-zinc-500 via-zinc-200 to-zinc-600 p-[2px] shadow-lg shadow-white/5">
                   <div className="w-full h-full rounded-[14px] bg-zinc-950 flex items-center justify-center overflow-hidden">
                     <Avatar className="w-full h-full rounded-none">
                       <AvatarImage src={data.details.avatarUrl} className="object-cover" />
-                      <AvatarFallback className="text-3xl font-bold text-emerald-400 bg-zinc-950 w-full h-full flex items-center justify-center">
+                      <AvatarFallback className="text-3xl font-bold text-white bg-zinc-950 w-full h-full flex items-center justify-center">
                         {data.details.displayName?.[0]?.toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                     {data.details.displayName || "Anonymous User"}
                   </h1>
                   <p className="text-sm text-zinc-500 font-medium">@{data.details.username || data.details.email.split('@')[0]}</p>
-                  <div className="flex items-center gap-1.5 mt-2 px-2 py-0.5 w-fit rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+                  <div className="flex items-center gap-1.5 mt-2 px-2 py-0.5 w-fit rounded-full bg-zinc-800/40 border border-zinc-800/60 text-[10px] text-zinc-300 font-bold uppercase tracking-widest">
                     <Zap size={10} fill="currentColor" /> Pro Member
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function ProfilePage() {
                 {/* Bio Card */}
                 <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
                   <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <MapPin size={12} className="text-emerald-500" /> About
+                    <MapPin size={12} className="text-zinc-400" /> About
                   </h3>
                   <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
                     {data.details.bio || "No biography provided."}
@@ -179,16 +179,16 @@ export default function ProfilePage() {
                       <Calendar size={12} /> Joined {format(new Date(data.details.createdAt), "MMM yyyy")}
                     </div>
                     {data.details.socialLinks?.github && (
-                      <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><GitHubIcon className="h-3 w-3" /> GitHub</a>
+                       <a href={data.details.socialLinks.github} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><GitHubIcon className="h-3 w-3" /> GitHub</a>
                     )}
                     {data.details.socialLinks?.linkedin && (
-                      <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><LinkedInIcon className="h-3 w-3" /> LinkedIn</a>
+                       <a href={data.details.socialLinks.linkedin} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors text-xs font-medium"><LinkedInIcon className="h-3 w-3" /> LinkedIn</a>
                     )}
                     {data.details.socialLinks?.twitter && (
-                      <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><BrandXIcon className="h-3 w-3" /> Twitter</a>
+                       <a href={data.details.socialLinks.twitter} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-sky-400 transition-colors text-xs font-medium"><BrandXIcon className="h-3 w-3" /> Twitter</a>
                     )}
                     {data.details.socialLinks?.website && (
-                      <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-colors text-xs font-medium"><Globe size={12} /> Website</a>
+                       <a href={data.details.socialLinks.website} target="_blank" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-medium"><Globe size={12} /> Website</a>
                     )}
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export default function ProfilePage() {
                 {/* Communities Card */}
                 <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col">
                   <div className="p-4 border-b border-zinc-800/50">
-                    <h3 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <h3 className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-3 flex items-center gap-2">
                       <Crown size={12} /> Created
                     </h3>
                     <div className="space-y-1">
@@ -231,8 +231,8 @@ export default function ProfilePage() {
                         <PolarGrid stroke="#27272a" />
                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#a1a1aa', fontSize: 10, fontWeight: 700 }} />
                         <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
-                        <Radar name="DSA" dataKey="DSA" stroke="#10b981" fill="#10b981" fillOpacity={0.2} strokeWidth={2} />
-                        <Radar name="MCQ" dataKey="MCQ" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
+                        <Radar name="DSA" dataKey="DSA" stroke="#ffffff" fill="#ffffff" fillOpacity={0.2} strokeWidth={2} />
+                        <Radar name="MCQ" dataKey="MCQ" stroke="#71717a" fill="#71717a" fillOpacity={0.2} strokeWidth={2} />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
@@ -254,7 +254,7 @@ export default function ProfilePage() {
                 <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5 overflow-hidden">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                      <BarChart3 size={12} className="text-emerald-500" /> Contribution Activity
+                      <BarChart3 size={12} className="text-zinc-400" /> Contribution Activity
                     </h3>
                     <span className="text-[10px] text-zinc-600 font-mono font-bold bg-zinc-800/50 px-2 py-1 rounded-md">{new Date().getFullYear()}</span>
                   </div>
@@ -262,8 +262,8 @@ export default function ProfilePage() {
                     <ActivityCalendar
                       data={calendarData}
                       theme={{
-                        light: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
-                        dark: ['#18181b', '#064e3b', '#047857', '#10b981', '#34d399'],
+                        light: ['#18181b', '#27272a', '#52525b', '#a1a1aa', '#e4e4e7'],
+                        dark: ['#18181b', '#27272a', '#52525b', '#a1a1aa', '#e4e4e7'],
                       }}
                       blockSize={11} blockMargin={3} fontSize={10} showWeekdayLabels={true}
                     />
@@ -273,15 +273,15 @@ export default function ProfilePage() {
                 {/* Recent Solves */}
                 <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 rounded-2xl p-5">
                   <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Send size={12} className="text-emerald-500" /> Recent Solves
+                    <Send size={12} className="text-zinc-400" /> Recent Solves
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {data.activity.recent.slice(0, 6).map((sub, idx) => (
                       <div key={idx} className="flex justify-between items-center px-3 py-2 bg-zinc-800/30 rounded-lg hover:bg-zinc-800/60 transition-colors border border-zinc-800/40">
                         <div className="flex items-center gap-2 w-[70%]">
                           <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                            sub.problemId.difficulty === 'Easy' ? 'bg-emerald-500' :
-                            sub.problemId.difficulty === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
+                            sub.problemId.difficulty === 'Easy' ? 'bg-zinc-400' :
+                            sub.problemId.difficulty === 'Medium' ? 'bg-zinc-600' : 'bg-zinc-200'
                           )} />
                           <span className="text-[11px] font-semibold text-zinc-300 truncate" title={sub.problemId.title}>{sub.problemId.title}</span>
                         </div>
@@ -326,10 +326,10 @@ function CompactDiffCard({ label, dsa, mcq, color }: { label: string; dsa: numbe
     <div className="bg-zinc-800/30 border border-zinc-800/50 rounded-xl p-3 flex flex-col items-center justify-center text-center">
       <span className={cn("text-[10px] font-bold uppercase tracking-widest", color)}>{label}</span>
       <div className="mt-2 text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
-        <span><span className="text-emerald-400 font-bold">{dsa}</span> <span className="text-[8px] uppercase">DSA</span></span>
+        <span><span className="text-white font-bold">{dsa}</span> <span className="text-[8px] uppercase">DSA</span></span>
       </div>
       <div className="text-xs font-mono text-zinc-400 w-full flex justify-between px-1">
-        <span><span className="text-purple-400 font-bold">{mcq}</span> <span className="text-[8px] uppercase">MCQ</span></span>
+        <span><span className="text-zinc-300 font-bold">{mcq}</span> <span className="text-[8px] uppercase">MCQ</span></span>
       </div>
     </div>
   );
@@ -339,7 +339,7 @@ function CommunityItem({ community, onClick }: { community: Community; onClick: 
   return (
     <button onClick={onClick} className="w-full flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-zinc-800/50 transition-all group text-left">
       <div className="flex items-center gap-2">
-        <div className="text-zinc-600 group-hover:text-emerald-500 transition-colors"><Hash size={12} /></div>
+        <div className="text-zinc-600 group-hover:text-white transition-colors"><Hash size={12} /></div>
         <div className="flex flex-col">
           <span className="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors">{community.name}</span>
           <span className="text-[8px] text-zinc-600 font-mono uppercase">{community.role}</span>
@@ -368,7 +368,7 @@ function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails; onCl
     } catch { toast.error("Error updating profile"); } finally { setSaving(false); }
   };
 
-  const inputClass = "w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-zinc-600";
+  const inputClass = "w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-700 transition-colors placeholder:text-zinc-600";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -388,7 +388,7 @@ function EditProfileModal({ user, onClose, onUpdate }: { user: UserDetails; onCl
         </form>
         <div className="p-4 border-t border-zinc-800 flex justify-end gap-2 bg-zinc-950/50">
           <button onClick={onClose} className="px-4 py-1.5 text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50">
+          <button onClick={handleSubmit} disabled={saving} className="px-5 py-1.5 bg-white hover:bg-zinc-200 text-zinc-950 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50">
             {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
           </button>
         </div>

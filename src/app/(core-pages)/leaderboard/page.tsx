@@ -169,10 +169,10 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <div className="h-auto lg:h-full overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
+      <div className="h-auto lg:h-[100dvh] overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
 
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative z-10 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden">
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative z-10 flex flex-col lg:h-[100dvh] min-h-0 overflow-visible lg:overflow-hidden">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 shrink-0">
             <div className="flex items-center gap-4">
