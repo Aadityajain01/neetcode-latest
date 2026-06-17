@@ -1,11 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { ChatBox } from "@/components/communities/ChatBox";
-
-export default function ChatPage() {
-  return (
-    <div className="flex h-full min-h-0 w-full flex-col">
-      <ChatBox />
-    </div>
-  );
+export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/communities?id=${id}`);
 }
