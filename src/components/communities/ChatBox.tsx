@@ -6,9 +6,9 @@ import { useCommunity } from "./CommunityContext";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, ShieldAlert, MessageSquare } from "lucide-react";
+import { Send, ShieldAlert, MessageSquare, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { messageApi } from "@/lib/api-modules";
+import { messageApi, communityApi } from "@/lib/api-modules";
 import { TestBuilder } from "./TestBuilder";
 
 interface Message {
@@ -58,11 +58,21 @@ function shouldShowDateSeparator(
 
 export function ChatBox() {
   const router = useRouter();
-  const { community, userRole } = useCommunity();
+  const {
+    community,
+    userRole,
+    activeGroupId,
+    activeGroup,
+    isGroupMember,
+    groupUserRole,
+    refreshGroups,
+  } = useCommunity();
+  
   const { user, firebaseUser } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
+  const [joining, setJoining] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef(true);
@@ -85,9 +95,9 @@ export function ChatBox() {
   }, []);
 
   const fetchMessages = useCallback(async () => {
-    if (!community?._id) return;
+    if (!community?._id || !activeGroupId) return;
     try {
-      const data = await messageApi.getMessages(community._id, 100);
+      const data = await messageApi.getMessages(community._id, 100, undefined, activeGroupId);
       const fetched: Message[] = data.messages || [];
       setMessages(fetched);
       latestTimestampRef.current =
@@ -99,15 +109,16 @@ export function ChatBox() {
     } catch (err) {
       console.error("Failed to fetch messages:", err);
     }
-  }, [community?._id, scrollToBottom]);
+  }, [community?._id, activeGroupId, scrollToBottom]);
 
   const fetchNewMessages = useCallback(async () => {
-    if (!community?._id || !latestTimestampRef.current) return;
+    if (!community?._id || !activeGroupId || !latestTimestampRef.current) return;
     try {
       const data = await messageApi.getMessages(
         community._id,
         100,
-        latestTimestampRef.current
+        latestTimestampRef.current,
+        activeGroupId
       );
       const incoming: Message[] = data.messages || [];
       if (incoming.length === 0) return;
@@ -124,11 +135,11 @@ export function ChatBox() {
     } catch (err) {
       console.error("Failed to fetch incremental messages:", err);
     }
-  }, [community?._id, scrollToBottom]);
+  }, [community?._id, activeGroupId, scrollToBottom]);
 
   // Initial fetch + fast polling for near-realtime chat updates
   useEffect(() => {
-    if (!community?._id) {
+    if (!community?._id || !activeGroupId) {
       setMessages([]);
       latestTimestampRef.current = null;
       return;
@@ -146,15 +157,14 @@ export function ChatBox() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [community?._id, fetchMessages, fetchNewMessages]);
+  }, [community?._id, activeGroupId, fetchMessages, fetchNewMessages]);
 
   const handleSend = async (e?: FormEvent) => {
     e?.preventDefault();
-    if (!inputText.trim() || !community || sending) return;
+    if (!inputText.trim() || !community || !activeGroupId || sending) return;
 
-    const isAdmin = userRole === "admin" || userRole === "owner";
-    if (!community.allowUsersToChat && !isAdmin) {
-      toast.error("Chat is disabled for members.");
+    if (chatDisabled) {
+      toast.error("You do not have permission to chat in this channel.");
       return;
     }
 
@@ -175,7 +185,7 @@ export function ChatBox() {
 
     try {
       setSending(true);
-      await messageApi.sendMessage(community._id, textToSend);
+      await messageApi.sendMessage(community._id, textToSend, activeGroupId);
       // Refetch to get the real message with proper _id
       await fetchMessages();
       scrollToBottom();
@@ -191,10 +201,41 @@ export function ChatBox() {
     }
   };
 
-  const isAdmin = userRole === "admin" || userRole === "owner";
-  const chatDisabled = !community?.allowUsersToChat && !isAdmin;
+  const handleJoinGroup = async () => {
+    if (!community?._id || !activeGroupId || joining) return;
+    try {
+      setJoining(true);
+      const res = await communityApi.joinGroup(community._id, activeGroupId);
+      if (res.status === "pending_approval") {
+        toast.info("Join request submitted for admin approval");
+      } else {
+        toast.success("Joined group successfully!");
+      }
+      await refreshGroups();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to join group");
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const isCommAdmin = userRole === "admin" || userRole === "owner";
+  const isGroupAdmin =
+    isCommAdmin ||
+    groupUserRole === "owner" ||
+    groupUserRole === "admin" ||
+    groupUserRole === "subadmin";
+
+  const isAnnouncement = activeGroup?.type === "announcement";
+  const allowChatSetting = activeGroup?.settings?.allowChat ?? true;
+  const commAllowChatSetting = community?.allowUsersToChat ?? true;
+
+  const chatDisabled =
+    !isGroupMember ||
+    (!isGroupAdmin && (isAnnouncement || !allowChatSetting || !commAllowChatSetting));
+
   const canCreateTest =
-    isAdmin || userRole === "subadmin" || !!community?.allowTestCreation;
+    isGroupMember && (isGroupAdmin || !!community?.allowTestCreation);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-zinc-950/60">
@@ -204,15 +245,7 @@ export function ChatBox() {
         className="h-full w-full flex-1"
       >
         <div className="px-4 py-8 space-y-1 flex flex-col min-h-full">
-          {/* Admin-only chat notice */}
-          {!community?.allowUsersToChat && (
-            <div className="flex justify-center my-4">
-              <div className="bg-zinc-900 text-zinc-400 text-xs px-4 py-2 rounded-lg text-center shadow-sm flex items-center gap-1.5 border border-zinc-800">
-                <ShieldAlert className="w-4 h-4" /> Only admins can send
-                messages
-              </div>
-            </div>
-          )}
+
 
           {/* Empty state */}
           {messages.length === 0 && (
@@ -259,7 +292,7 @@ export function ChatBox() {
                   <div className="flex justify-center my-3">
                     <div className="bg-zinc-900 text-zinc-100 px-4 py-3 rounded-xl text-center shadow-sm max-w-sm w-full sm:w-auto border border-zinc-800">
                       <div className="text-zinc-300 font-semibold mb-1 text-[12px] uppercase tracking-wide">
-                        Community Update
+                        Group Update
                       </div>
                       <div className="text-[13.5px] leading-relaxed text-zinc-300 break-all [overflow-wrap:anywhere]">{msg.text}</div>
 
@@ -287,9 +320,6 @@ export function ChatBox() {
                       isSameSenderAsPrev ? "mt-0.5" : "mt-2"
                     } ${isMe ? "self-end pr-2 md:pr-10" : "self-start pl-2 md:pl-10"}`}
                   >
-                    {/* Optional avatar on left for others */}
-                    {/* Removing avatar entirely to make it exactly like WhatsApp Web where group chats just show colored names */}
-
                     <div
                       className={`relative w-fit max-w-[84vw] sm:max-w-[70vw] lg:max-w-[58vw] px-2.5 py-1.5 text-[14.5px] leading-[21px] shadow-sm flex flex-col ${
                         isMe
@@ -336,44 +366,75 @@ export function ChatBox() {
         </div>
       </ScrollArea>
 
-      {/* Input area */}
-      <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-3 sm:px-6 md:px-10 flex items-center justify-center">
-        <div className="flex items-center gap-3 w-full max-w-5xl">
-          {canCreateTest && (
-            <div className="shrink-0 bg-transparent">
-               <TestBuilder onTestCreated={() => {}} />
-            </div>
-          )}
-          <form onSubmit={handleSend} className="flex-1 flex items-center bg-zinc-900 rounded-lg px-4 py-2 min-h-11 shadow-sm border border-zinc-800">
-            <input
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              disabled={chatDisabled}
-              placeholder={
-                chatDisabled
-                  ? "Only admins can send messages"
-                  : "Type a message"
-              }
-              className="bg-transparent border-none w-full text-[15px] text-zinc-200 placeholder:text-zinc-500 focus:ring-0 focus:outline-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-          </form>
-          {inputText.trim() && !chatDisabled && !sending && (
-             <Button
-               type="submit"
-               onClick={handleSend}
-               className="h-11 w-11 shrink-0 rounded-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-all shadow-none border-0 p-0 flex items-center justify-center"
-             >
-               <Send className="w-5 h-5 ml-1" />
-             </Button>
-          )}
+      {/* Input area or Join Group panel */}
+      {!activeGroup ? (
+        <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-6 text-center text-zinc-500">
+          Select a group from the sidebar to start.
         </div>
-      </div>
+      ) : !isGroupMember ? (
+        activeGroup.pendingApproval ? (
+          <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-6 sm:px-6 md:px-10 flex flex-col items-center justify-center gap-2">
+            <div className="p-2.5 rounded-full bg-zinc-850 border border-zinc-850">
+              <Lock className="w-5 h-5 text-zinc-500 animate-pulse" />
+            </div>
+            <p className="text-sm text-zinc-400 font-medium">Join request is pending admin approval.</p>
+            <Button disabled className="bg-zinc-800 text-zinc-500 rounded-xl px-6 h-10 text-xs border border-zinc-750 cursor-not-allowed">
+              Pending Approval
+            </Button>
+          </div>
+        ) : (
+          <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-6 sm:px-6 md:px-10 flex flex-col items-center justify-center gap-2">
+            <p className="text-sm text-zinc-400 font-medium">You are not a member of #{activeGroup.name}</p>
+            <Button
+              onClick={handleJoinGroup}
+              disabled={joining}
+              className="bg-white hover:bg-zinc-200 text-zinc-950 font-black rounded-xl px-6 h-10 text-xs border-0 transition-all active:scale-95"
+            >
+              {joining ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+              {activeGroup.settings?.requireApproval ? "Request to Join Group" : "Join Group"}
+            </Button>
+          </div>
+        )
+      ) : chatDisabled ? (
+        <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-6 text-center text-zinc-500 text-xs font-semibold">
+          {isAnnouncement
+            ? "Only admins and subadmins can send messages in this announcement group."
+            : "Chat is disabled in this group."}
+        </div>
+      ) : (
+        <div className="relative z-20 w-full shrink-0 bg-zinc-900/95 border-t border-zinc-800 px-4 py-3 sm:px-6 md:px-10 flex items-center justify-center">
+          <div className="flex items-center gap-3 w-full max-w-5xl">
+            {canCreateTest && (
+              <div className="shrink-0 bg-transparent">
+                <TestBuilder onTestCreated={() => {}} />
+              </div>
+            )}
+            <form onSubmit={handleSend} className="flex-1 flex items-center bg-zinc-900 rounded-lg px-4 py-2 min-h-11 shadow-sm border border-zinc-800">
+              <input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Type a message..."
+                className="bg-transparent border-none w-full text-[15px] text-zinc-200 placeholder:text-zinc-500 focus:ring-0 focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+            </form>
+            {inputText.trim() && !sending && (
+              <Button
+                type="submit"
+                onClick={handleSend}
+                className="h-11 w-11 shrink-0 rounded-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-all shadow-none border-0 p-0 flex items-center justify-center"
+              >
+                <Send className="w-5 h-5 ml-1" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Code2, Trophy, Users, Shield,
-  X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass
+  X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass, Terminal, Bookmark
 } from 'lucide-react';
 import Image from 'next/image';
 import logo from '../../../public/logo.png';
@@ -43,11 +43,12 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
     'U';
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/problems', label: 'Problem Set', icon: Code2 },
-    { href: '/practice', label: 'Practice Arena', icon: Zap },
+    { href: '/practice', label: 'MCQ Arena', icon: HelpCircle },
+    { href: '/practice/code', label: 'Coding Arena', icon: Terminal },
     { href: '/communities', label: 'Communities', icon: Users },
-
+    { href: '/tech-opportunities', label: 'Opportunities', icon: TrendingUp },
+    { href: '/roadmap', label: 'Roadmap', icon: Compass },
   ];
 
   const adminNavItems = [
@@ -63,7 +64,7 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
             <div className={cn(
               "flex items-center lg:justify-center h-11 w-[calc(100%-24px)] lg:h-9 lg:w-9 mx-3 lg:mx-auto px-3 lg:px-0 rounded-[14px] lg:rounded-[8px] transition-all duration-300 relative bg-transparent",
               isActive 
-                ? isAdminItem ? "text-purple-400" : "text-emerald-400"
+                ? isAdminItem ? "text-purple-400" : "text-white"
                 : "text-zinc-400 hover:text-zinc-100"
             )}>
               <item.icon className={cn(
@@ -94,12 +95,12 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       
       {/* ── Logo Area ── */}
       <div className="h-24 flex items-center justify-start lg:justify-center px-6 lg:px-0 shrink-0 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
-        <Link href="/dashboard" onClick={onClose} className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 outline-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+        <Link href="/" onClick={onClose} className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 outline-none">
           <Image src={logo} alt="Neetcode Logo" fill sizes="40px" className="object-cover" />
         </Link>
         <div className="lg:hidden ml-4 flex-1">
-          <h1 className="font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 whitespace-nowrap">
+          <h1 className="font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 whitespace-nowrap">
             Neetcode
           </h1>
         </div>
@@ -115,7 +116,13 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
             <SidebarItem 
               key={item.href} 
               item={item} 
-              isActive={pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href + '/'))} 
+              isActive={
+                item.href === '/practice'
+                  ? pathname === '/practice' || pathname?.startsWith('/practice/mcq/')
+                  : item.href === '/practice/code'
+                    ? pathname === '/practice/code' || pathname?.startsWith('/practice/code/') || (pathname?.startsWith('/practice/') && !pathname?.startsWith('/practice/mcq/'))
+                    : pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href + '/'))
+              } 
             />
           ))}
         </nav>
@@ -137,96 +144,83 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
         )}
       </ScrollArea>
 
-      {/* ── Footer Area ── */}
-      <div className="shrink-0 pb-6 pt-4 px-2 lg:px-0 flex flex-col items-center bg-gradient-to-t from-zinc-950/80 to-transparent">
-        
-        {/* Help / Tutorial Button */}
-        <div className="mb-4 w-full flex justify-center relative group/item px-3 lg:px-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button 
-                onClick={onShowTutorial}
-                className="flex items-center justify-start lg:justify-center h-11 w-full lg:w-9 lg:h-9 lg:mx-auto px-3 lg:px-0 text-zinc-500 hover:text-emerald-400 bg-transparent rounded-[14px] lg:rounded-[8px] transition-all duration-300 outline-none relative"
-              >
-                <HelpCircle className="h-[18px] w-[18px] shrink-0 group-hover/item:scale-110 transition-transform duration-300" />
-                <span className="lg:hidden ml-3 font-semibold text-[13px]">
-                  How to use
-                </span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} hideArrow={true} className="hidden lg:flex px-2.5 py-1.5 bg-zinc-800/90 backdrop-blur-sm border border-zinc-700/50 text-zinc-200 text-xs font-medium rounded-md shadow-lg">
-              How to use
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* User Profile Popover */}
-        <div className="relative mb-2 w-full px-3 lg:px-0 flex justify-center">
+      {/* Profile Section at the Bottom (Non-Homepage Pages) */}
+      {pathname !== '/' && (
+        <div className="shrink-0 pb-6 pt-4 px-2 lg:px-0 flex flex-col items-center bg-gradient-to-t from-zinc-950/80 to-transparent w-full">
           <DropdownMenu>
-            <DropdownMenuTrigger className="outline-none flex items-center w-full lg:w-auto">
-              <div className="h-10 w-10 lg:h-9 lg:w-9 shrink-0 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] relative transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(52,211,153,0.2)]">
-                <Avatar className="h-full w-full rounded-full bg-zinc-950 border-[2px] border-zinc-950">
-                  <AvatarImage
-                    src={profileImageUrl}
-                    alt={user?.displayName || user?.email || 'User avatar'}
-                    className="h-full w-full rounded-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <AvatarFallback className="rounded-full bg-zinc-950 text-emerald-400 font-bold text-xs lg:text-[10px]">
-                    {profileInitial}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="lg:hidden ml-3 text-left">
-                <p className="text-[13px] font-bold text-white truncate max-w-[140px]">
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2.5 px-3 py-1.5 lg:p-0 rounded-full cursor-pointer select-none group transition-all duration-300">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-zinc-500 via-zinc-200 to-zinc-600 p-[1px] relative transition-all duration-300 group-hover:scale-105">
+                  <Avatar className="h-full w-full rounded-full bg-zinc-950 border border-zinc-950">
+                    <AvatarImage
+                      src={profileImageUrl}
+                      alt={user?.displayName || user?.email || 'User avatar'}
+                      className="h-full w-full rounded-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <AvatarFallback className="rounded-full bg-zinc-950 text-white font-bold text-[10px] flex items-center justify-center">
+                      {profileInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                {/* Mobile/Open Drawer Display Name */}
+                <span className="lg:hidden text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors truncate max-w-[150px]">
                   {user?.displayName || 'Developer'}
-                </p>
-                <p className="text-[11px] text-zinc-500 truncate max-w-[140px]">
-                  {user?.email}
-                </p>
+                </span>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="end" sideOffset={20} className="w-56 bg-zinc-900 border border-white/10 text-zinc-300 rounded-xl shadow-2xl p-1 z-[100]">
-              <div className="flex flex-col space-y-1 px-2 py-2.5 border-b border-white/5 mb-1">
-                <p className="text-sm font-semibold text-white truncate">
+            <DropdownMenuContent align="start" side="right" sideOffset={12} className="w-52 bg-zinc-900/95 border border-white/10 text-zinc-300 rounded-xl shadow-2xl p-1 z-[100] backdrop-blur-md">
+              <div className="flex flex-col space-y-1 px-2.5 py-2.5 border-b border-white/5 mb-1">
+                <p className="text-xs font-semibold text-white truncate">
                   {user?.displayName || 'Developer'}
                 </p>
-                <p className="text-xs text-zinc-500 truncate">
+                <p className="text-[10px] text-zinc-500 truncate">
                   {user?.email}
                 </p>
               </div>
               
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2 mt-1">
-                <Link href="/dashboard" onClick={onClose} className="flex items-center w-full">
-                  <LayoutDashboard className="mr-2.5 h-[15px] w-[15px]" />
-                  <span className="font-medium text-sm">Dashboard</span>
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                <Link href="/" className="flex items-center w-full">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <span className="font-semibold text-xs">Dashboard</span>
                 </Link>
               </DropdownMenuItem>
               
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2">
-                <Link href="/profile" onClick={onClose} className="flex items-center w-full">
-                  <User className="mr-2.5 h-[15px] w-[15px]" />
-                  <span className="font-medium text-sm">Profile</span>
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                <Link href="/profile" className="flex items-center w-full">
+                  <User className="mr-2 h-4 w-4" />
+                  <span className="font-semibold text-xs">Profile</span>
                 </Link>
               </DropdownMenuItem>
               
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-emerald-400 rounded-lg transition-colors py-2 px-2">
-                <Link href="/leaderboard" onClick={onClose} className="flex items-center w-full">
-                  <Trophy className="mr-2.5 h-[15px] w-[15px]" />
-                  <span className="font-medium text-sm">Leaderboard</span>
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                <Link href="/bookmarks" className="flex items-center w-full">
+                  <Bookmark className="mr-2 h-4 w-4" />
+                  <span className="font-semibold text-xs">Bookmarks</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                <Link href="/leaderboard" className="flex items-center w-full">
+                  <Trophy className="mr-2 h-4 w-4" />
+                  <span className="font-semibold text-xs">Leaderboard</span>
                 </Link>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator className="bg-white/5 my-1" />
               
-              <DropdownMenuItem onClick={() => { onClose(); onLogout(); }} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors py-2 px-2 mb-0.5">
-                <LogOut className="mr-2.5 h-[15px] w-[15px]" />
-                <span className="font-medium text-sm">Logout</span>
+              <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors py-2 px-2.5 mb-0.5">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span className="font-semibold text-xs">Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      )}
+
+      {pathname === '/' && (
+        <div className="shrink-0 pb-6 pt-4 px-2 lg:px-0 flex flex-col items-center bg-gradient-to-t from-zinc-950/80 to-transparent h-12" />
+      )}
 
     </aside>
   );
