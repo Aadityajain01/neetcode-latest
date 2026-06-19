@@ -39,7 +39,7 @@ export default async function TechDetailsPage({ params }: TechDetailsPageProps) 
         <div className="flex flex-col gap-4 pb-6 border-b border-white/5">
           <Link
             href="/tech-opportunities"
-            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-zinc-400 hover:text-emerald-400 transition-colors"
+            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-zinc-400 hover:text-brand-400 transition-colors"
           >
             <ArrowLeft size={16} />
             Back to opportunities
@@ -83,7 +83,7 @@ export default async function TechDetailsPage({ params }: TechDetailsPageProps) 
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-10 border-b border-zinc-800/60 pb-8">
           <div>
             <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.25em] mb-4">Responsibilities List</h2>
-            <ol className="space-y-3 text-sm text-zinc-200 list-decimal pl-5 marker:text-emerald-400">
+            <ol className="space-y-3 text-sm text-zinc-200 list-decimal pl-5 marker:text-brand-400">
               {tech.responsibilities.map((item) => (
                 <li key={item} className="leading-relaxed pl-1">{item}</li>
               ))}
@@ -115,7 +115,7 @@ export default async function TechDetailsPage({ params }: TechDetailsPageProps) 
               </thead>
               <tbody>
                 <tr className="border-t border-zinc-800/60">
-                  <td className="px-4 py-4 text-emerald-400 font-semibold align-top">Core Skills</td>
+                  <td className="px-4 py-4 text-brand-400 font-semibold align-top">Core Skills</td>
                   <td className="px-4 py-4 text-zinc-200">
                     <ul className="space-y-2">
                       {tech.skills.core.map((skill) => (

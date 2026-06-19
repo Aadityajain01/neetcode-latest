@@ -52,7 +52,7 @@ const CircularProgress = ({ solved, total }: { solved: number; total: number }) 
             cx="40"
             cy="40"
             r={radius}
-            className="stroke-emerald-500 transition-all duration-500 ease-out fill-none"
+            className="stroke-brand-500 transition-all duration-500 ease-out fill-none"
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -359,7 +359,7 @@ function DashboardView() {
 
         {/* Roadmaps Card */}
         <div className="bg-zinc-900/30 border border-zinc-800/40 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden flex items-center justify-between shrink-0">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 blur-[50px] rounded-full pointer-events-none" />
           <div className="relative z-10 space-y-1">
             <h2 className="text-base font-black text-white tracking-tight">DSA Learning Path</h2>
             <p className="text-zinc-400 text-xs font-semibold">
@@ -474,7 +474,7 @@ function DashboardView() {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-emerald-400 transition-colors truncate">
+                          <h4 className="text-sm font-semibold text-zinc-200 group-hover:text-brand-400 transition-colors truncate">
                             {problem.title}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">

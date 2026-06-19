@@ -74,15 +74,15 @@ function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
 
   return (
     <Link href={`/tech-opportunities/${tech.slug}`} className="block w-full outline-none">
-      <div className="group relative bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-900/80 hover:border-emerald-500/30 backdrop-blur-md rounded-2xl p-5 md:p-6 transition-all duration-300 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6 w-full cursor-pointer">
+      <div className="group relative bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-900/80 hover:border-brand-500/30 backdrop-blur-md rounded-2xl p-5 md:p-6 transition-all duration-300 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6 w-full cursor-pointer">
         
         {/* Subtle color glow in background */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 group-hover:bg-emerald-500/10 blur-[40px] rounded-full pointer-events-none transition-all duration-500" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 group-hover:bg-brand-500/10 blur-[40px] rounded-full pointer-events-none transition-all duration-500" />
         
         {/* Left Side: Role details */}
         <div className="space-y-2 flex-1 relative z-10">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-black text-white tracking-tight leading-snug group-hover:text-emerald-400 transition-colors">
+            <h2 className="text-lg font-black text-white tracking-tight leading-snug group-hover:text-brand-400 transition-colors">
               {tech.title}
             </h2>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-900/80 border border-zinc-800/80 text-zinc-400 text-[9px] font-bold uppercase tracking-wider">
@@ -91,16 +91,16 @@ function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
             <button
               onClick={handleBookmarkClick}
               type="button"
-              className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-md transition-colors shrink-0 ml-1 relative z-20"
+              className="text-zinc-500 hover:text-brand-400 p-1.5 rounded-md transition-colors shrink-0 ml-1 relative z-20"
             >
               <Bookmark
                 size={15}
-                className={isBookmarked ? "fill-emerald-400 text-emerald-400" : "text-zinc-650 group-hover:text-zinc-400"}
+                className={isBookmarked ? "fill-brand-500 text-brand-500" : "text-zinc-650 group-hover:text-zinc-400"}
               />
             </button>
           </div>
           <p className="text-zinc-400 text-xs leading-relaxed max-w-2xl">
-            {tech.summary}
+             {tech.summary}
           </p>
         </div>
 
@@ -128,7 +128,7 @@ function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
           </div>
 
           {/* Arrow navigation indicator */}
-          <div className="text-zinc-600 group-hover:text-emerald-400 transition-colors ml-auto md:ml-2">
+          <div className="text-zinc-600 group-hover:text-brand-400 transition-colors ml-auto md:ml-2">
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </div>
 
@@ -165,7 +165,7 @@ export default function TechOpportunitiesPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-6 border-b border-zinc-800/40 shrink-0">
           <div className="space-y-1.5">
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none flex items-center gap-2.5">
-              <Zap className="text-emerald-400" size={26} />
+              <Zap className="text-brand-500" size={26} />
               Tech Opportunities
             </h1>
             <p className="text-zinc-400 text-xs md:text-sm max-w-xl font-medium">
@@ -173,12 +173,12 @@ export default function TechOpportunitiesPage() {
             </p>
           </div>
           <div className="relative w-full md:w-72 group shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-brand-500 transition-colors" />
             <Input
               placeholder="Search roles..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 pl-10 h-10 text-xs rounded-xl focus-visible:ring-1 focus-visible:ring-emerald-500/30 placeholder:text-zinc-650 w-full"
+              className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 pl-10 h-10 text-xs rounded-xl focus-visible:ring-1 focus-visible:ring-brand-500/30 placeholder:text-zinc-650 w-full"
             />
           </div>
         </div>
