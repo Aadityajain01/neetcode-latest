@@ -27,7 +27,7 @@ const opportunities = Object.entries(techDetails).map(([slug, tech]) => {
 function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
   const [isBookmarked, setIsBookmarked] = useState(() => {
     if (typeof window === "undefined") return false;
-    const bookmarkedRaw = localStorage.getItem("neetcode-bookmarked-jobs");
+    const bookmarkedRaw = localStorage.getItem("swadhyaayi-bookmarked-jobs");
     if (!bookmarkedRaw) return false;
     try {
       const parsed = JSON.parse(bookmarkedRaw);
@@ -43,7 +43,7 @@ function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
     const nextState = !isBookmarked;
     setIsBookmarked(nextState);
 
-    const bookmarkedRaw = localStorage.getItem("neetcode-bookmarked-jobs");
+    const bookmarkedRaw = localStorage.getItem("swadhyaayi-bookmarked-jobs");
     let bookmarked: any[] = [];
     if (bookmarkedRaw) {
       try {
@@ -69,7 +69,7 @@ function TechOpportunityCard({ tech }: { tech: typeof opportunities[0] }) {
       bookmarked = bookmarked.filter(b => b.slug !== tech.slug);
       toast.info(`Removed bookmark for "${tech.title}".`);
     }
-    localStorage.setItem("neetcode-bookmarked-jobs", JSON.stringify(bookmarked));
+    localStorage.setItem("swadhyaayi-bookmarked-jobs", JSON.stringify(bookmarked));
   };
 
   return (

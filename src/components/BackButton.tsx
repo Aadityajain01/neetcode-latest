@@ -33,7 +33,7 @@ export function BackButton({ label = "Back", href, className }: BackButtonProps)
         
       }
     >
-      <div className="p-1 rounded-full bg-zinc-900 border border-zinc-800 group-hover:border-emerald-500/50 group-hover:bg-zinc-800 transition-all">
+      <div className="p-1 rounded-full bg-zinc-900 border border-zinc-800 group-hover:border-brand-500/50 group-hover:bg-zinc-800 transition-all">
         <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
       </div>
       <span className="font-medium text-xs uppercase tracking-wider">{label}</span>

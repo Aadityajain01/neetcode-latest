@@ -16,7 +16,7 @@ import { CheckCircle2, Circle, Trophy, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export default function Neetcode150Page() {
+export default function Swadhyaayi150Page() {
   const { isAuthenticated, initialized, isLoading: authLoading } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function Neetcode150Page() {
     return (
       <MainLayout>
         <div className="h-[80vh] flex items-center justify-center">
-          <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+          <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
         </div>
       </MainLayout>
     );
@@ -66,15 +66,15 @@ export default function Neetcode150Page() {
 
   return (
     <MainLayout>
-      <div className="h-full overflow-y-auto scrollbar-emerald bg-zinc-950 p-4 md:p-6 lg:p-12 font-sans text-zinc-200">
+      <div className="h-full overflow-y-auto scrollbar-brand bg-zinc-950 p-4 md:p-6 lg:p-12 font-sans text-zinc-200">
         <div className="max-w-5xl mx-auto space-y-12">
           
           {/* HEADER SECTION */}
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 md:gap-6 border-b border-zinc-800 pb-6 md:pb-8">
             <div className="space-y-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
-                  Neetcode 150
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400">
+                  Swadhyaayi 150
                 </span>
               </h1>
               <p className="text-zinc-400 text-base md:text-lg max-w-2xl">
@@ -84,8 +84,8 @@ export default function Neetcode150Page() {
 
             {/* Total Progress Card */}
             <div className="bg-zinc-900 border border-zinc-800 p-4 md:p-6 rounded-2xl flex items-center gap-4 md:gap-6 shadow-xl w-full md:w-auto shrink-0">
-              <div className="p-3 bg-emerald-500/10 rounded-full">
-                <Trophy className="w-8 h-8 text-emerald-500" />
+              <div className="p-3 bg-brand-500/10 rounded-full">
+                <Trophy className="w-8 h-8 text-brand-500" />
               </div>
               <div>
                 <div className="text-3xl font-bold text-white">
@@ -118,7 +118,7 @@ export default function Neetcode150Page() {
                         {/* Custom Progress Bar */}
                         <div className="h-2 w-16 md:w-32 bg-zinc-800 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-emerald-500 transition-all duration-500" 
+                            className="h-full bg-brand-500 transition-all duration-500" 
                             style={{ width: `${(category.solvedCount / category.total) * 100}%` }}
                           />
                         </div>
