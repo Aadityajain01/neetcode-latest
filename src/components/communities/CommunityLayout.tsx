@@ -539,7 +539,7 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
                                     <span className={cn(
                                       "text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded border shrink-0",
                                       role === "owner" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
-                                      role === "admin" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                                      role === "admin" ? "text-brand-400 bg-brand-500/10 border-brand-500/20" :
                                       "text-zinc-400 bg-zinc-800 border-zinc-750"
                                     )}>
                                       {role}

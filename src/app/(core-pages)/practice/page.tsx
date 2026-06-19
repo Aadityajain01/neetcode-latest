@@ -10,7 +10,6 @@ import { useAuthStore } from '@/store/auth-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Search, Code2, CheckCircle2, Circle, ChevronLeft, ChevronRight, HelpCircle, XCircle, BrainCircuit, Play, Zap, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -35,7 +34,7 @@ const CircularProgress = ({ solved, total }: { solved: number; total: number }) 
             cx="40"
             cy="40"
             r={radius}
-            className="stroke-emerald-500 transition-all duration-500 ease-out fill-none"
+            className="stroke-brand-500 transition-all duration-500 ease-out fill-none"
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -60,7 +59,7 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(true);
   const [allMcqs, setAllMcqs] = useState<MCQ[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
-  
+
   // Solved IDs
   const [solvedMcqs, setSolvedMcqs] = useState<Set<string>>(new Set());
 
@@ -79,6 +78,8 @@ export default function PracticePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
+  const [loadingMcqId, setLoadingMcqId] = useState<string | null>(null);
+  const [solvedMcqDetails, setSolvedMcqDetails] = useState<MCQ | null>(null);
 
   // Start Session Modal States
   const [isStartSessionOpen, setIsStartSessionOpen] = useState(false);
@@ -119,6 +120,28 @@ export default function PracticePage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isStartSessionOpen]);
+
+  // Escape key handler for MCQ modals
+  useEffect(() => {
+    if (!selectedMcq && !solvedMcqDetails) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (selectedMcq) {
+          setSelectedMcq(null);
+          setSelectedAnswer(null);
+          setIsSubmitted(false);
+          setSubmissionResult(null);
+        }
+        if (solvedMcqDetails) {
+          setSolvedMcqDetails(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMcq, solvedMcqDetails]);
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -208,6 +231,22 @@ export default function PracticePage() {
     setSubmissionResult(null);
   };
 
+  // Fetch details and open solution modal for solved MCQ
+  const handleOpenSolvedMcq = async (mcq: MCQ) => {
+    setLoadingMcqId(mcq._id);
+    try {
+      const fullMcq = await mcqApi.getMCQById(mcq._id);
+      if (fullMcq) {
+        setSolvedMcqDetails(fullMcq);
+      }
+    } catch (err) {
+      console.error('Failed to load solved MCQ details:', err);
+      toast.error('Failed to load solution explanation');
+    } finally {
+      setLoadingMcqId(null);
+    }
+  };
+
   // Submit in-place answer for MCQ
   const handleSubmitAnswer = async () => {
     if (!selectedMcq || selectedAnswer === null) return;
@@ -233,7 +272,7 @@ export default function PracticePage() {
           const updatedByDifficulty = { ...prev.byDifficulty };
           const difficultyKey = selectedMcq.difficulty as 'easy' | 'medium' | 'hard';
           const isNewSolve = !solvedMcqs.has(selectedMcq._id);
-          
+
           if (isNewSolve) {
             updatedByDifficulty[difficultyKey] = (updatedByDifficulty[difficultyKey] || 0) + 1;
           }
@@ -277,10 +316,10 @@ export default function PracticePage() {
 
   return (
     <div className="h-full flex flex-col lg:flex-row gap-6 p-4 md:p-6 min-h-0 overflow-y-auto lg:overflow-hidden font-sans text-zinc-100">
-      
+
       {/* ── LEFT MAIN CONTENT COLUMN ────────────────────────────────────────── */}
       <div className="flex-1 h-full flex flex-col gap-4 min-w-0">
-        
+
         {/* Header & selectors */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
@@ -309,9 +348,9 @@ export default function PracticePage() {
             {/* Action Session Button (Starts MCQ session) */}
             <Button
               onClick={handleOpenStartSession}
-              className="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-xs font-bold px-3 h-9 rounded-xl flex items-center gap-1 hover:scale-[1.02] transition-all"
+              className="bg-brand-500 hover:bg-brand-400 text-zinc-950 text-xs font-bold px-3 h-9 rounded-xl flex items-center gap-1 hover:scale-[1.02] transition-all"
             >
-              <Play className="h-3.5 w-3.5 fill-emerald-950" /> Start Session
+              <Play className="h-3.5 w-3.5 fill-zinc-950" /> Start Session
             </Button>
           </div>
         </div>
@@ -348,7 +387,7 @@ export default function PracticePage() {
                   return (
                     <div
                       key={mcq._id}
-                      onClick={() => handleOpenMcq(mcq)}
+                      onClick={() => isSolved ? handleOpenSolvedMcq(mcq) : handleOpenMcq(mcq)}
                       className="group relative flex items-center justify-between p-4 bg-zinc-900/20 hover:bg-zinc-900/40 rounded-2xl transition-all duration-300 gap-4 cursor-pointer"
                     >
                       <div className="flex items-start gap-3.5 min-w-0 flex-1">
@@ -363,12 +402,12 @@ export default function PracticePage() {
                           <h4 className="text-sm font-semibold text-zinc-350 group-hover:text-white transition-colors line-clamp-2 leading-relaxed">
                             {mcq.question}
                           </h4>
-                          
+
                           <div className="flex items-center gap-2 mt-2">
                             <span className={cn(
                               'text-[9px] font-black uppercase tracking-wider',
                               mcq.difficulty === 'easy' ? 'text-emerald-500' :
-                              mcq.difficulty === 'medium' ? 'text-amber-500' : 'text-red-500'
+                                mcq.difficulty === 'medium' ? 'text-amber-500' : 'text-red-500'
                             )}>
                               {mcq.difficulty}
                             </span>
@@ -391,7 +430,11 @@ export default function PracticePage() {
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                      {loadingMcqId === mcq._id ? (
+                        <div className="h-4 w-4 rounded-full border-2 border-zinc-700 border-t-brand-500 animate-spin shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0" />
+                      )}
                     </div>
                   );
                 })}
@@ -405,7 +448,7 @@ export default function PracticePage() {
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                 Showing <span className="text-zinc-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> -{' '}
                 <span className="text-zinc-300">{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> of{' '}
-                <span className="text-emerald-400">{totalItems}</span> exercises
+                <span className="text-brand-500">{totalItems}</span> exercises
               </p>
               <div className="flex items-center gap-1.5">
                 <Button
@@ -418,7 +461,7 @@ export default function PracticePage() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <div className="flex items-center justify-center min-w-[3rem] px-2 h-7 bg-zinc-900/60 rounded-lg text-xs font-bold">
-                  <span className="text-white">{currentPage}</span>
+                  <span className="text-brand-500">{currentPage}</span>
                   <span className="text-zinc-650 mx-1">/</span>
                   <span className="text-zinc-500">{totalPages}</span>
                 </div>
@@ -439,7 +482,7 @@ export default function PracticePage() {
 
       {/* ── RIGHT DETAILS SIDEBAR ────────────────────────────────────────────── */}
       <div className="w-full lg:w-[320px] shrink-0 h-full flex flex-col gap-4 overflow-y-auto lg:overflow-hidden pr-1 pb-4 lg:pb-0">
-        
+
         {/* Profile spacing offset */}
         <div className="hidden lg:block h-16 shrink-0" />
 
@@ -507,6 +550,7 @@ export default function PracticePage() {
       {isStartSessionOpen && typeof document !== 'undefined' && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
           onMouseDown={() => setIsStartSessionOpen(false)}
         >
           <div
@@ -516,7 +560,7 @@ export default function PracticePage() {
             className="relative w-full max-w-md overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 p-6 text-zinc-100 shadow-2xl shadow-black/70"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="pointer-events-none absolute left-1/4 right-1/4 top-0 h-[2px] bg-emerald-400" />
+            <div className="pointer-events-none absolute left-1/4 right-1/4 top-0 h-[2px] bg-brand-500" />
             <button
               type="button"
               aria-label="Close start session modal"
@@ -527,8 +571,8 @@ export default function PracticePage() {
             </button>
 
             <div className="flex items-center gap-2 pr-10">
-              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-1.5">
-                <Zap className="h-4 w-4 text-emerald-400" />
+              <div className="rounded-lg border border-brand-500/30 bg-brand-500/10 p-1.5">
+                <Zap className="h-4 w-4 text-brand-500" />
               </div>
               <div>
                 <h2 id="start-session-title" className="text-lg font-black tracking-tight text-white">
@@ -543,14 +587,14 @@ export default function PracticePage() {
             <div className="my-5 space-y-4">
               <div className="space-y-1.5">
                 <label htmlFor="session-language" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                   Language
                 </label>
                 <select
                   id="session-language"
                   value={sessionLang}
                   onChange={(event) => setSessionLang(event.target.value)}
-                  className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-xs font-semibold text-zinc-200 outline-none transition-colors hover:border-zinc-700 focus:border-emerald-500/60"
+                  className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-xs font-semibold text-zinc-200 outline-none transition-colors hover:border-zinc-700 focus:border-brand-500/60"
                 >
                   {sessionLanguageOptions.map((lang) => (
                     <option key={lang} value={lang}>
@@ -562,7 +606,7 @@ export default function PracticePage() {
 
               <div className="space-y-1.5">
                 <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                   Difficulty
                 </p>
                 <div className="grid grid-cols-4 gap-2">
@@ -592,7 +636,7 @@ export default function PracticePage() {
 
               <div className="space-y-1.5">
                 <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                   Questions Count
                 </p>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -604,7 +648,7 @@ export default function PracticePage() {
                       className={cn(
                         'h-9 rounded-xl border text-xs font-bold transition-all',
                         sessionLimit === size
-                          ? 'border-emerald-500 bg-emerald-500 text-zinc-950'
+                          ? 'border-brand-500 bg-brand-500 text-zinc-950'
                           : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                       )}
                     >
@@ -620,7 +664,7 @@ export default function PracticePage() {
                 className={cn(
                   'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all',
                   sessionUnsolvedOnly
-                    ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
+                    ? 'border-brand-500/30 bg-brand-500/[0.03]'
                     : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
                 )}
               >
@@ -628,7 +672,7 @@ export default function PracticePage() {
                   className={cn(
                     'flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border',
                     sessionUnsolvedOnly
-                      ? 'border-emerald-500 bg-emerald-500 text-zinc-950'
+                      ? 'border-brand-500 bg-brand-500 text-zinc-950'
                       : 'border-zinc-700 bg-zinc-950'
                   )}
                 >
@@ -657,7 +701,7 @@ export default function PracticePage() {
               <Button
                 type="button"
                 onClick={handleStartSession}
-                className="h-10 rounded-xl bg-emerald-500 px-6 text-xs font-black uppercase tracking-widest text-zinc-950 transition-all hover:bg-emerald-400 active:scale-95"
+                className="h-10 rounded-xl bg-brand-500 px-6 text-xs font-black uppercase tracking-widest text-zinc-950 transition-all hover:bg-brand-400 active:scale-95"
               >
                 Start Session
               </Button>
@@ -666,28 +710,57 @@ export default function PracticePage() {
         </div>,
         document.body
       )}
-      {/* ── INTERACTIVE MCQ SOLVE MODAL ─────────────────────────────────────── */}
-      {selectedMcq && (
-        <Dialog open={!!selectedMcq} onOpenChange={(open) => !open && setSelectedMcq(null)}>
-          <DialogContent className="max-w-xl bg-gradient-to-b from-zinc-900/95 to-zinc-955/98 border border-zinc-800/80 text-zinc-100 rounded-3xl p-6 shadow-2xl backdrop-blur-md z-[200] overflow-hidden relative before:absolute before:top-0 before:left-1/4 before:right-1/4 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-emerald-500/80 before:to-transparent before:filter before:blur-[1px]">
-            <DialogHeader>
-              <div className="flex items-center gap-2 mb-2">
+      {/* ── INTERACTIVE MCQ SOLVE MODAL (portal-based) ──────────────────── */}
+      {selectedMcq && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          onMouseDown={() => {
+            setSelectedMcq(null);
+            setSelectedAnswer(null);
+            setIsSubmitted(false);
+            setSubmissionResult(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mcq-solve-title"
+            className="relative w-full max-w-xl overflow-y-auto max-h-[90vh] rounded-3xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 text-zinc-100 shadow-2xl shadow-black/70"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="pointer-events-none absolute left-1/4 right-1/4 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-500/80 to-transparent blur-[1px]" />
+            <button
+              type="button"
+              aria-label="Close MCQ modal"
+              onClick={() => {
+                setSelectedMcq(null);
+                setSelectedAnswer(null);
+                setIsSubmitted(false);
+                setSubmissionResult(null);
+              }}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-white z-10"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex flex-col gap-2 text-left pr-10">
+              <div className="flex items-center gap-2 mb-1">
                 <span className="text-[9px] bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded font-black uppercase tracking-wider">
                   {selectedMcq.language}
                 </span>
                 <span className={cn(
                   'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-900/40',
                   selectedMcq.difficulty === 'easy' ? 'text-emerald-400 border border-emerald-500/20' :
-                  selectedMcq.difficulty === 'medium' ? 'text-amber-400 border border-amber-500/20' : 'text-red-400 border border-red-500/20'
+                    selectedMcq.difficulty === 'medium' ? 'text-amber-400 border border-amber-500/20' : 'text-red-400 border border-red-500/20'
                 )}>
                   {selectedMcq.difficulty}
                 </span>
               </div>
-              <DialogTitle className="text-lg font-bold text-white text-left leading-relaxed">
+              <h2 id="mcq-solve-title" className="text-lg font-bold text-white leading-relaxed">
                 {selectedMcq.question}
-              </DialogTitle>
-              <DialogDescription className="hidden" />
-            </DialogHeader>
+              </h2>
+            </div>
 
             <div className="space-y-2.5 my-4">
               {selectedMcq.options.map((option, idx) => {
@@ -698,9 +771,9 @@ export default function PracticePage() {
                 const isCorrect = isSubmitted && idx === correctAnswer;
                 const isWrong = isSubmitted && isSelected && !submissionResult?.isCorrect;
 
-                let optionStyle = "bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-850 hover:text-zinc-200 hover:border-zinc-700/80 text-zinc-300";
+                let optionStyle = "bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-800/60 hover:text-zinc-200 hover:border-zinc-700/80 text-zinc-300";
                 if (isSelected && !isSubmitted) {
-                  optionStyle = "bg-emerald-500/5 text-white border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.1)]";
+                  optionStyle = "bg-brand-500/5 text-white border border-brand-500/40 shadow-[0_0_12px_rgba(255,106,31,0.1)]";
                 } else if (isSubmitted) {
                   if (isCorrect) {
                     optionStyle = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.15)]";
@@ -721,14 +794,14 @@ export default function PracticePage() {
                     )}
                   >
                     <div className={cn(
-                      'flex items-center justify-center w-7 h-7 rounded-lg border text-xs font-black mr-3.5 transition-all',
-                      isSelected ? 'border-emerald-500 bg-gradient-to-br from-emerald-500 to-teal-500 text-zinc-950 shadow-[0_0_8px_rgba(16,185,129,0.2)]' : 'border-zinc-850 bg-zinc-900/60 text-zinc-500'
+                      'flex items-center justify-center w-7 h-7 rounded-lg border text-xs font-black mr-3.5 transition-all shrink-0',
+                      isSelected ? 'border-brand-500 bg-gradient-to-br from-brand-500 to-brand-400 text-zinc-950 shadow-[0_0_8px_rgba(255,106,31,0.2)]' : 'border-zinc-850 bg-zinc-900/60 text-zinc-500'
                     )}>
                       {String.fromCharCode(65 + idx)}
                     </div>
                     <span className="text-sm font-medium">{option}</span>
-                    {isCorrect && <CheckCircle2 className="absolute right-4 h-4.5 w-4.5 text-emerald-400 fill-emerald-450/10" />}
-                    {isWrong && <XCircle className="absolute right-4 h-4.5 w-4.5 text-red-400 fill-red-450/10" />}
+                    {isCorrect && <CheckCircle2 className="absolute right-4 h-4.5 w-4.5 text-emerald-400 fill-emerald-500/10" />}
+                    {isWrong && <XCircle className="absolute right-4 h-4.5 w-4.5 text-red-400 fill-red-500/10" />}
                   </div>
                 );
               })}
@@ -736,7 +809,7 @@ export default function PracticePage() {
 
             {/* Answer Explanation */}
             {isSubmitted && submissionResult?.explanation && (
-              <div className="bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4 mb-4 text-left animate-in fade-in slide-in-from-top-2">
+              <div className="bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4 mb-4 text-left">
                 <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
                   <HelpCircle className="h-3.5 w-3.5" /> Explanation
                 </div>
@@ -750,29 +823,145 @@ export default function PracticePage() {
             <div className="flex items-center justify-end gap-3 border-t border-zinc-900/80 pt-4">
               {!isSubmitted ? (
                 <>
-                  <DialogClose asChild>
-                    <Button variant="ghost" className="text-xs font-bold text-zinc-400 hover:text-white uppercase tracking-widest hover:bg-zinc-900/50 rounded-xl px-4 h-10">
-                      Cancel
-                    </Button>
-                  </DialogClose>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedMcq(null);
+                      setSelectedAnswer(null);
+                      setIsSubmitted(false);
+                      setSubmissionResult(null);
+                    }}
+                    className="text-xs font-bold text-zinc-400 hover:text-white uppercase tracking-widest hover:bg-zinc-900/50 rounded-xl px-4 h-10"
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     onClick={handleSubmitAnswer}
                     disabled={selectedAnswer === null || submitting}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 text-xs font-black tracking-widest uppercase rounded-xl px-6 h-10 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] active:scale-95"
+                    className="bg-gradient-to-r from-brand-500 to-brand-400 hover:from-brand-400 hover:to-brand-500 text-zinc-950 text-xs font-black tracking-widest uppercase rounded-xl px-6 h-10 shadow-[0_0_15px_rgba(255,106,31,0.25)] hover:shadow-[0_0_20px_rgba(255,106,31,0.4)] transition-all hover:scale-[1.02] active:scale-95"
                   >
                     Submit Answer
                   </Button>
                 </>
               ) : (
-                <DialogClose asChild>
-                  <Button className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-black tracking-widest uppercase rounded-xl px-6 h-10 hover:scale-[1.02] active:scale-95 transition-all">
-                    Done
-                  </Button>
-                </DialogClose>
+                <Button
+                  onClick={() => {
+                    setSelectedMcq(null);
+                    setSelectedAnswer(null);
+                    setIsSubmitted(false);
+                    setSubmissionResult(null);
+                  }}
+                  className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-black tracking-widest uppercase rounded-xl px-6 h-10 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Done
+                </Button>
               )}
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── MCQ SOLUTION DETAIL MODAL (portal-based) ─────────────────────── */}
+      {solvedMcqDetails && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+          onMouseDown={() => setSolvedMcqDetails(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mcq-solved-title"
+            className="relative w-full max-w-xl overflow-y-auto max-h-[90vh] rounded-3xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 text-zinc-100 shadow-2xl shadow-black/70"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="pointer-events-none absolute left-1/4 right-1/4 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-500/80 to-transparent blur-[1px]" />
+            <button
+              type="button"
+              aria-label="Close solution modal"
+              onClick={() => setSolvedMcqDetails(null)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-white z-10"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex flex-col gap-2 text-left pr-10">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[9px] bg-zinc-900 text-zinc-300 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                  {solvedMcqDetails.language}
+                </span>
+                <span className={cn(
+                  'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-900/40',
+                  solvedMcqDetails.difficulty === 'easy' ? 'text-emerald-400 border border-emerald-500/20' :
+                    solvedMcqDetails.difficulty === 'medium' ? 'text-amber-400 border border-amber-500/20' : 'text-red-400 border border-red-500/20'
+                )}>
+                  {solvedMcqDetails.difficulty}
+                </span>
+                <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                  Solved
+                </span>
+              </div>
+              <h2 id="mcq-solved-title" className="text-base md:text-lg font-bold text-white leading-relaxed">
+                {solvedMcqDetails.question}
+              </h2>
+            </div>
+
+            <div className="space-y-2.5 my-4">
+              {solvedMcqDetails.options.map((option, idx) => {
+                const isCorrect = idx === solvedMcqDetails.correctOption;
+
+                let optionStyle = "bg-zinc-950/50 opacity-40 border border-zinc-900/40 text-zinc-550";
+                if (isCorrect) {
+                  optionStyle = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.15)]";
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      'relative flex items-center p-3.5 rounded-2xl select-none border transition-all duration-200',
+                      optionStyle
+                    )}
+                  >
+                    <div className={cn(
+                      'flex items-center justify-center w-7 h-7 rounded-lg border text-xs font-black mr-3.5 transition-all shrink-0',
+                      isCorrect
+                        ? 'border-emerald-500 bg-gradient-to-br from-emerald-500 to-teal-500 text-zinc-950 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                        : 'border-zinc-850 bg-zinc-900/60 text-zinc-500'
+                    )}>
+                      {String.fromCharCode(65 + idx)}
+                    </div>
+                    <span className="text-sm font-medium">{option}</span>
+                    {isCorrect && <CheckCircle2 className="absolute right-4 h-4.5 w-4.5 text-emerald-400 fill-emerald-500/10" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Answer Explanation */}
+            {solvedMcqDetails.explanation && (
+              <div className="bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4 mb-4 text-left">
+                <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                  <HelpCircle className="h-3.5 w-3.5" /> Explanation
+                </div>
+                <p className="text-zinc-400 text-xs leading-relaxed font-sans whitespace-pre-wrap">
+                  {solvedMcqDetails.explanation}
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end border-t border-zinc-900/80 pt-4">
+              <Button
+                onClick={() => setSolvedMcqDetails(null)}
+                className="bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-black tracking-widest uppercase rounded-xl px-6 h-10 hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

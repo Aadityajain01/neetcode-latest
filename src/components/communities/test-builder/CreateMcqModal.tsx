@@ -12,7 +12,7 @@ import type { McqDraft, DraftQuestion } from "./types";
 import { toast } from "sonner";
 import { mcqApi } from "@/lib/api-modules";
 
-const EMERALD_SCROLLBAR = "[scrollbar-color:rgba(16,185,129,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/60";
+const BRAND_SCROLLBAR = "[scrollbar-color:rgba(255,106,31,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-brand-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-500/60";
 
 export function CreateMcqModal({
   open,
@@ -155,13 +155,13 @@ export function CreateMcqModal({
           <Button
             onClick={handleFinish}
             disabled={!isEditing && createdQuestions.length === 0}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[110px] h-10 disabled:opacity-40"
+            className="bg-brand-500 hover:bg-brand-600 text-white min-w-[110px] h-10 disabled:opacity-40"
           >
             {isEditing ? "Close" : "Finish"}
           </Button>
         </DialogHeader>
 
-        <div className={"flex-1 min-h-0 p-4 overflow-y-auto " + EMERALD_SCROLLBAR}>
+        <div className={"flex-1 min-h-0 p-4 overflow-y-auto " + BRAND_SCROLLBAR}>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 overflow-hidden">
             <div className="grid grid-cols-[minmax(0,1fr)_120px_120px] gap-3 px-4 py-2.5 border-b border-zinc-800 bg-zinc-900/40 text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
               <div>Editor</div>
@@ -236,7 +236,7 @@ export function CreateMcqModal({
                 <div className="text-right">Del</div>
               </div>
 
-              <div className={"max-h-[260px] overflow-y-auto overflow-x-hidden p-2 " + EMERALD_SCROLLBAR}>
+              <div className={"max-h-[260px] overflow-y-auto overflow-x-hidden p-2 " + BRAND_SCROLLBAR}>
                 {createdQuestions.length === 0 ? (
                   <div className="text-center text-zinc-400 text-sm py-12 italic border border-dashed border-zinc-800/50 rounded-lg bg-zinc-950">
                     No questions added yet.
@@ -248,7 +248,7 @@ export function CreateMcqModal({
                       <div className="overflow-x-auto whitespace-nowrap pb-1 text-zinc-200 text-sm">
                         {q.question?.split("\n")[0] || "Untitled Question"}
                       </div>
-                      <div className="text-emerald-400 font-semibold text-sm">{q.marks}</div>
+                      <div className="text-brand-500 font-semibold text-sm">{q.marks}</div>
                       <div className="flex justify-end">
                         <Button variant="ghost" size="icon" onClick={() => handleRemove(i)} className="h-8 w-8 text-red-400/80 hover:text-red-400 hover:bg-red-950/30">
                           <Trash2 className="w-4 h-4" />

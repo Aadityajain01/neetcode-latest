@@ -435,7 +435,7 @@ function ProgrammingPracticeContent() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <div className="flex items-center justify-center min-w-[3rem] px-2 h-7 bg-zinc-900/60 rounded-lg text-xs font-bold">
-                  <span className="text-white">{currentPage}</span>
+                  <span className="text-brand-500">{currentPage}</span>
                   <span className="text-zinc-600 mx-1">/</span>
                   <span className="text-zinc-500">{totalPages}</span>
                 </div>
