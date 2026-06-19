@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
             <div className={cn(
               "flex items-center lg:justify-center h-11 w-[calc(100%-24px)] lg:h-9 lg:w-9 mx-3 lg:mx-auto px-3 lg:px-0 rounded-[14px] lg:rounded-[8px] transition-all duration-300 relative bg-transparent",
               isActive 
-                ? isAdminItem ? "text-purple-400" : "text-white"
+                ? isAdminItem ? "text-purple-400" : "text-brand-500"
                 : "text-zinc-400 hover:text-zinc-100"
             )}>
               <item.icon className={cn(
@@ -97,11 +97,11 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       <div className="h-24 flex items-center justify-start lg:justify-center px-6 lg:px-0 shrink-0 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
         <Link href="/" onClick={onClose} className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 outline-none">
-          <Image src={logo} alt="Neetcode Logo" fill sizes="40px" className="object-cover" />
+          <Image src={logo} alt="Swadhyaayi Logo" fill sizes="40px" className="object-cover" />
         </Link>
         <div className="lg:hidden ml-4 flex-1">
           <h1 className="font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 whitespace-nowrap">
-            Neetcode
+            Swadhyaayi
           </h1>
         </div>
         <Button variant="ghost" size="icon" className="lg:hidden ml-auto shrink-0 text-zinc-400 hover:text-white" onClick={onClose}>

@@ -27,9 +27,9 @@ export function PreTestConsentGate({ test, questions, onStart }: Props) {
       icon: Eye,
       label: "Video Monitoring",
       text: "Your camera must stay on. Face detection AI checks for missing faces or multiple people in the frame.",
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
+      color: "text-brand-400",
+      bg: "bg-brand-500/10",
+      border: "border-brand-500/20",
     },
     {
       icon: CheckCircle,
@@ -84,7 +84,7 @@ export function PreTestConsentGate({ test, questions, onStart }: Props) {
           <p className="text-sm font-semibold text-zinc-200 truncate">{test.title}</p>
         </div>
         <div className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg">
-          <Clock className="h-3.5 w-3.5 text-emerald-400" />
+          <Clock className="h-3.5 w-3.5 text-brand-500" />
           <span className="text-xs font-bold text-zinc-300">{test.durationMinutes} min</span>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function PreTestConsentGate({ test, questions, onStart }: Props) {
 
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Duration", value: `${test.durationMinutes} min`, icon: Clock, color: "text-emerald-400" },
+              { label: "Duration", value: `${test.durationMinutes} min`, icon: Clock, color: "text-brand-400" },
               { label: "Questions", value: questions.length, icon: ListTodo, color: "text-blue-400" },
               { label: "Total Marks", value: test.totalMarks, icon: CheckCircle, color: "text-purple-400" },
             ].map((s, i) => (
@@ -186,7 +186,7 @@ export function PreTestConsentGate({ test, questions, onStart }: Props) {
         <div className="max-w-2xl mx-auto">
           <Button
             onClick={onStart}
-            className="w-full h-14 text-base font-bold bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl shadow-[0_0_30px_-8px_rgba(16,185,129,0.6)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full h-14 text-base font-bold bg-brand-500 hover:bg-brand-400 text-zinc-950 rounded-xl shadow-[0_0_30px_-8px_rgba(255,106,31,0.6)] transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
             <Eye className="h-5 w-5 mr-2.5" />
             I Agree - Start Exam

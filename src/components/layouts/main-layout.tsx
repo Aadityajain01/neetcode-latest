@@ -64,7 +64,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative lg:pl-20 lg:pr-4 lg:p-2 transition-all duration-300 min-h-0 lg:h-[100dvh] overflow-x-hidden lg:overflow-hidden">
+      <main className={`flex-1 flex flex-col min-w-0 ${pathname?.startsWith('/roadmap') ? 'bg-zinc-950' : 'bg-[#020617]'} relative lg:pl-20 ${
+        pathname?.startsWith('/roadmap') ? 'lg:pr-0 lg:p-0' : 'lg:pr-4 lg:p-2'
+      } transition-all duration-300 min-h-0 lg:h-[100dvh] overflow-x-hidden lg:overflow-hidden`}>
 
         {/* Global Desktop Top-Right Profile Section */}
         {isHomepage && (
@@ -151,7 +153,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-zinc-300" />
           </Button>
-          <span className="font-semibold text-white">Neetcode</span>
+          <span className="font-semibold text-white">Swadhyaayi</span>
         </div>
 
         {/* Premium Deep Radial Background */}
