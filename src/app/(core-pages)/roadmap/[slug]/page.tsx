@@ -9,6 +9,22 @@ export const generateStaticParams = async () => {
   }));
 };
 
+const countNodes = (topics: any[]) => {
+  let count = 0;
+  topics?.forEach(topic => {
+    count++;
+    if (topic.subtopics) {
+      topic.subtopics.forEach(sub => {
+        count++;
+        if (sub.children) {
+          count += sub.children.length;
+        }
+      });
+    }
+  });
+  return count;
+};
+
 export default async function RoadmapDetailPage({
   params,
 }: {
@@ -22,8 +38,6 @@ export default async function RoadmapDetailPage({
 
   const slug = String(rawSlug ?? "").toLowerCase();
 
-
-
   const roadmap = (roadmaps as Record<string, any>)[slug] ??
     Object.values(roadmaps).find((r: any) => String(r.slug).toLowerCase() === slug);
 
@@ -34,66 +48,28 @@ export default async function RoadmapDetailPage({
           <h1 className="text-2xl font-bold text-white mb-4">Roadmap not found</h1>
           <Link
             href="/roadmap"
-            className="text-emerald-400 hover:text-emerald-300 font-medium"
+            className="text-brand-500 hover:text-brand-400 font-medium"
           >
-            ? resolvedParams.slug[0]
+            Back to roadmaps
           </Link>
         </div>
       </div>
     );
   }
 
+  const totalTopics = countNodes(roadmap.topics);
+
   return (
-    <div className="h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pb-20 pt-6 font-sans sm:px-6 lg:px-8">
-        {/* Header */}
-        <Link
-          href="/roadmap"
-          className="inline-flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-emerald-400 transition-colors w-fit"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to roadmaps
-        </Link>
-
-        <div className="space-y-3">
-          <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
-            {roadmap.title}
-          </h1>
-          <p className="max-w-3xl text-base leading-relaxed text-zinc-300 md:text-lg">
-            {roadmap.description}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">
-              Level
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              {roadmap.level}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">
-              Estimated Time
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              {roadmap.estimatedTime}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-zinc-500">
-              Topics
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              {roadmap.roadmap.nodes.length}
-            </div>
-          </div>
-        </div>
-
-        {/* Canvas */}
-        <RoadmapCanvas roadmap={roadmap.roadmap} />
-      </div>
+    <div className="h-full w-full flex flex-col overflow-hidden bg-zinc-950 text-white">
+      <RoadmapCanvas
+        roadmapId={roadmap.slug}
+        title={roadmap.title}
+        description={roadmap.description}
+        level={roadmap.level}
+        estimatedTime={roadmap.estimatedTime}
+        topics={roadmap.topics}
+        totalTopics={totalTopics}
+      />
     </div>
   );
 }

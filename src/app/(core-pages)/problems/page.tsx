@@ -410,7 +410,7 @@ export default function ProblemsPage() {
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                 Showing <span className="text-zinc-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> -{' '}
                 <span className="text-zinc-300">{Math.min(currentPage * ITEMS_PER_PAGE, totalProblems)}</span> of{' '}
-                <span className="text-emerald-400">{totalProblems}</span> problems
+                <span className="text-brand-500">{totalProblems}</span> problems
               </p>
               <div className="flex items-center gap-1.5">
                 <Button
@@ -423,7 +423,7 @@ export default function ProblemsPage() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <div className="flex items-center justify-center min-w-[3rem] px-2 h-7 bg-zinc-900/60 rounded-lg text-xs font-bold">
-                  <span className="text-white">{currentPage}</span>
+                  <span className="text-brand-500">{currentPage}</span>
                   <span className="text-zinc-600 mx-1">/</span>
                   <span className="text-zinc-500">{totalPages}</span>
                 </div>

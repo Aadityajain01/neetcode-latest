@@ -199,7 +199,7 @@ function MCQSessionContent() {
               const size = limitParam ? (parseInt(limitParam) || 20) : 20;
               fetchMCQs(size);
             }}
-            className="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold"
+            className="bg-brand-500 hover:bg-brand-400 text-zinc-950 font-bold"
           >
             <RefreshCw className="h-4 w-4 mr-2" /> Try Again
           </Button>
@@ -285,7 +285,7 @@ function MCQSessionContent() {
               </div>
               <div className="text-xs">
                 <span className="text-zinc-500 font-semibold">Answered:</span>{" "}
-                <span className="text-emerald-400 font-bold">{answers.size} / {mcqs.length}</span>
+                <span className="text-brand-500 font-bold">{answers.size} / {mcqs.length}</span>
               </div>
             </div>
           ) : (
@@ -300,7 +300,7 @@ function MCQSessionContent() {
                   </div>
                   <div className="text-left border-l border-zinc-850 pl-4">
                     <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Accuracy</p>
-                    <p className="text-xs font-black text-emerald-400">
+                    <p className="text-xs font-black text-brand-500">
                       {batchSummary.total > 0 ? Math.round((batchSummary.correct / batchSummary.total) * 100) : 0}%
                     </p>
                   </div>
@@ -342,7 +342,7 @@ function MCQSessionContent() {
       {phase === "session" && (
         <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden mb-4 shrink-0">
           <div 
-            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-300" 
+            className="h-full bg-gradient-to-r from-brand-500 to-brand-400 rounded-full transition-all duration-300" 
             style={{ width: `${(answers.size / mcqs.length) * 100}%` }} 
           />
         </div>
@@ -461,7 +461,7 @@ function MCQSessionContent() {
 
                   let optionStyle = "bg-zinc-900/30 border-zinc-850 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-300";
                   if (isSelected && phase !== "results") {
-                    optionStyle = "bg-emerald-500/10 border-emerald-500/60 text-white ring-1 ring-emerald-500/20";
+                    optionStyle = "bg-brand-500/10 border-brand-500/60 text-white ring-1 ring-brand-500/20";
                   } else if (phase === "results") {
                     if (isCorrectOption) {
                       optionStyle = "bg-emerald-500/15 border-emerald-500 text-emerald-400 font-semibold";
@@ -484,7 +484,7 @@ function MCQSessionContent() {
                       <div className={cn(
                         'flex items-center justify-center w-7 h-7 rounded-lg border text-xs font-black mr-3.5 transition-colors shrink-0',
                         isSelected && phase !== "results"
-                          ? 'border-emerald-500 bg-emerald-500 text-black' 
+                          ? 'border-brand-500 bg-brand-500 text-zinc-950' 
                           : isCorrectOption 
                           ? 'border-emerald-500 bg-emerald-500 text-black'
                           : isWrongOption
@@ -550,12 +550,11 @@ function MCQSessionContent() {
                   Next <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
               ) : null}
-
               {phase === "session" ? (
                 <Button
                   onClick={handleBatchSubmit}
                   disabled={submitting || answers.size === 0}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-xs font-bold tracking-widest uppercase rounded-xl px-5 h-9 shadow-md shadow-emerald-500/10 disabled:opacity-50"
+                  className="bg-brand-500 hover:bg-brand-400 text-zinc-950 text-xs font-bold tracking-widest uppercase rounded-xl px-5 h-9 shadow-md shadow-brand-500/10 disabled:opacity-50"
                 >
                   {submitting ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
@@ -567,7 +566,7 @@ function MCQSessionContent() {
               ) : (
                 <Button
                   onClick={() => router.push("/practice")}
-                  className="bg-emerald-555 hover:bg-emerald-500 text-emerald-950 text-xs font-bold tracking-widest uppercase rounded-xl px-5 h-9 shadow-md"
+                  className="bg-brand-500 hover:bg-brand-400 text-zinc-950 text-xs font-bold tracking-widest uppercase rounded-xl px-5 h-9 shadow-md"
                 >
                   Finish Review
                 </Button>
