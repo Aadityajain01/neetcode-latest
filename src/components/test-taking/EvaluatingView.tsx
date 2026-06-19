@@ -42,7 +42,7 @@ export function EvaluatingView({
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 shadow-lg">
         <div className="relative mx-auto mb-6 w-20 h-20">
           <div className="absolute inset-0 rounded-full border-4 border-zinc-800" />
-          <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 border-r-emerald-500/30 border-b-transparent border-l-transparent animate-spin" />
+          <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/30 border-b-transparent border-l-transparent animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center">
             <CheckCircle className="w-8 h-8 text-emerald-500" />
           </div>
@@ -59,7 +59,7 @@ export function EvaluatingView({
           <div className="mt-6 max-w-xs mx-auto">
             <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-brand-500 to-brand-400 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${Math.min(95, (pollAttempts / 40) * 100)}%` }}
               />
             </div>

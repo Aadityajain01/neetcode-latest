@@ -49,7 +49,7 @@ export function SubmitDialog({ open, onOpenChange, totalAnswered, totalQuestions
               onOpenChange(false);
               onSubmit();
             }}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-brand-500 hover:bg-brand-400 text-zinc-950 font-bold"
           >
             Confirm Submit
           </AlertDialogAction>
