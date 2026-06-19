@@ -19,7 +19,7 @@ import {
 } from "./types";
 import { toast } from "sonner";
 
-const EMERALD_SCROLLBAR = "[scrollbar-color:rgba(16,185,129,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/60";
+const BRAND_SCROLLBAR = "[scrollbar-color:rgba(255,106,31,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-brand-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-500/60";
 
 export function CreateProgrammingModal({
   open,
@@ -171,13 +171,13 @@ export function CreateProgrammingModal({
           <Button
             onClick={handleFinish}
             disabled={!isEditing && createdQuestions.length === 0}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[110px] h-10 disabled:opacity-40"
+            className="bg-brand-500 hover:bg-brand-600 text-white min-w-[110px] h-10 disabled:opacity-40"
           >
             {isEditing ? "Close" : "Finish"}
           </Button>
         </DialogHeader>
 
-        <div className={"flex-1 min-h-0 p-4 overflow-y-auto " + EMERALD_SCROLLBAR}>
+        <div className={"flex-1 min-h-0 p-4 overflow-y-auto " + BRAND_SCROLLBAR}>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 overflow-hidden">
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
@@ -240,7 +240,7 @@ export function CreateProgrammingModal({
                         type="button"
                         onClick={() => toggleLanguage(lang)}
                         className={active
-                          ? "px-3 py-1.5 rounded-md text-xs uppercase tracking-wide font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-400"
+                          ? "px-3 py-1.5 rounded-md text-xs uppercase tracking-wide font-semibold bg-brand-500/20 border border-brand-500/40 text-brand-400"
                           : "px-3 py-1.5 rounded-md text-xs uppercase tracking-wide font-semibold bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"}
                       >
                         {lang}
@@ -322,7 +322,7 @@ export function CreateProgrammingModal({
                       <div className="overflow-x-auto whitespace-nowrap pb-1 text-zinc-200 text-sm">
                         {previewText(q.title, "Untitled programming question")}
                       </div>
-                      <div className="text-emerald-400 font-semibold text-sm">{q.marks}</div>
+                      <div className="text-brand-500 font-semibold text-sm">{q.marks}</div>
                       <div className="flex justify-end">
                         <Button variant="ghost" size="icon" onClick={() => handleRemoveCreated(i)} className="h-8 w-8 text-red-400/80 hover:text-red-400 hover:bg-red-950/30">
                           <Trash2 className="w-4 h-4" />

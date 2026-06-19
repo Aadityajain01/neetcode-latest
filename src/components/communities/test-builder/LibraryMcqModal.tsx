@@ -12,7 +12,7 @@ import { mcqApi } from "@/lib/api-modules";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const EMERALD_SCROLLBAR = "[scrollbar-color:rgba(16,185,129,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-emerald-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-emerald-500/60";
+const BRAND_SCROLLBAR = "[scrollbar-color:rgba(255,106,31,0.45)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-brand-500/40 hover:[&::-webkit-scrollbar-thumb]:bg-brand-500/60";
 
 export function LibraryMcqModal({
   open,
@@ -148,7 +148,7 @@ export function LibraryMcqModal({
                 </div>
             </div>
             
-              <Button onClick={handleFinish} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[120px] h-10 shrink-0 shadow-none border-none mr-6">
+              <Button onClick={handleFinish} className="bg-brand-500 hover:bg-brand-400 text-zinc-950 font-bold min-w-[120px] h-10 shrink-0 shadow-none border-none mr-6">
                 Confirm
             </Button>
         </DialogHeader>
@@ -166,7 +166,7 @@ export function LibraryMcqModal({
               <div className="text-right">Action</div>
             </div>
 
-            <div className={cn("flex-1 min-h-[230px] overflow-y-auto overflow-x-hidden", EMERALD_SCROLLBAR)}>
+            <div className={cn("flex-1 min-h-[230px] overflow-y-auto overflow-x-hidden", BRAND_SCROLLBAR)}>
               {!loading && libraryItems.length === 0 ? (
                 <div className="mx-4 my-4 text-center text-zinc-500 text-sm py-10 italic border border-dashed border-zinc-800 rounded-lg bg-zinc-900/10">No questions found.</div>
               ) : (
@@ -197,11 +197,11 @@ export function LibraryMcqModal({
                           size="sm"
                           disabled={isAdded}
                           onClick={() => handleAdd(item)}
-                          className={cn("h-8 min-w-[92px]", isAdded ? "opacity-70 border-emerald-900/50 bg-emerald-950/20 text-emerald-500" : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800")}
+                          className={cn("h-8 min-w-[92px]", isAdded ? "opacity-70 border-brand-500/30 bg-brand-500/10 text-brand-500 font-bold" : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800")}
                         >
                           {isAdded ? (
                             <>
-                              <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500" />
+                              <CheckCircle2 className="w-4 h-4 mr-1.5 text-brand-500" />
                               Added
                             </>
                           ) : (
@@ -226,7 +226,7 @@ export function LibraryMcqModal({
                 <div className="text-right">Remove</div>
               </div>
 
-              <div className={cn("max-h-[230px] overflow-y-auto overflow-x-hidden", EMERALD_SCROLLBAR)}>
+              <div className={cn("max-h-[230px] overflow-y-auto overflow-x-hidden", BRAND_SCROLLBAR)}>
                 {selectedQuestions.length === 0 ? (
                   <div className="mx-4 my-4 text-center text-zinc-500 text-sm py-8 italic border border-dashed border-zinc-800 rounded-lg bg-zinc-900/10">
                     No questions selected.
@@ -242,7 +242,7 @@ export function LibraryMcqModal({
                       <Input
                         type="number"
                         min={1}
-                        className="h-8 w-[96px] text-sm font-semibold bg-zinc-950 border-zinc-800 text-emerald-400 focus-visible:ring-emerald-500/40"
+                        className="h-8 w-[96px] text-sm font-semibold bg-zinc-950 border-zinc-800 text-brand-500 focus-visible:ring-brand-500/40"
                         value={q.marks}
                         onChange={(e) => handleUpdateMarks(q.originalId, Number(e.target.value))}
                       />

@@ -1,4 +1,4 @@
-﻿import { PencilLine, Trash2 } from "lucide-react";
+import { PencilLine, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { questionPrimaryText } from "./helpers";
 import type { DraftQuestion } from "./types";
@@ -24,7 +24,7 @@ export function QuestionCard({
       </div>
       
       <div className="text-center">
-        <span className="text-xs uppercase tracking-wider font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">
+        <span className="text-xs uppercase tracking-wider font-medium text-brand-500 bg-brand-500/10 px-2 py-1 rounded-md">
           {question.type === "programming" ? "CODING" : "MCQ"}
         </span>
       </div>

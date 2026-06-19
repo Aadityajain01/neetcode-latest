@@ -112,7 +112,7 @@ export default function PublicProfilePage() {
   return (
     <>
       {/* Profile is content-heavy — allow internal scroll within the viewport-locked layout */}
-      <div className="h-full overflow-y-auto scrollbar-emerald">
+      <div className="h-full overflow-y-auto scrollbar-brand">
       <div className="font-sans pb-20 max-w-5xl mx-auto pt-4 px-4 sm:px-6">
 
         {/* Back Button */}
@@ -159,7 +159,7 @@ export default function PublicProfilePage() {
             {/* ── Top Core Stats Row ──────────────────────────────────────── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <MinimalStatCard icon={<Trophy className="text-yellow-400" size={16} />} label="Global Rank" value={`#${data.stats.rank}`} />
-              <MinimalStatCard icon={<TrendingUp className="text-zinc-300" size={16} />} label="Total Score" value={data.stats.score} />
+              <MinimalStatCard icon={<TrendingUp className="text-brand-500" size={16} />} label="Total Score" value={data.stats.score} />
               <MinimalStatCard icon={<Target className="text-blue-400" size={16} />} label="Total Solved" value={data.stats.solvedBreakdown.total} />
               <MinimalStatCard icon={<Flame className="text-orange-400" size={16} />} label="Day Streak" value="0" />
             </div>
@@ -244,7 +244,7 @@ export default function PublicProfilePage() {
                   {/* Detailed Breakdowns */}
                   <div className="flex-1 w-full space-y-4">
                     <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                      <Activity size={12} className="text-emerald-500" /> Proficiency Matrix
+                      <Activity size={12} className="text-brand-500" /> Proficiency Matrix
                     </h3>
                     <div className="grid grid-cols-3 gap-2">
                        <CompactDiffCard label="Easy" dsa={data.stats.solvedBreakdown.easy} mcq={data.stats.mcqSolvedBreakdown?.easy || 0} color="text-emerald-400" />
@@ -262,7 +262,7 @@ export default function PublicProfilePage() {
                     </h3>
                     <span className="text-[10px] text-zinc-600 font-mono font-bold bg-zinc-800/50 px-2 py-1 rounded-md">{new Date().getFullYear()}</span>
                   </div>
-                  <div className="flex justify-center w-full overflow-x-auto scrollbar-emerald pb-1">
+                  <div className="flex justify-center w-full overflow-x-auto scrollbar-brand pb-1">
                     <ActivityCalendar
                       data={calendarData}
                       theme={{

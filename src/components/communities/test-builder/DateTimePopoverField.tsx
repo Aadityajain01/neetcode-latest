@@ -93,7 +93,7 @@ export function DateTimePopoverField({
                 head_cell: "text-zinc-400 text-[11px] font-medium",
                 day: "flex items-center justify-center",
                 day_button:
-                  "h-9 w-9 rounded-md text-zinc-200 hover:bg-zinc-900 hover:text-zinc-100 aria-selected:bg-emerald-600 aria-selected:text-white",
+                  "h-9 w-9 rounded-md text-zinc-200 hover:bg-zinc-900 hover:text-zinc-100 aria-selected:bg-brand-500 aria-selected:text-white",
                 caption_label: "text-zinc-200",
                 button_previous: "text-zinc-300 hover:text-zinc-100",
                 button_next: "text-zinc-300 hover:text-zinc-100",
