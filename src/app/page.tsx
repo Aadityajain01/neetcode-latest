@@ -161,7 +161,7 @@ const SmallLeaderboard = ({ entries, myRank }: { entries: any[]; myRank: any }) 
         <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Global Rankings</h4>
         <Link 
           href="/leaderboard" 
-          className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest flex items-center gap-0.5"
+          className="text-[9px] font-bold text-orange-400 hover:text-orange-300 transition-colors uppercase tracking-widest flex items-center gap-0.5"
         >
           View Full <ArrowRight className="h-2.5 w-2.5" />
         </Link>
@@ -204,14 +204,14 @@ const SmallLeaderboard = ({ entries, myRank }: { entries: any[]; myRank: any }) 
       {myRank && (
         <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between mt-2.5 shadow-inner shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded">
               Your Rank
             </span>
             <span className="text-xs font-bold text-white">
               #{myRank.rank || '—'}
             </span>
           </div>
-          <span className="text-xs font-mono font-black text-emerald-400">
+          <span className="text-xs font-mono font-black text-orange-400">
             {myRank.score || 0} pts
           </span>
         </div>
@@ -320,7 +320,7 @@ function DashboardView() {
   if (isLoading) {
     return (
       <div className="h-full p-4 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
       </div>
     );
   }
@@ -347,7 +347,7 @@ function DashboardView() {
           <div>
             <h1 className="text-xl md:text-2xl font-black text-white tracking-tighter leading-none">
               Welcome back,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400">
                 {user?.displayName || 'Developer'}
               </span>
             </h1>
