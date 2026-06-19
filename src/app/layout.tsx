@@ -18,12 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Neetcode - Competitive Coding Platform",
-  description: "Solve DSA problems, practice programming, and climb the leaderboard on Neetcode - a modern competitive coding platform.",
-  keywords: ["Neetcode", "DSA", "Algorithms", "Data Structures", "Programming", "Competitive Coding"],
-  authors: [{ name: "Neetcode Team" }],
+  title: "Swadhyaayi - Competitive Coding Platform",
+  description: "Solve DSA problems, practice programming, and climb the leaderboard on Swadhyaayi - a modern competitive coding platform.",
+  keywords: ["Swadhyaayi", "DSA", "Algorithms", "Data Structures", "Programming", "Competitive Coding"],
+  authors: [{ name: "Swadhyaayi Team" }],
   openGraph: {
-    title: "Neetcode",
+    title: "Swadhyaayi",
     description: "Competitive coding platform for mastering algorithms and data structures",
     type: "website",
   },
@@ -59,7 +59,7 @@ export default function RootLayout({
               title: "text-sm font-semibold text-zinc-100",
               description: "text-xs text-zinc-300",
               actionButton:
-                "bg-emerald-500 text-zinc-950 hover:bg-emerald-400 rounded-md",
+                "bg-brand-500 text-zinc-950 hover:bg-brand-400 rounded-md",
               cancelButton:
                 "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 rounded-md",
               success:
