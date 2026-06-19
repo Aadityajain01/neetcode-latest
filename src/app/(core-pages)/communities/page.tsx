@@ -75,7 +75,7 @@ function normalizeDomainInput(value: string): string {
 const GRADIENTS = [
   "from-violet-600 to-indigo-600",
   "from-cyan-500 to-blue-600",
-  "from-emerald-500 to-teal-600",
+  "from-brand-500 to-brand-600",
   "from-amber-500 to-orange-600",
   "from-rose-500 to-pink-600",
   "from-fuchsia-500 to-purple-600",
@@ -263,7 +263,7 @@ function RightSidebarAbout() {
                     <span className={cn(
                       "text-[8px] font-black uppercase tracking-wider px-1 py-0.5 rounded border",
                       m.role === "owner" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
-                      m.role === "admin" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                      m.role === "admin" ? "text-brand-400 bg-brand-500/10 border-brand-500/20" :
                       "text-zinc-400 bg-zinc-800 border-zinc-750"
                     )}>{m.role}</span>
                   )}
@@ -1453,7 +1453,9 @@ function CommunitiesPageContent() {
             {!loading && totalPages > 1 && (
               <div className="flex items-center justify-between px-3 py-2 border-t border-zinc-900 shrink-0">
                 <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-7 px-2 bg-zinc-900/60 border border-zinc-850 rounded-lg text-[10px] font-bold text-zinc-400 hover:text-white disabled:opacity-30">Prev</button>
-                <span className="text-[10px] text-zinc-550">{currentPage} of {totalPages}</span>
+                <span className="text-[10px] text-zinc-550">
+                  <span className="text-brand-500 font-bold">{currentPage}</span> of {totalPages}
+                </span>
                 <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-7 px-2 bg-zinc-900/60 border border-zinc-850 rounded-lg text-[10px] font-bold text-zinc-400 hover:text-white disabled:opacity-30">Next</button>
               </div>
             )}

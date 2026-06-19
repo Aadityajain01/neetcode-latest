@@ -34,7 +34,7 @@ function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; positi
         <div className="relative mb-2">
           <Avatar className={cn(config.size, config.ring, 'ring-offset-2 ring-offset-zinc-900 shadow-xl transition-transform group-hover:scale-105')}>
             <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-            <AvatarFallback className={cn('font-bold text-xs flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-300')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className={cn('font-bold text-xs flex items-center justify-center h-full w-full rounded-full', isMe ? 'bg-brand-500 text-zinc-950' : 'bg-zinc-800 text-zinc-300')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className={cn('absolute -bottom-2 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full shadow-xl text-[10px] border border-white/20', config.badgeBg)}>{config.badge}</div>
         </div>
@@ -44,7 +44,7 @@ function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; positi
           <p className="text-[8px] text-zinc-500 uppercase tracking-widest mt-0.5 font-bold">Points</p>
         </div>
 
-        <p className={cn('font-bold text-sm md:text-base truncate max-w-full relative z-10', isMe ? 'text-emerald-400' : config.nameColor)}>{firstName}</p>
+        <p className={cn('font-bold text-sm md:text-base truncate max-w-full relative z-10', isMe ? 'text-brand-500' : config.nameColor)}>{firstName}</p>
       </div>
     </Link>
   );
@@ -53,22 +53,22 @@ function PodiumCard({ entry, position, isMe }: { entry: LeaderboardEntry; positi
 function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) {
   return (
     <Link href={`/profile/${entry.userId}`} className="block">
-      <div className={cn('group grid grid-cols-12 gap-3 px-4 md:px-5 py-2.5 items-center transition-all duration-200 cursor-pointer overflow-hidden relative', isMe ? 'bg-emerald-500/10' : 'hover:bg-zinc-800/40')}>
-        {isMe && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
+      <div className={cn('group grid grid-cols-12 gap-3 px-4 md:px-5 py-2.5 items-center transition-all duration-200 cursor-pointer overflow-hidden relative', isMe ? 'bg-brand-500/10' : 'hover:bg-zinc-800/40')}>
+        {isMe && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500" />}
         <div className="col-span-2 md:col-span-1 flex items-center justify-center">
-          <div className={cn('flex items-center justify-center h-7 w-7 rounded-full font-mono text-xs font-bold', isMe ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800/50 text-zinc-500 group-hover:text-zinc-300 group-hover:bg-zinc-700/50')}>{entry.rank}</div>
+          <div className={cn('flex items-center justify-center h-7 w-7 rounded-full font-mono text-xs font-bold', isMe ? 'bg-brand-500/20 text-brand-500 font-bold' : 'bg-zinc-800/50 text-zinc-500 group-hover:text-zinc-300 group-hover:bg-zinc-700/50')}>{entry.rank}</div>
         </div>
         <div className="col-span-7 md:col-span-8 flex items-center gap-3">
-          <Avatar className={cn('h-8 w-8 md:h-9 md:w-9 shadow-sm transition-transform group-hover:scale-105', isMe ? 'ring-2 ring-emerald-500/50 ring-offset-1 ring-offset-zinc-900' : 'border border-zinc-700')}>
+          <Avatar className={cn('h-8 w-8 md:h-9 md:w-9 shadow-sm transition-transform group-hover:scale-105', isMe ? 'ring-2 ring-brand-500/50 ring-offset-1 ring-offset-zinc-900' : 'border border-zinc-700')}>
             <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-            <AvatarFallback className={cn('font-bold text-xs rounded-full', isMe ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-400')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className={cn('font-bold text-xs rounded-full', isMe ? 'bg-brand-500 text-zinc-950 font-bold' : 'bg-zinc-800 text-zinc-400')}>{(entry.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className={cn('text-sm font-bold truncate transition-colors leading-tight', isMe ? 'text-emerald-400' : 'text-zinc-200 group-hover:text-white')}>{entry.displayName} {isMe && <span className="opacity-70">(You)</span>}</span>
+            <span className={cn('text-sm font-bold truncate transition-colors leading-tight', isMe ? 'text-brand-500 font-bold' : 'text-zinc-200 group-hover:text-white')}>{entry.displayName} {isMe && <span className="opacity-70">(You)</span>}</span>
           </div>
         </div>
         <div className="col-span-3 md:col-span-3 text-right flex items-center justify-end gap-1.5">
-          <span className={cn('font-mono font-black text-sm tracking-tight', isMe ? 'text-emerald-400' : 'text-zinc-300 group-hover:text-white')}>{entry.score}</span>
+          <span className={cn('font-mono font-black text-sm tracking-tight', isMe ? 'text-brand-500' : 'text-zinc-300 group-hover:text-white')}>{entry.score}</span>
           <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest hidden sm:inline-block mt-0.5">pts</span>
         </div>
       </div>
@@ -89,20 +89,20 @@ function ScopeDropdown({ activeTab, setActiveTab, communities }: { activeTab: st
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800/80 border border-zinc-700/60 text-sm text-zinc-200 hover:bg-zinc-700/80 transition-all backdrop-blur-sm">
-        {activeTab === 'global' ? <Globe className="h-4 w-4 text-emerald-400" /> : <Users className="h-4 w-4 text-zinc-400" />}
+        {activeTab === 'global' ? <Globe className="h-4 w-4 text-brand-500" /> : <Users className="h-4 w-4 text-zinc-400" />}
         <span className="max-w-[140px] truncate font-medium">{activeName}</span>
         <ChevronDown className={cn('h-4 w-4 text-zinc-500 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50 backdrop-blur-xl">
           <div className="p-1.5">
-            <button onClick={() => { setActiveTab('global'); setOpen(false); }} className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all', activeTab === 'global' ? 'bg-emerald-500 text-white font-semibold' : 'text-zinc-300 hover:bg-zinc-800')}><Globe className="h-4 w-4" /> Global</button>
+            <button onClick={() => { setActiveTab('global'); setOpen(false); }} className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all', activeTab === 'global' ? 'bg-brand-500 text-zinc-950 font-bold' : 'text-zinc-300 hover:bg-zinc-800')}><Globe className="h-4 w-4" /> Global</button>
             {communities.length > 0 && (
               <>
                 <div className="h-px bg-zinc-800 my-1.5 mx-2" />
                 <p className="text-[10px] text-zinc-600 uppercase tracking-widest px-3 py-1 font-semibold">Communities</p>
                 {communities.map((comm) => (
-                  <button key={comm.id} onClick={() => { setActiveTab(comm.id); setOpen(false); }} className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all truncate', activeTab === comm.id ? 'bg-zinc-700 text-emerald-400 font-semibold' : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200')}>
+                  <button key={comm.id} onClick={() => { setActiveTab(comm.id); setOpen(false); }} className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all truncate', activeTab === comm.id ? 'bg-zinc-700 text-brand-500 font-semibold' : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200')}>
                     <Users className="h-4 w-4 shrink-0" /><span className="truncate">{comm.name}</span>
                   </button>
                 ))}
@@ -169,14 +169,14 @@ export default function LeaderboardPage() {
 
   return (
     <>
-      <div className="h-auto lg:h-[100dvh] overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 relative flex flex-col items-center">
-        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+      <div className="h-auto lg:h-[100dvh] overflow-x-hidden overflow-y-auto lg:overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950 text-zinc-100 font-sans selection:bg-brand-500/30 relative flex flex-col items-center">
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
 
         <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative z-10 flex flex-col lg:h-[100dvh] min-h-0 overflow-visible lg:overflow-hidden">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 shrink-0">
             <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]"><Trophy className="h-5 w-5 text-emerald-400" /></div>
+              <div className="p-2.5 bg-gradient-to-br from-brand-500/20 to-brand-600/10 rounded-2xl border border-brand-500/20 shadow-[0_0_20px_rgba(255,106,31,0.1)]"><Trophy className="h-5 w-5 text-brand-500" /></div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-sm">Leaderboard</h1>
             </div>
             <div className="shadow-lg shadow-black/20 rounded-xl shrink-0">
@@ -197,7 +197,7 @@ export default function LeaderboardPage() {
                 {top3.length > 0 ? (
                   <div className="w-full max-w-lg mx-auto">
                     <div className="text-center mb-4 lg:mb-6">
-                      <h2 className="text-emerald-400 font-bold tracking-[0.2em] uppercase text-xs">Hall of Fame</h2>
+                      <h2 className="text-brand-500 font-bold tracking-[0.2em] uppercase text-xs">Hall of Fame</h2>
                       <p className="text-zinc-500 text-sm mt-1">Top developers in this scope</p>
                     </div>
                     <div className="flex items-end justify-center gap-3 md:gap-4 w-full relative">
@@ -232,7 +232,7 @@ export default function LeaderboardPage() {
                           <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline-block">Previous</span>
                         </button>
                         <div className="flex items-center gap-2 bg-zinc-900/50 px-4 py-1.5 rounded-xl border border-zinc-800/50">
-                          <span className="text-sm text-emerald-400 font-bold">{listPage + 1}</span>
+                          <span className="text-sm text-brand-500 font-bold">{listPage + 1}</span>
                           <span className="text-zinc-600 font-medium text-xs">/</span>
                           <span className="text-sm text-zinc-400 font-bold">{totalPages}</span>
                         </div>
@@ -249,7 +249,7 @@ export default function LeaderboardPage() {
                 {!isMeInTop3 && !isMeInPagedList && myStats && user && (
                   <div className="w-full mt-4 pt-3 relative shrink-0">
                     <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-zinc-950 border border-zinc-800/50 shadow-md text-[10px] text-zinc-400 font-bold tracking-widest uppercase rounded-full z-20">Your Rank</div>
-                    <div className="rounded-2xl overflow-hidden border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.1)] bg-zinc-900/80 backdrop-blur-md relative z-10">
+                    <div className="rounded-2xl overflow-hidden border border-brand-500/30 shadow-[0_0_25px_rgba(255,106,31,0.1)] bg-zinc-900/80 backdrop-blur-md relative z-10">
                       <LeaderboardRow entry={{ userId: user.id, displayName: user.displayName || 'You', avatarUrl: (user as any).avatarUrl, score: myStats.score, rank: myStats.rank }} isMe={true} />
                     </div>
                   </div>

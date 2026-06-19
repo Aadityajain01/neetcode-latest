@@ -12,62 +12,16 @@ interface RoadmapCardItem {
   isAvailable: boolean;
 }
 
-const skillRoadmaps: RoadmapCardItem[] = [
-  { title: "SQL", slug: "sql", isAvailable: false },
-  { title: "Computer Science", slug: "computer-science", isAvailable: false },
-  { title: "React", slug: "react", isAvailable: false },
-  { title: "Vue", slug: "vue", isAvailable: false },
-  { title: "Angular", slug: "angular", isAvailable: false },
-  { title: "JavaScript", slug: "javascript", isAvailable: false },
-  { title: "TypeScript", slug: "typescript", isAvailable: false },
-  { title: "Node.js", slug: "node-js", isAvailable: false },
-  { title: "Python", slug: "python", isAvailable: false },
-  { title: "System Design", slug: "system-design", isAvailable: false },
-  { title: "Java", slug: "java", isAvailable: false },
-  { title: "ASP.NET Core", slug: "asp-net-core", isAvailable: false },
-  { title: "API Design", slug: "api-design", isAvailable: false },
-  { title: "Spring Boot", slug: "spring-boot", isAvailable: false },
-  { title: "Flutter", slug: "flutter", isAvailable: false },
-  { title: "C++", slug: "c-plus-plus", isAvailable: false },
-  { title: "Rust", slug: "rust", isAvailable: false },
-  { title: "Go Roadmap", slug: "go-roadmap", isAvailable: false },
-];
+const skillRoadmaps: RoadmapCardItem[] = [];
 
 const roleRoadmaps: RoadmapCardItem[] = [
-  { title: "Frontend", slug: "frontend", isAvailable: true },
-  { title: "Backend", slug: "backend", isAvailable: true },
-  { title: "Full Stack", slug: "full-stack", isAvailable: false },
-  { title: "DevOps", slug: "devops", isAvailable: true },
-  { title: "DevSecOps", slug: "devsecops", isAvailable: false },
-  { title: "Data Analyst", slug: "data-analyst", isAvailable: false },
-  { title: "AI Engineer", slug: "ai-engineer", isAvailable: false },
-  { title: "AI and Data Scientist", slug: "ai-data-scientist", isAvailable: false },
-  { title: "Data Engineer", slug: "data-engineer", isAvailable: false },
-  { title: "Android", slug: "android", isAvailable: false },
-  { title: "Machine Learning", slug: "machine-learning", isAvailable: false },
-  { title: "PostgreSQL", slug: "postgresql", isAvailable: false },
-  { title: "iOS", slug: "ios", isAvailable: false },
-  { title: "Blockchain", slug: "blockchain", isAvailable: false },
-  { title: "QA", slug: "qa", isAvailable: false },
-  { title: "Software Architect", slug: "software-architect", isAvailable: false },
-  { title: "Cyber Security", slug: "cyber-security", isAvailable: false },
-  { title: "UX Design", slug: "ux-design", isAvailable: false },
-  { title: "Technical Writer", slug: "technical-writer", isAvailable: false },
-  { title: "Game Developer", slug: "game-developer", isAvailable: false },
-  { title: "Server Side Game Developer", slug: "server-side-game-developer", isAvailable: false },
-  { title: "MLOps", slug: "mlops", isAvailable: false },
-  { title: "Product Manager", slug: "product-manager", isAvailable: false },
-  { title: "Engineering Manager", slug: "engineering-manager", isAvailable: false },
-  { title: "Developer Relations", slug: "developer-relations", isAvailable: false },
-  { title: "BI Analyst", slug: "bi-analyst", isAvailable: false },
-  { title: "Network Engineer", slug: "network-engineer", isAvailable: false },
-  { title: "Cloud Architecture", slug: "cloud", isAvailable: true },
+  { title: "Frontend", slug: "frontend", isAvailable: true }
 ];
 
 function RoadmapCard({ item }: { item: RoadmapCardItem }) {
   const [isBookmarked, setIsBookmarked] = useState(() => {
     if (typeof window === "undefined") return false;
-    const bookmarkedRaw = localStorage.getItem("neetcode-bookmarked-roadmaps");
+    const bookmarkedRaw = localStorage.getItem("swadhyaayi-bookmarked-roadmaps");
     if (!bookmarkedRaw) return false;
     try {
       const parsed = JSON.parse(bookmarkedRaw);
@@ -91,7 +45,7 @@ function RoadmapCard({ item }: { item: RoadmapCardItem }) {
     const nextState = !isBookmarked;
     setIsBookmarked(nextState);
 
-    const bookmarkedRaw = localStorage.getItem("neetcode-bookmarked-roadmaps");
+    const bookmarkedRaw = localStorage.getItem("swadhyaayi-bookmarked-roadmaps");
     let bookmarked: any[] = [];
     if (bookmarkedRaw) {
       try {
@@ -109,13 +63,13 @@ function RoadmapCard({ item }: { item: RoadmapCardItem }) {
       bookmarked = bookmarked.filter(b => b.slug !== item.slug);
       toast.info(`Removed bookmark for "${item.title}".`);
     }
-    localStorage.setItem("neetcode-bookmarked-roadmaps", JSON.stringify(bookmarked));
+    localStorage.setItem("swadhyaayi-bookmarked-roadmaps", JSON.stringify(bookmarked));
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className={`group flex items-center justify-between h-14 px-5 rounded-[12px] border transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden bg-zinc-900/40 border-zinc-800/60 hover:bg-zinc-900/80 hover:border-emerald-500/30`}
+      className={`group flex items-center justify-between h-14 px-5 rounded-[12px] border transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden bg-zinc-900/40 border-zinc-800/60 hover:bg-zinc-900/80 hover:border-brand-500/30`}
     >
       <span className="font-semibold text-sm text-zinc-300 group-hover:text-white transition-colors truncate pr-4">
         {item.title}
@@ -123,11 +77,11 @@ function RoadmapCard({ item }: { item: RoadmapCardItem }) {
       <button
         onClick={handleBookmarkClick}
         type="button"
-        className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded-md transition-colors shrink-0"
+        className="text-zinc-500 hover:text-brand-500 p-1.5 rounded-md transition-colors shrink-0"
       >
         <Bookmark
           size={15}
-          className={isBookmarked ? "fill-emerald-400 text-emerald-400" : "text-zinc-600 group-hover:text-zinc-400"}
+          className={isBookmarked ? "fill-brand-500 text-brand-500" : "text-zinc-600 group-hover:text-zinc-400"}
         />
       </button>
     </div>
@@ -159,7 +113,7 @@ export default function RoadmapPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-6 border-b border-zinc-800/40 shrink-0">
           <div className="space-y-1.5">
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none flex items-center gap-2.5">
-              <Compass className="text-emerald-400" size={26} />
+              <Compass className="text-brand-500" size={26} />
               Learning Roadmaps
             </h1>
             <p className="text-zinc-400 text-xs md:text-sm max-w-xl font-medium">
@@ -167,12 +121,12 @@ export default function RoadmapPage() {
             </p>
           </div>
           <div className="relative w-full md:w-72 group shrink-0">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 group-focus-within:text-brand-500 transition-colors" />
             <Input
               placeholder="Search roadmaps..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 pl-10 h-10 text-xs rounded-xl focus-visible:ring-1 focus-visible:ring-emerald-500/30 placeholder:text-zinc-600 w-full"
+              className="bg-zinc-900/50 border-zinc-800/80 text-zinc-200 pl-10 h-10 text-xs rounded-xl focus-visible:ring-1 focus-visible:ring-brand-500/30 placeholder:text-zinc-600 w-full"
             />
           </div>
         </div>

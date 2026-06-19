@@ -438,7 +438,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden relative p-6">
             <div className="flex items-center justify-between mb-4">
-               <h3 className="font-semibold text-zinc-200">Added Questions ({questions.length}) {totalMarks > 0 && <span className="ml-2 text-sm font-normal text-emerald-400">{totalMarks} marks</span>}</h3>
+               <h3 className="font-semibold text-zinc-200">Added Questions ({questions.length}) {totalMarks > 0 && <span className="ml-2 text-sm font-normal text-brand-500">{totalMarks} marks</span>}</h3>
                <div className="flex items-center gap-3">
                  <Popover open={addPopoverOpen} onOpenChange={setAddPopoverOpen}>
                    <PopoverTrigger asChild>
@@ -555,7 +555,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
                     </div>
                     
                   ) : (
-                    <div className="flex-1 min-h-0 divide-y divide-zinc-800/50 overflow-y-auto overflow-x-hidden scrollbar-emerald">
+                    <div className="flex-1 min-h-0 divide-y divide-zinc-800/50 overflow-y-auto overflow-x-hidden scrollbar-brand">
                       {paginatedQuestions.map((q, i) => {
                         const absoluteIndex = (currentPage - 1) * QUESTIONS_PER_PAGE + i;
 

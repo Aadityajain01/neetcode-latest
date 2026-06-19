@@ -273,7 +273,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
   if (loading) {
     return (
       <div className="flex justify-center p-24">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
       </div>
     );
   }
@@ -346,7 +346,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           drag
           dragConstraints={{ left: -1000, right: 0, top: -1000, bottom: 0 }}
           whileDrag={{ scale: 1.05 }}
-          className="fixed bottom-6 right-6 w-56 h-36 rounded-xl border-2 border-emerald-500/50 overflow-hidden bg-black shadow-2xl z-50 cursor-move"
+          className="fixed bottom-6 right-6 w-56 h-36 rounded-xl border-2 border-brand-500/50 overflow-hidden bg-black shadow-2xl z-50 cursor-move"
         >
           <video
             autoPlay
@@ -415,11 +415,11 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
           <div className="flex items-center justify-center h-full text-zinc-500">Select a question</div>
         ) : q.type === "mcq" ? (
           <div className="h-full flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
-            <ScrollArea className="flex-1 min-h-0 p-6 lg:p-10 scrollbar-emerald">
+            <ScrollArea className="flex-1 min-h-0 p-6 lg:p-10 scrollbar-brand">
               <div className="max-w-4xl mx-auto w-full">
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
+                    <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
                       Question {activeIndex + 1}
                     </span>
                     <span className="text-zinc-500 text-sm font-medium">{q.marks} Marks</span>
@@ -440,12 +440,12 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                         className={cn(
                           "flex items-center p-4 rounded-xl border cursor-pointer transition-all",
                           answers[q._id] === i
-                            ? "border-emerald-500 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                            ? "border-brand-500 bg-brand-500/5 shadow-[0_0_15px_rgba(255,106,31,0.1)]"
                             : "border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 hover:border-zinc-700",
                           isLocked && "opacity-70 cursor-not-allowed"
                         )}
                       >
-                        <RadioGroupItem value={i.toString()} id={`opt-${i}`} className="text-emerald-500 border-zinc-600" />
+                        <RadioGroupItem value={i.toString()} id={`opt-${i}`} className="text-brand-500 border-zinc-600" />
                         <span className="ml-4 text-zinc-300 font-medium">{opt}</span>
                       </label>
                     ))}
@@ -462,7 +462,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                     disabled={isLocked || answers[q._id] === undefined}
                     className={cn(
                       "h-9 px-4 text-xs font-semibold",
-                      isLocked ? "bg-zinc-800 text-zinc-400" : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      isLocked ? "bg-zinc-800 text-zinc-400" : "bg-brand-500 hover:bg-brand-600 text-white"
                     )}
                   >
                     {isLocked ? "Answer Locked" : "Lock Answer"}
@@ -472,7 +472,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
             </ScrollArea>
 
             <QuestionsNav questions={questions} activeIndex={activeIndex} onSelect={setActiveIndex} getQuestionState={getQuestionState}>
-              <Button onClick={() => setConfirmOpen(true)} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700 h-9">
+              <Button onClick={() => setConfirmOpen(true)} disabled={submitting} className="bg-brand-500 hover:bg-brand-600 h-9">
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Submit
               </Button>
@@ -485,10 +485,10 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
               minSize={30}
               className="flex flex-col bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-sm"
             >
-              <ScrollArea className="flex-1 min-h-0 p-6 space-y-6 scrollbar-emerald">
+              <ScrollArea className="flex-1 min-h-0 p-6 space-y-6 scrollbar-brand">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
+                    <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full">
                       Question {activeIndex + 1}
                     </span>
                     <span className="text-zinc-500 text-sm font-medium">{q.marks} Marks</span>
@@ -526,7 +526,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
                   disabled={!!lockedProgramming[q._id]}
                   className={cn(
                     "h-9",
-                    lockedProgramming[q._id] ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-800" : "bg-emerald-600 hover:bg-emerald-700"
+                    lockedProgramming[q._id] ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-800" : "bg-brand-500 hover:bg-brand-600"
                   )}
                 >
                   {lockedProgramming[q._id] ? "Question Locked" : "Lock Question"}
