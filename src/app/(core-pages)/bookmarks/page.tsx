@@ -39,7 +39,7 @@ export default function BookmarksPage() {
     setMounted(true);
     
     // Load roadmaps
-    const roadmapsRaw = localStorage.getItem("neetcode-bookmarked-roadmaps");
+    const roadmapsRaw = localStorage.getItem("swadhyaayi-bookmarked-roadmaps");
     if (roadmapsRaw) {
       try {
         const parsed = JSON.parse(roadmapsRaw);
@@ -52,7 +52,7 @@ export default function BookmarksPage() {
     }
 
     // Load jobs
-    const jobsRaw = localStorage.getItem("neetcode-bookmarked-jobs");
+    const jobsRaw = localStorage.getItem("swadhyaayi-bookmarked-jobs");
     if (jobsRaw) {
       try {
         const parsed = JSON.parse(jobsRaw);
@@ -70,7 +70,7 @@ export default function BookmarksPage() {
     event.stopPropagation();
     const updated = roadmaps.filter(item => item.slug !== slug);
     setRoadmaps(updated);
-    localStorage.setItem("neetcode-bookmarked-roadmaps", JSON.stringify(updated));
+    localStorage.setItem("swadhyaayi-bookmarked-roadmaps", JSON.stringify(updated));
     toast.info(`Removed bookmark for "${title}" roadmap.`);
   };
 
@@ -80,7 +80,7 @@ export default function BookmarksPage() {
     event.stopPropagation();
     const updated = jobs.filter(item => item.slug !== slug);
     setJobs(updated);
-    localStorage.setItem("neetcode-bookmarked-jobs", JSON.stringify(updated));
+    localStorage.setItem("swadhyaayi-bookmarked-jobs", JSON.stringify(updated));
     toast.info(`Removed bookmark for "${title}" role.`);
   };
 

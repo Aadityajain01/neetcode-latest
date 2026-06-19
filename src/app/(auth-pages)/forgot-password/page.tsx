@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import logo from "../../../../public/logo.png";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -37,12 +39,26 @@ export default function ForgotPasswordPage() {
   return (
     <div className="h-[100dvh] w-[100dvw] flex items-center justify-center bg-black px-4 relative font-swiss overflow-hidden selection:bg-white selection:text-black">
       
+      {/* Subtle brand orange ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50dvw] h-[50dvw] bg-brand-500/10 blur-[10dvw] rounded-full pointer-events-none z-0" />
+
       {/* Background overlay noise and blueprint grids */}
       <div className="absolute inset-0 blueprint-grid opacity-60 pointer-events-none z-0" />
       <div className="absolute inset-0 blueprint-grid-fine opacity-40 pointer-events-none z-0" />
       <div className="noise-overlay" />
 
       <div className="w-[90dvw] sm:w-[24rem] lg:w-[25dvw] space-y-[3dvh] bg-black/60 border border-zinc-900 p-[4dvh] lg:p-[5dvh] shadow-2xl rounded-none relative z-10">
+        
+        <div className="flex justify-center lg:justify-start mb-2">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+              <Image src={logo} alt="Swadhyaayi Logo" width={28} height={28} className="object-contain" />
+            </div>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
+              Swadhyaayi
+            </span>
+          </Link>
+        </div>
         
         <div className="space-y-[1dvh] text-center lg:text-left">
           <h2 className="text-4xl font-extrabold tracking-tighter text-white uppercase font-swiss">Reset Password</h2>
@@ -72,15 +88,15 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
+                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-brand-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-white hover:bg-zinc-200 text-black h-11 rounded-none font-mono text-xs uppercase tracking-widest transition-all cursor-pointer"
+                className="w-full bg-brand-500 hover:bg-brand-600 text-white h-11 rounded-none font-sans font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-[0_0_15px_rgba(255,106,31,0.2)]"
                 disabled={isLoading}
               >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-black" />}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />}
                 Send Reset Link
               </Button>
               <div className="text-center pt-2">

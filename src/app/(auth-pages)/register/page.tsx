@@ -115,14 +115,16 @@ export default function RegisterPage() {
       {/* LEFT COLUMN: Visual Brand Side */}
       <div className="hidden lg:flex flex-col justify-between bg-zinc-950/20 p-[5dvh] relative overflow-hidden border-r border-zinc-900/80 order-2 z-10 h-full">
          
-         {/* Subtle monochrome ambient light with dynamic size */}
-         <div className="absolute bottom-0 right-0 w-[40dvw] h-[40dvw] bg-zinc-800/5 blur-[12dvw] rounded-full pointer-events-none" />
+         {/* Subtle brand orange ambient light */}
+         <div className="absolute bottom-0 right-0 w-[40dvw] h-[40dvw] bg-brand-500/10 blur-[12dvw] rounded-full pointer-events-none" />
 
          <div className="relative z-10 text-right space-y-[2dvh]">
-           <div className="flex items-center justify-end gap-3 text-zinc-100 font-mono text-xs uppercase tracking-widest mb-[4dvh]">
-             <span className="text-zinc-200">Neetcode</span>
-             <div className="p-1 border border-zinc-800 bg-black">
-               <Image src={logo} alt="Neetcode" width={32} height={32} className="img-monochrome filter invert brightness-200" />
+           <div className="flex items-center justify-end gap-3 text-zinc-100 font-sans text-xs uppercase tracking-widest mb-[4dvh]">
+             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
+               Swadhyaayi
+             </span>
+             <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+               <Image src={logo} alt="Swadhyaayi Logo" width={28} height={28} className="object-contain" />
              </div>
            </div>
            
@@ -186,7 +188,7 @@ export default function RegisterPage() {
                   required
                   placeholder="John Doe"
                   disabled={isLoading}
-                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 pl-10 focus:border-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
+                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 pl-10 focus:border-brand-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
                 />
               </div>
             </div>
@@ -202,7 +204,7 @@ export default function RegisterPage() {
                   required
                   placeholder="name@college.edu"
                   disabled={isLoading}
-                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 pl-10 focus:border-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
+                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 pl-10 focus:border-brand-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
                 />
               </div>
             </div>
@@ -217,7 +219,7 @@ export default function RegisterPage() {
                   required
                   placeholder="••••••••"
                   disabled={isLoading}
-                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
+                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-brand-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
                 />
               </div>
               <div className="space-y-[0.5dvh]">
@@ -229,7 +231,7 @@ export default function RegisterPage() {
                   required
                   placeholder="••••••••"
                   disabled={isLoading}
-                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
+                  className="bg-black/50 border-zinc-800 text-white font-mono h-11 focus:border-brand-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none transition-colors placeholder:text-zinc-500"
                 />
               </div>
             </div>
@@ -242,9 +244,9 @@ export default function RegisterPage() {
               type="button"
               disabled={isLoading}
               onClick={handleRegister}
-              className="w-full bg-white hover:bg-zinc-200 text-black h-11 rounded-none font-mono text-xs uppercase tracking-widest transition-all cursor-pointer mt-2"
+              className="w-full bg-brand-500 hover:bg-brand-600 text-white h-11 rounded-none font-sans font-bold text-xs uppercase tracking-widest transition-all cursor-pointer mt-2 shadow-[0_0_15px_rgba(255,106,31,0.2)]"
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-black" />}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />}
               Create Account
             </Button>
           </form>
@@ -266,7 +268,7 @@ export default function RegisterPage() {
             variant="outline"
             disabled={isLoading}
             onClick={handleGoogleRegister}
-            className="w-full bg-black border border-zinc-800 text-zinc-100 hover:bg-zinc-900 hover:text-white h-11 rounded-none font-mono text-xs uppercase tracking-widest transition-colors cursor-pointer"
+            className="w-full bg-black border border-zinc-800 hover:border-brand-500/50 text-zinc-100 hover:text-brand-400 h-11 rounded-none font-mono text-xs uppercase tracking-widest transition-colors cursor-pointer"
           >
             <svg className="mr-2 h-4 w-4 filter grayscale brightness-200" viewBox="0 0 24 24">
               <path
