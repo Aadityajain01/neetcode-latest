@@ -37,9 +37,9 @@ export function QuestionsNav({ questions, activeIndex, onSelect, getQuestionStat
                   onClick={() => onSelect(idx)}
                   className={cn(
                     "w-9 h-9 rounded-lg text-xs font-bold transition-all border",
-                    activeIndex === idx && "ring-2 ring-emerald-500 ring-offset-1 ring-offset-zinc-950",
+                    activeIndex === idx && "ring-2 ring-brand-500 ring-offset-1 ring-offset-zinc-950",
                     state === "locked" && "bg-amber-500/15 border-amber-500/30 text-amber-400",
-                    state === "attempted" && "bg-emerald-500/15 border-emerald-500/30 text-emerald-400",
+                    state === "attempted" && "bg-brand-500/15 border-brand-500/30 text-brand-500",
                     state === "unattempted" && "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400"
                   )}
                 >
@@ -50,7 +50,7 @@ export function QuestionsNav({ questions, activeIndex, onSelect, getQuestionStat
           </div>
           <div className="mt-2 pt-2 border-t border-zinc-800 flex items-center gap-3 text-[10px] text-zinc-500">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-sm bg-emerald-500/40" /> Answered
+              <span className="w-2 h-2 rounded-sm bg-brand-500/40" /> Answered
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-sm bg-amber-500/40" /> Locked

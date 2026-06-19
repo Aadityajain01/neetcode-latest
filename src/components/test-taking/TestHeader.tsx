@@ -40,7 +40,7 @@ export function TestHeader({
           {communityName && (
             <Badge
               variant="outline"
-              className="border-emerald-500/30 text-emerald-300 bg-emerald-500/10 hidden sm:inline-flex"
+              className="border-brand-500/30 text-brand-500 bg-brand-500/10 hidden sm:inline-flex"
             >
               {communityName}
             </Badge>
@@ -51,7 +51,7 @@ export function TestHeader({
           <span>&bull;</span>
           <span>{totalMarks} Marks</span>
           <span>&bull;</span>
-          <span className={cn("font-semibold", totalAnswered === totalQuestions ? "text-emerald-400" : "text-zinc-400")}>
+          <span className={cn("font-semibold", totalAnswered === totalQuestions ? "text-brand-500" : "text-zinc-400")}>
             {totalAnswered}/{totalQuestions} answered
           </span>
         </div>
@@ -63,13 +63,13 @@ export function TestHeader({
             "flex items-center gap-2 font-mono font-bold text-base sm:text-xl px-3 sm:px-4 py-1.5 rounded-lg bg-zinc-950 border",
             timeLeft !== null && timeLeft <= 300
               ? "border-red-500/50 text-red-400"
-              : "border-zinc-800 text-emerald-400"
+              : "border-zinc-800 text-brand-500"
           )}
         >
           <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
           {timeLeft !== null ? formatTime(timeLeft) : "--:--"}
         </div>
-        <Button onClick={onSubmitClick} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={onSubmitClick} disabled={submitting} className="bg-brand-500 hover:bg-brand-400 text-zinc-950 font-bold shadow-md shadow-brand-500/10">
           {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           Submit Test
         </Button>
