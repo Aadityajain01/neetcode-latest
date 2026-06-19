@@ -159,11 +159,11 @@ export default function DashboardPage() {
         {/* ── Header ────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 shrink-0">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Platform Active
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[9px] font-bold uppercase tracking-widest mb-1.5 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" /> Platform Active
             </div>
             <h1 className="text-xl md:text-2xl xl:text-3xl font-black text-white tracking-tighter leading-none mb-0.5">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">{user?.displayName || 'Developer'}</span>
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400">{user?.displayName || 'Developer'}</span>
             </h1>
           </div>
 
@@ -326,8 +326,8 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="text-right shrink-0">
-                       <p className="text-3xl font-black text-emerald-400 tracking-tighter leading-none">
-                          {(totalProblems ?? 0) > 0 ? Math.round((solved / (totalProblems ?? 0)) * 100) : 0}<span className="text-base text-emerald-500/50 ml-0.5">%</span>
+                       <p className="text-3xl font-black text-brand-400 tracking-tighter leading-none">
+                          {(totalProblems ?? 0) > 0 ? Math.round((solved / (totalProblems ?? 0)) * 100) : 0}<span className="text-base text-brand-500/50 ml-0.5">%</span>
                        </p>
                     </div>
                  </div>
@@ -335,13 +335,13 @@ export default function DashboardPage() {
                  {/* Wide Progress Bar */}
                  <div className="relative z-10 w-full h-3 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/80 mb-1.5 shadow-inner">
                     <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                      className="h-full bg-gradient-to-r from-brand-500 via-brand-400 to-brand-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,106,31,0.3)]"
                       style={{ width: `${(totalProblems ?? 0) > 0 ? Math.max(0, (solved / (totalProblems ?? 0)) * 100) : 0}%` }}
                     />
                  </div>
                  
                  <div className="w-full flex justify-between relative z-10">
-                    <span className="text-[8px] xl:text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1"><CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> {solved} Solved</span>
+                    <span className="text-[8px] xl:text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1"><CheckCircle2 className="h-2.5 w-2.5 text-brand-500" /> {solved} Solved</span>
                     <span className="text-[8px] xl:text-[9px] font-bold text-zinc-500 uppercase tracking-widest hidden sm:inline">{totalProblems} Total Verified Questions</span>
                  </div>
              </div>
