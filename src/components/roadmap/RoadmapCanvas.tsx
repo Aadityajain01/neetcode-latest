@@ -258,12 +258,12 @@ export function RoadmapCanvas({
 
   // Metro Line Labels styling & positioning metadata
   const lineLabels: Record<string, { x: number; y: number; text: string; color: string }> = {
-    "foundations": { x: 275, y: 50, text: "FOUNDATIONS LINE", color: "#4ade80" },
-    "advanced": { x: 120, y: 560, text: "ADVANCED LINE", color: "#c084fc" },
+    "foundations": { x: 350, y: 145, text: "FOUNDATIONS LINE", color: "#4ade80" },
+    "advanced": { x: 325, y: 560, text: "ADVANCED LINE", color: "#c084fc" },
     "frontend": { x: 615, y: 295, text: "FRONTEND LINE", color: "#facc15" },
     "backend": { x: 955, y: 440, text: "BACKEND LINE", color: "#3b82f6" },
-    "data-deploy": { x: 880, y: 745, text: "DATA & DEPLOY LINE", color: "#f87171" },
-    "career": { x: 420, y: 890, text: "CAREER LINE", color: "#ec4899" }
+    "data-deploy": { x: 880, y: 645, text: "DATA & DEPLOY LINE", color: "#f87171" },
+    "career": { x: 420, y: 805, text: "CAREER LINE", color: "#ec4899" }
   };
 
   // Helper function to generate smooth rounded paths dynamically

@@ -187,7 +187,7 @@ export const roadmaps: Record<string, RoadmapDefinition> = {
         description: "A component-based JavaScript library for building user interfaces.",
         x: 530,
         y: 250,
-        labelPos: "right",
+        labelPos: "above",
         subtitle: "components",
         content: {
           description: "React is a popular open-source JavaScript library developed by Meta for building component-based user interfaces. It optimizes rendering using a virtual DOM.",
@@ -294,7 +294,7 @@ export const roadmaps: Record<string, RoadmapDefinition> = {
         description: "Secure login and authorization patterns.",
         x: 780,
         y: 700,
-        labelPos: "above",
+        labelPos: "below",
         subtitle: "security",
         content: {
           description: "JSON Web Tokens (JWT) are an open, industry-standard method for representing claims securely between two parties, commonly used for stateless authorization and secure login.",
@@ -309,7 +309,7 @@ export const roadmaps: Record<string, RoadmapDefinition> = {
         description: "Deployment to AWS and Vercel services.",
         x: 580,
         y: 700,
-        labelPos: "above",
+        labelPos: "below",
         isInterchange: true,
         subtitle: "AWS / Vercel - interchange",
         content: {
