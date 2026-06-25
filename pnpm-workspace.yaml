@@ -1,0 +1,11 @@
+allowBuilds:
+  '@firebase/util': true
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  '@swc/core': true
+  es5-ext: true
+  msw: true
+  prisma: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true

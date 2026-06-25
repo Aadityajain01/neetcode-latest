@@ -69,6 +69,8 @@ export default async function RoadmapDetailPage({
         estimatedTime={roadmap.estimatedTime}
         topics={roadmap.topics}
         totalTopics={totalTopics}
+        layoutType={roadmap.layoutType}
+        metroLines={roadmap.metroLines}
       />
     </div>
   );

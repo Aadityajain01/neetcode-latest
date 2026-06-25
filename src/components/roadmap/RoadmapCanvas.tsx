@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, ArrowLeft } from 'lucide-react';
-import type { RoadmapTopic } from '../../../data/roadmaps';
+import type { RoadmapTopic, MetroLineDefinition } from '../../../data/roadmaps';
 import Link from 'next/link';
 
 interface RoadmapCanvasProps {
@@ -13,6 +13,8 @@ interface RoadmapCanvasProps {
   estimatedTime: string;
   topics: RoadmapTopic[];
   totalTopics: number;
+  layoutType?: "metromap" | "tree";
+  metroLines?: MetroLineDefinition[];
 }
 
 interface NodePosition {
@@ -41,10 +43,12 @@ export function RoadmapCanvas({
   level,
   estimatedTime,
   topics,
-  totalTopics
+  totalTopics,
+  layoutType,
+  metroLines
 }: RoadmapCanvasProps) {
   // Zoom & Pan State
-  const [transform, setTransform] = useState({ zoom: 1, panX: 0, panY: 0 });
+  const [transform, setTransform] = useState({ zoom: 0.75, panX: 0, panY: 0 });
   const { zoom, panX, panY } = transform;
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -103,6 +107,32 @@ export function RoadmapCanvas({
         });
       });
     });
+
+    const isMetro = layoutType === "metromap" || topics.some(t => t.x !== undefined && t.y !== undefined);
+
+    if (isMetro) {
+      topics.forEach((topic) => {
+        if (topic.x !== undefined && topic.y !== undefined) {
+          positions.set(topic.id, {
+            x: topic.x - 20, // center on x
+            y: topic.y - 20, // center on y
+            width: 40,
+            height: 40,
+            type: topic.isInterchange ? "root" : "main-topic"
+          });
+        }
+      });
+
+      // Calculate max bounds
+      let maxX = 1200;
+      let maxY = 1000;
+      positions.forEach((p) => {
+        maxX = Math.max(maxX, p.x + 200);
+        maxY = Math.max(maxY, p.y + 200);
+      });
+
+      return { nodePositions: positions, allNodes: nodesMap, canvasWidth: maxX, canvasHeight: maxY };
+    }
 
     const centerX = 800;
     let y = CONFIG.canvasPadding;
@@ -224,10 +254,149 @@ export function RoadmapCanvas({
     });
 
     return { nodePositions: positions, allNodes: nodesMap, canvasWidth: maxX, canvasHeight: maxY };
-  }, [topics, roadmapId, title, description]);
+  }, [topics, roadmapId, title, description, layoutType]);
+
+  // Metro Line Labels styling & positioning metadata
+  const lineLabels: Record<string, { x: number; y: number; text: string; color: string }> = {
+    "foundations": { x: 275, y: 50, text: "FOUNDATIONS LINE", color: "#4ade80" },
+    "advanced": { x: 120, y: 560, text: "ADVANCED LINE", color: "#c084fc" },
+    "frontend": { x: 615, y: 295, text: "FRONTEND LINE", color: "#facc15" },
+    "backend": { x: 955, y: 440, text: "BACKEND LINE", color: "#3b82f6" },
+    "data-deploy": { x: 880, y: 745, text: "DATA & DEPLOY LINE", color: "#f87171" },
+    "career": { x: 420, y: 890, text: "CAREER LINE", color: "#ec4899" }
+  };
+
+  // Helper function to generate smooth rounded paths dynamically
+  const generateRoundedPath = (pts: Array<{ x: number; y: number }>, radius: number = 24): string => {
+    if (pts.length === 0) return "";
+    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+
+    for (let i = 1; i < pts.length - 1; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
+      const next = pts[i + 1];
+
+      const d1x = prev.x - curr.x;
+      const d1y = prev.y - curr.y;
+      const len1 = Math.sqrt(d1x * d1x + d1y * d1y);
+
+      const d2x = next.x - curr.x;
+      const d2y = next.y - curr.y;
+      const len2 = Math.sqrt(d2x * d2x + d2y * d2y);
+
+      const r = Math.min(radius, len1 / 2, len2 / 2);
+
+      if (r <= 0) {
+        d += ` L ${curr.x} ${curr.y}`;
+        continue;
+      }
+
+      // Check if collinear to skip redundant rounding curves
+      const crossProduct = Math.abs(d1x * d2y - d1y * d2x);
+      if (crossProduct < 1) {
+        d += ` L ${curr.x} ${curr.y}`;
+        continue;
+      }
+
+      const p1x = curr.x + (d1x / len1) * r;
+      const p1y = curr.y + (d1y / len1) * r;
+
+      const p2x = curr.x + (d2x / len2) * r;
+      const p2y = curr.y + (d2y / len2) * r;
+
+      d += ` L ${p1x} ${p1y} Q ${curr.x} ${curr.y} ${p2x} ${p2y}`;
+    }
+
+    d += ` L ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
+    return d;
+  };
 
   // Render SVG connection lines dynamically
   const connectionSvgContent = useMemo(() => {
+    if (layoutType === "metromap" && metroLines) {
+      return (
+        <>
+          {/* Subtle Grid Pattern Overlay */}
+          <g opacity="0.08">
+            {Array.from({ length: 15 }).map((_, idx) => (
+              <line key={`v-${idx}`} x1={50 + idx * 80} y1={0} x2={50 + idx * 80} y2={1100} stroke="#71717a" strokeWidth={1} />
+            ))}
+            {Array.from({ length: 15 }).map((_, idx) => (
+              <line key={`h-${idx}`} x1={0} y1={50 + idx * 80} x2={1250} y2={50 + idx * 80} stroke="#71717a" strokeWidth={1} />
+            ))}
+          </g>
+
+          {/* Metro Line Tracks */}
+          {metroLines.map((line) => {
+            const pts: Array<{ x: number; y: number }> = [];
+            line.stations.forEach((station) => {
+              if (typeof station === "string") {
+                const topic = topics.find((t) => t.id === station);
+                if (topic && topic.x !== undefined && topic.y !== undefined) {
+                  pts.push({ x: topic.x, y: topic.y });
+                }
+              } else if (station && typeof station.x === "number" && typeof station.y === "number") {
+                pts.push({ x: station.x, y: station.y });
+              }
+            });
+
+            if (pts.length < 2) return null;
+            const pathD = generateRoundedPath(pts, 32);
+
+            return (
+              <g key={line.id}>
+                {/* Thick glow effect */}
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke={line.color}
+                  strokeWidth={14}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.06"
+                />
+                {/* Sharp core transit line */}
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke={line.color}
+                  strokeWidth={7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            );
+          })}
+
+          {/* Dynamic Metro Line Labels */}
+          {metroLines.map((line) => {
+            const labelConfig = lineLabels[line.id];
+            if (!labelConfig) return null;
+            return (
+              <text
+                key={`label-${line.id}`}
+                x={labelConfig.x}
+                y={labelConfig.y}
+                fill={labelConfig.color}
+                fontSize="12"
+                fontWeight="900"
+                letterSpacing="0.18em"
+                textAnchor="middle"
+                opacity="0.85"
+                className="font-sans select-none"
+                style={{ textShadow: "0 2px 4px rgba(9, 9, 11, 0.95), 0 0 6px rgba(9, 9, 11, 0.95)" }}
+              >
+                {labelConfig.text}
+              </text>
+            );
+          })}
+        </>
+      );
+    }
+
+    // Fallback to original tree-like edge connection lines
     const paths: React.ReactNode[] = [];
     const rootPos = nodePositions.get(roadmapId);
 
@@ -332,7 +501,7 @@ export function RoadmapCanvas({
     });
 
     return paths;
-  }, [nodePositions, topics, roadmapId]);
+  }, [nodePositions, topics, roadmapId, layoutType, metroLines]);
 
   // Fit view port to show everything centered
   const fitToScreen = () => {
@@ -350,13 +519,22 @@ export function RoadmapCanvas({
 
     const rect = containerRef.current.getBoundingClientRect();
     const targetWidth = rect.width > 0 ? rect.width : window.innerWidth;
+    const targetHeight = rect.height > 0 ? rect.height : window.innerHeight - 150;
 
-    const newZoom = 1.0;
+    const mapWidth = maxX - minX;
+    const mapHeight = maxY - minY;
+
+    let newZoom = Math.min(
+      (targetWidth - 100) / mapWidth,
+      (targetHeight - 100) / mapHeight
+    );
+
+    newZoom = layoutType === "metromap" ? 0.75 : Math.max(0.5, Math.min(1.1, newZoom));
 
     setTransform({
       zoom: newZoom,
       panX: targetWidth / 2 - ((maxX + minX) / 2) * newZoom,
-      panY: 40 - minY * newZoom
+      panY: targetHeight / 2 - ((maxY + minY) / 2) * newZoom
     });
   };
 
@@ -575,6 +753,8 @@ export function RoadmapCanvas({
                     progressStatus={progress[id] || "not-started"}
                     onProgressToggle={(e) => cycleProgressState(id, e)}
                     onNodeClick={() => setSelectedNode(node)}
+                    layoutType={layoutType}
+                    metroLines={metroLines}
                   />
                 );
               })}
@@ -667,6 +847,32 @@ export function RoadmapCanvas({
                   ✕
                 </button>
               </div>
+              <div className="shrink-0 px-5 py-3 border-b border-zinc-800/60 flex items-center justify-between bg-zinc-900/10">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</span>
+                <button
+                  onClick={(e) => cycleProgressState(selectedNode.id, e)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
+                    progress[selectedNode.id] === "completed"
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                      : progress[selectedNode.id] === "in-progress"
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    progress[selectedNode.id] === "completed"
+                      ? "bg-emerald-400"
+                      : progress[selectedNode.id] === "in-progress"
+                      ? "bg-amber-400 animate-pulse"
+                      : "bg-zinc-500"
+                  }`} />
+                  {progress[selectedNode.id] === "completed"
+                    ? "Completed"
+                    : progress[selectedNode.id] === "in-progress"
+                    ? "In Progress"
+                    : "Not Started"}
+                </button>
+              </div>
               <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-brand">
                 {selectedNode.content ? (
                   <>
@@ -742,6 +948,8 @@ interface RoadmapNodeProps {
   progressStatus: string;
   onProgressToggle: (e: React.MouseEvent) => void;
   onNodeClick: () => void;
+  layoutType?: "metromap" | "tree";
+  metroLines?: MetroLineDefinition[];
 }
 
 function RoadmapNodeComponent({
@@ -751,8 +959,141 @@ function RoadmapNodeComponent({
   isSelected,
   progressStatus,
   onProgressToggle,
-  onNodeClick
+  onNodeClick,
+  layoutType,
+  metroLines
 }: RoadmapNodeProps) {
+  const isMetro = layoutType === "metromap";
+
+  if (isMetro) {
+    const isInterchange = node.isInterchange || false;
+    const labelPos = node.labelPos || "above";
+    const subtitle = node.subtitle || "";
+
+    // Resolve node line color
+    const getNodeColor = () => {
+      if (metroLines) {
+        const line = metroLines.find(l => l.stations.includes(id));
+        if (line) return line.color;
+      }
+      return "#4ade80"; // fallback green
+    };
+
+    const lineColor = getNodeColor();
+
+    // Checkbox styling based on progress
+    let dotBg = "bg-zinc-950";
+    let dotBorder = isInterchange ? "border-white" : "border-zinc-700";
+    let innerDot: React.ReactNode = null;
+    let glowClass = "";
+
+    if (progressStatus === "completed") {
+      dotBg = "bg-[#10b981]";
+      dotBorder = "border-[#10b981]";
+      glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.6)]";
+      innerDot = (
+        <span className="text-[10px] font-black text-zinc-950 select-none pointer-events-none">
+          ✓
+        </span>
+      );
+    } else if (progressStatus === "in-progress") {
+      dotBg = "bg-zinc-950";
+      dotBorder = "border-[#fbbf24]";
+      glowClass = "shadow-[0_0_15px_rgba(251,191,36,0.5)]";
+      innerDot = (
+        <div className="w-2.5 h-2.5 rounded-full bg-[#fbbf24] animate-pulse" />
+      );
+    } else {
+      // Not started
+      dotBg = "bg-zinc-950";
+      dotBorder = isInterchange ? "border-white border-2" : `border-[3px]`;
+      glowClass = isInterchange ? "shadow-[0_0_10px_rgba(255,255,255,0.25)]" : "";
+      innerDot = (
+        <div 
+          className="w-2 h-2 rounded-full" 
+          style={{ backgroundColor: isInterchange ? "#ffffff" : lineColor }} 
+        />
+      );
+    }
+
+    // Label position CSS styling
+    let labelClasses = "absolute flex flex-col pointer-events-auto cursor-pointer select-none whitespace-nowrap min-w-[140px]";
+
+    switch (labelPos) {
+      case "above":
+        labelClasses += " bottom-full left-1/2 -translate-x-1/2 -translate-y-3 items-center text-center";
+        break;
+      case "below":
+        labelClasses += " top-full left-1/2 -translate-x-1/2 translate-y-3 items-center text-center";
+        break;
+      case "left":
+        labelClasses += " right-full top-1/2 -translate-y-1/2 -translate-x-4 items-end text-right";
+        break;
+      case "right":
+        labelClasses += " left-full top-1/2 -translate-y-1/2 translate-x-4 items-start text-left";
+        break;
+      case "above-left":
+        labelClasses += " bottom-full right-1/2 -translate-x-2 -translate-y-2 items-end text-right";
+        break;
+      case "above-right":
+        labelClasses += " bottom-full left-1/2 translate-x-2 -translate-y-2 items-start text-left";
+        break;
+      case "below-left":
+        labelClasses += " top-full right-1/2 -translate-x-2 translate-y-2 items-end text-right";
+        break;
+      case "below-right":
+        labelClasses += " top-full left-1/2 translate-x-2 translate-y-2 items-start text-left";
+        break;
+    }
+
+    const sizeClass = isInterchange ? "w-9 h-9" : "w-7 h-7";
+
+    return (
+      <div
+        className="absolute flex items-center justify-center pointer-events-none"
+        style={{
+          left: `${pos.x}px`,
+          top: `${pos.y}px`,
+          width: `${pos.width}px`,
+          height: `${pos.height}px`,
+          zIndex: isSelected ? 30 : 10
+        }}
+      >
+        {/* Clickable station circle */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onNodeClick();
+          }}
+          style={{ borderColor: progressStatus === "not-started" && !isInterchange ? lineColor : undefined }}
+          className={`pointer-events-auto flex items-center justify-center rounded-full border-2 transition-all duration-300 hover:scale-110 cursor-pointer ${dotBg} ${dotBorder} ${glowClass} ${sizeClass}`}
+        >
+          {innerDot}
+        </div>
+
+        {/* Text Label */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onNodeClick();
+          }}
+          className={`${labelClasses} group/label`}
+          style={{ textShadow: "0 2px 4px rgba(9, 9, 11, 0.95), 0 0 6px rgba(9, 9, 11, 0.95)" }}
+        >
+          <span className={`text-base font-black tracking-tight transition-colors duration-200 ${isSelected ? 'text-[#FF6A1F] scale-105' : 'text-zinc-100 group-hover/label:text-white'}`}>
+            {node.title}
+          </span>
+          {subtitle && (
+            <span className="text-xs font-bold text-zinc-400 lowercase tracking-wide mt-0.5 leading-none">
+              {subtitle}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback tree-like node rendering
   let cardClass = "";
   if (pos.type === "root") {
     cardClass = "border-2 border-brand-500 bg-zinc-900 shadow-[0_0_20px_rgba(255,106,31,0.2)] text-[15px] font-black tracking-tight";

@@ -48,11 +48,26 @@ export type RoadmapSubtopic = {
   children: RoadmapLeafNode[];
 };
 
+export type MetroLineDefinition = {
+  id: string;
+  name: string;
+  color: string;
+  stations: Array<string | { x: number; y: number }>;
+};
+
 export type RoadmapTopic = {
   id: string;
   title: string;
   description: string;
-  subtopics: RoadmapSubtopic[];
+  subtopics?: RoadmapSubtopic[];
+  content?: RoadmapNodeContent;
+  
+  // Metromap properties
+  x?: number;
+  y?: number;
+  labelPos?: "above" | "below" | "left" | "right" | "above-left" | "above-right" | "below-left" | "below-right";
+  isInterchange?: boolean;
+  subtitle?: string;
 };
 
 export type RoadmapDefinition = {
@@ -64,6 +79,10 @@ export type RoadmapDefinition = {
   summary: string;
   description: string;
   topics: RoadmapTopic[];
+  
+  // Metromap layout configuration
+  layoutType?: "metromap" | "tree";
+  metroLines?: MetroLineDefinition[];
 };
 
 export const roadmaps: Record<string, RoadmapDefinition> = {
@@ -73,188 +92,323 @@ export const roadmaps: Record<string, RoadmapDefinition> = {
     level: "Intermediate",
     estimatedTime: "6-9 months",
     status: "available",
-    summary: "HTML, CSS, JavaScript, Version Control, Responsive Design, and Deployment",
-    description: "Complete roadmap to master modern frontend engineering",
+    summary: "HTML, CSS, JavaScript, React, Node.js, Express, REST APIs, MongoDB, Auth, Deploy, Projects, and DSA",
+    description: "Complete roadmap to master modern frontend & full-stack engineering",
+    layoutType: "metromap",
+    metroLines: [
+      {
+        id: "foundations",
+        name: "FOUNDATIONS LINE",
+        color: "#4ade80",
+        stations: ["html", "css", "javascript"]
+      },
+      {
+        id: "advanced",
+        name: "ADVANCED LINE",
+        color: "#c084fc",
+        stations: ["css", "dsa", "system-design", "interview-prep", "placement"]
+      },
+      {
+        id: "frontend",
+        name: "FRONTEND LINE",
+        color: "#facc15",
+        stations: ["javascript", { x: 450, y: 250 }, "react", "tailwind", "nextjs"]
+      },
+      {
+        id: "backend",
+        name: "BACKEND LINE",
+        color: "#3b82f6",
+        stations: ["nextjs", "nodejs", "express", "rest-api"]
+      },
+      {
+        id: "data-deploy",
+        name: "DATA & DEPLOY LINE",
+        color: "#f87171",
+        stations: ["rest-api", "mongodb", "auth", "cloud-deploy"]
+      },
+      {
+        id: "career",
+        name: "CAREER LINE",
+        color: "#ec4899",
+        stations: ["cloud-deploy", "portfolio", "internship", "placement"]
+      }
+    ],
     topics: [
       {
         id: "html",
         title: "HTML",
         description: "HyperText Markup Language - the structural backbone of all web pages.",
-        subtopics: [
-          {
-            id: "html-basics",
-            title: "HTML Basics",
-            children: [
-              { id: "doctype", title: "DOCTYPE", content: { description: "Declares the document type and HTML version. Must be the first line of every HTML file.", syntax: "<!DOCTYPE html>", examples: ["Always use HTML5 doctype: <!DOCTYPE html>", "Case insensitive but lowercase is standard"], bestPractices: ["Place at the very top of the file", "Never skip it to avoid quirks mode"] } },
-              { id: "html-structure", title: "Basic Structure", content: { description: "The fundamental skeleton of every HTML page with head and body sections.", syntax: "<html>\n  <head>\n    <title>Page Title</title>\n  </head>\n  <body>\n    Visible Content\n  </body>\n</html>", examples: ["Head contains metadata", "Body contains visible content"], bestPractices: ["Always include lang attribute on html tag", "Set proper charset (UTF-8)"] } },
-              { id: "meta-tags", title: "Meta Tags", content: { description: "Provide metadata about the HTML document for browsers, search engines, and social media.", syntax: "<meta charset='UTF-8'>\n<meta name='viewport' content='width=device-width, initial-scale=1.0'>", examples: ["charset", "viewport", "description", "keywords", "robots"], bestPractices: ["Always set UTF-8 encoding", "Include viewport tag for mobile responsiveness"] } }
-            ]
-          },
-          {
-            id: "html-elements",
-            title: "Elements & Tags",
-            children: [
-              { id: "headings", title: "Headings (h1-h6)", content: { description: "Define hierarchical headings. h1 is the most important, h6 the least.", syntax: "<h1>Main Title</h1>\n<h2>Section Header</h2>\n<h3>Subsection Header</h3>", examples: ["h1 for main page title", "h2 for major sections", "h3 for subsections"], bestPractices: ["Use only one h1 per page", "Don't skip heading levels", "Use headings for structure, not for sizing"] } },
-              { id: "paragraphs", title: "Paragraphs & Text", content: { description: "Block-level elements for organizing text paragraphs, along with inline text styling tags.", syntax: "<p>Paragraph text</p>\n<strong>Strong importance</strong>\n<em>Emphasis</em>", examples: ["p for text blocks", "strong for bold importance", "em for italic emphasis", "br for line breaks"], bestPractices: ["Use p for text blocks", "Don't use br for spacing", "Choose semantic formatting tags over visual ones"] } },
-              { id: "links", title: "Links (a tag)", content: { description: "Create hyperlinks to other web pages, sections, or files.", syntax: "<a href='https://example.com' target='_blank'>Visit Site</a>", examples: ["External links", "Internal navigation", "Email links (mailto:)", "Anchor links (#section)"], bestPractices: ["Use descriptive link text", "Add rel='noopener' for external target='_blank' links", "Set proper target attribute"] } },
-              { id: "images", title: "Images (img)", content: { description: "Embed images into web pages. Self-closing tag requiring src and alt.", syntax: "<img src='photo.jpg' alt='Descriptive text' width='400' height='300'>", examples: ["JPEG for photos", "PNG for transparent graphics", "SVG for icons", "WebP for modern web optimization"], bestPractices: ["Always include alt text", "Specify width and height to prevent layout shifts", "Use responsive images with srcset"] } }
-            ]
-          },
-          {
-            id: "html-forms",
-            title: "Forms & Inputs",
-            children: [
-              { id: "input-types", title: "Input Types", content: { description: "Various input types for collecting different kinds of user data.", syntax: "<input type='text'>\n<input type='email'>\n<input type='password'>\n<input type='checkbox'>", examples: ["text, email, password", "number, date, time", "checkbox, radio", "file, color, range"], bestPractices: ["Use the appropriate input type for better mobile UX", "Always associate input with a label tag", "Use placeholder for hints, not labels"] } },
-              { id: "form-validation", title: "Form Validation", content: { description: "Built-in HTML5 validation attributes for client-side form checking.", syntax: "<input required minlength='3' pattern='[A-Za-z]+'>", examples: ["required - must fill out", "minlength/maxlength - text length limits", "pattern - regex constraint", "min/max for numbers"], bestPractices: ["Always validate on the server too", "Show clear, helpful error messages", "Use :invalid CSS pseudo-class for styling feedback"] } }
-            ]
-          },
-          {
-            id: "semantic-html",
-            title: "Semantic HTML",
-            children: [
-              { id: "semantic-elements", title: "Semantic Elements", content: { description: "Elements that clearly describe their meaning to both the browser and the developer.", syntax: "<header>\n  <nav>...</nav>\n</header>\n<main>\n  <article>...</article>\n</main>\n<footer>...</footer>", examples: ["header - introductory content", "nav - navigation links", "main - dominant content", "article - self-contained piece", "footer - closing content"], bestPractices: ["Use semantic elements over generic divs", "Improves accessibility", "Significantly helps SEO crawlers"] } },
-              { id: "accessibility", title: "Accessibility (a11y)", content: { description: "Designing and developing web content that is usable by people with disabilities.", syntax: "<img alt='Description'>\n<button aria-label='Close Dialog'>✕</button>", examples: ["alt text for screen readers", "ARIA attributes", "Keyboard-accessible navigation", "Focus outline indicators"], bestPractices: ["Test accessibility with screen readers", "Use semantic HTML first before adding ARIA attributes", "Ensure sufficient color contrast"] } }
-            ]
-          }
-        ]
+        x: 100,
+        y: 100,
+        labelPos: "above",
+        subtitle: "structure",
+        content: {
+          description: "HTML (HyperText Markup Language) is the standard markup language for documents designed to be displayed in a web browser. It defines the structure and layout of web content.",
+          syntax: "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Page Title</title>\n  </head>\n  <body>\n    <h1>Hello World</h1>\n  </body>\n</html>",
+          examples: ["Semantic elements (header, nav, main, footer)", "Forms and validation attributes", "Meta tags for SEO and responsiveness"],
+          bestPractices: ["Always use semantic HTML tags instead of generic div/span", "Include descriptive alt attributes on all images", "Ensure proper heading structure (h1-h6)"]
+        }
       },
       {
         id: "css",
         title: "CSS",
         description: "Cascading Style Sheets - controls the styling, layout, and visual presentation of HTML documents.",
-        subtopics: [
-          {
-            id: "css-basics",
-            title: "CSS Fundamentals",
-            children: [
-              { id: "selectors", title: "Selectors", content: { description: "Patterns used to select and apply style rules to HTML elements.", syntax: "element { }\n.class { }\n#id { }\n[attr='value'] { }", examples: ["Element: p, div, h1", "Class: .button, .card", "ID: #header", "Attribute: [type='text']"], bestPractices: ["Prefer classes over IDs for styling", "Keep specificity low", "Use BEM naming conventions for cleanliness"] } },
-              { id: "properties", title: "Properties & Values", content: { description: "CSS declarations that define how targeted elements should be styled.", syntax: "selector {\n  property: value;\n  color: red;\n  font-size: 16px;\n}", examples: ["color, background-color", "font-size, font-family", "margin, padding", "border, border-radius"], bestPractices: ["Use shorthand properties where possible", "Group related properties logically", "Leverage CSS custom properties (variables)"] } },
-              { id: "units", title: "Units & Sizes", content: { description: "Measurement units for specifying sizes, padding, margins, and font sizes.", syntax: "width: 100px;\nwidth: 50%;\nfont-size: 1.25rem;\nwidth: 100vw;", examples: ["px - absolute pixels", "% - relative to parent element size", "rem - relative to root element font size", "vw/vh - relative to viewport width/height"], bestPractices: ["Use rem for scalable typography", "Use percentages or fr for layout widths", "Use viewport units for full-screen containers"] } }
-            ]
-          },
-          {
-            id: "css-layout",
-            title: "Layout Systems",
-            children: [
-              { id: "box-model", title: "Box Model", content: { description: "Every HTML element is represented as a rectangular box with content, padding, border, and margin.", syntax: "box-sizing: border-box;\nmargin: 20px;\npadding: 10px;\nborder: 1px solid #000;", examples: ["content - actual text/images", "padding - spacing inside the border", "border - edge around padding", "margin - spacing outside the border"], bestPractices: ["Use box-sizing: border-box globally", "Understand margin collapse", "Establish a CSS reset/normalize baseline"] } },
-              { id: "flexbox", title: "Flexbox", content: { description: "One-dimensional layout method for distributing space and aligning items inside containers.", syntax: ".container {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 16px;\n}", examples: ["justify-content: center", "align-items: stretch", "flex-direction: column", "flex-wrap: wrap"], bestPractices: ["Use for 1D layouts (rows OR columns)", "Perfect for navigation bars and list items", "Use gap instead of margins for spacing items"] } },
-              { id: "grid", title: "CSS Grid", content: { description: "Two-dimensional layout system designed for complex page layouts and rows/columns simultaneously.", syntax: ".container {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 20px;\n}", examples: ["grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-column: span 2"], bestPractices: ["Use for 2D layouts", "Use fr units for flexible columns", "Combine with Flexbox inside grid items"] } }
-            ]
-          },
-          {
-            id: "css-styling",
-            title: "Styling & Effects",
-            children: [
-              { id: "colors", title: "Colors", content: { description: "Specifying colors in CSS using Hex, RGB, HSL, or named formats.", syntax: "color: #ff5733;\ncolor: rgba(255, 87, 51, 0.8);\ncolor: hsl(14, 100%, 60%);", examples: ["Hex: #ffffff", "RGB/RGBA for opacity", "HSL/HSLA for design intuition", "currentColor keyword"], bestPractices: ["Maintain WCAG color contrast ratios", "Use HSL for easy color variations", "Define a color palette in CSS variables"] } },
-              { id: "typography", title: "Typography", content: { description: "Styling text elements with fonts, sizes, line heights, and alignments.", syntax: "font-family: 'Inter', sans-serif;\nfont-weight: 600;\nline-height: 1.6;\ntext-align: center;", examples: ["font-family stacks", "font-weight settings", "line-height line spacing", "letter-spacing tracking"], bestPractices: ["Limit web font loads to 2-3 weights", "Set base line-height at 1.5 minimum", "Use system font fallbacks"] } },
-              { id: "transitions-animations", title: "Transitions & Animations", content: { description: "Adding motion and dynamic state transitions to elements.", syntax: "transition: all 0.3s ease;\n\n@keyframes slideIn {\n  from { transform: translateY(20px); opacity: 0; }\n  to { transform: translateY(0); opacity: 1; }\n}\nanimation: slideIn 0.4s ease forwards;", examples: ["hover transitions", "loading spinner loops", "slide-in overlays", "fade-in page effects"], bestPractices: ["Only animate transform and opacity properties for performance", "Keep transition durations under 300ms", "Respect prefers-reduced-motion media query"] } }
-            ]
-          }
-        ]
+        x: 250,
+        y: 100,
+        labelPos: "above-left",
+        isInterchange: true,
+        subtitle: "styling - interchange",
+        content: {
+          description: "CSS (Cascading Style Sheets) styles the structural content of web pages. It controls layout, typography, colors, animations, and responsive breakpoints.",
+          syntax: ".button {\n  background-color: #3b82f6;\n  padding: 0.5rem 1rem;\n  border-radius: 0.375rem;\n  transition: all 0.2s;\n}",
+          examples: ["Flexbox and Grid layout systems", "Responsive media queries", "CSS variables (custom properties)"],
+          bestPractices: ["Use relative units (rem, em, %) for scalable spacing", "Adopt CSS naming conventions like BEM", "Prioritize performance by animating transform/opacity"]
+        }
       },
       {
         id: "javascript",
         title: "JavaScript",
         description: "A high-level, interpreted scripting language that enables interactive web pages.",
-        subtopics: [
-          {
-            id: "js-basics",
-            title: "JavaScript Basics",
-            children: [
-              { id: "variables", title: "Variables", content: { description: "Containers for storing data values.", syntax: "const name = 'Alice';\nlet age = 25;\nvar old = true; // avoid", examples: ["const - cannot reassign reference", "let - block-scoped reassignment variable", "var - function-scoped variable"], bestPractices: ["Use const by default", "Use let only when reassignment is required", "Never use var to avoid scope leaks"] } },
-              { id: "data-types", title: "Data Types", content: { description: "The kind of values JavaScript can store and manipulate.", syntax: "const str = 'text';      // String\nconst num = 100;         // Number\nconst arr = [1, 2, 3];   // Array\nconst obj = { k: 'v' };  // Object", examples: ["String, Number, Boolean", "Array, Object", "null, undefined", "Symbol, BigInt"], bestPractices: ["Use typeof for runtime checks", "Understand truthy and falsy values", "Avoid implicit type coercion"] } },
-              { id: "operators", title: "Operators", content: { description: "Symbols used to perform operations on variables and values.", syntax: "const sum = 5 + 3;\nconst isEqual = (a === b);\nconst value = a ?? 'default';", examples: ["Arithmetic: +, -, *, /, %", "Strict comparison: ===, !==", "Logical: &&, ||, !", "Nullish coalescing: ??"], bestPractices: ["Always use === over ==", "Leverage optional chaining ?.", "Use nullish coalescing ?? for fallback values"] } }
-            ]
-          },
-          {
-            id: "js-functions",
-            title: "Functions",
-            children: [
-              { id: "function-declarations", title: "Declarations & Expressions", content: { description: "Traditional way to define reusable blocks of executable code.", syntax: "function greet(name) {\n  return 'Hello, ' + name;\n}\n\nconst greetExpr = function(name) { ... };", examples: ["Function declarations (hoisted)", "Function expressions", "Return statements", "Parameters and arguments"], bestPractices: ["Name functions descriptive of their action", "Follow single responsibility principle", "Limit function side effects"] } },
-              { id: "arrow-functions", title: "Arrow Functions", content: { description: "Concise syntax for writing function expressions with lexical 'this' binding.", syntax: "const add = (a, b) => a + b;\nconst greet = name => `Hi ${name}`;", examples: ["Implicit return for single expressions", "Lexical 'this' binding", "Callbacks in array methods"], bestPractices: ["Use for short, inline functions", "Do not use as object methods", "Great for callback handlers"] } },
-              { id: "callbacks", title: "Callbacks & Higher-Order", content: { description: "Functions passed as arguments to other functions to be invoked later.", syntax: "array.map(item => item * 2);\nbutton.addEventListener('click', handler);", examples: ["Array methods (map, filter, reduce)", "Event handler callbacks", "setTimeout/setInterval delays"], bestPractices: ["Avoid callback hell by modularizing", "Prefer Promises/async-await for async logic", "Keep callback handlers pure"] } }
-            ]
-          },
-          {
-            id: "js-dom",
-            title: "DOM Manipulation",
-            children: [
-              { id: "selecting-elements", title: "Selecting Elements", content: { description: "Finding and accessing HTML elements from within JavaScript.", syntax: "const el = document.querySelector('.class');\nconst list = document.querySelectorAll('div');\nconst byId = document.getElementById('app');", examples: ["querySelector (most versatile)", "querySelectorAll (returns NodeList)", "getElementById (extremely fast)"], bestPractices: ["Cache selected elements in variables", "Prefer querySelector", "Verify element exists before acting on it"] } },
-              { id: "modifying-elements", title: "Modifying Elements", content: { description: "Changing content, attributes, classes, and styles of selected elements.", syntax: "el.textContent = 'Updated';\nel.classList.add('active');\nel.setAttribute('href', '/url');", examples: ["textContent / innerHTML content", "classList add, remove, toggle", "style property updates", "setAttribute / getAttribute"], bestPractices: ["Prefer textContent over innerHTML for security (XSS prevention)", "Modify classes rather than inline styles", "Batch DOM updates where possible"] } },
-              { id: "events", title: "Event Handling", content: { description: "Listening and responding to user actions and browser events.", syntax: "button.addEventListener('click', (e) => {\n  console.log('Clicked!', e.target);\n});", examples: ["click, dblclick mouse events", "keydown, keyup keyboard events", "submit, change form events", "DOMContentLoaded lifecycle event"], bestPractices: ["Always use addEventListener", "Remove event listeners on cleanup", "Use event delegation for dynamic lists"] } }
-            ]
-          },
-          {
-            id: "js-async",
-            title: "Async JavaScript",
-            children: [
-              { id: "promises", title: "Promises", content: { description: "An object representing the eventual completion or failure of an asynchronous operation.", syntax: "fetch('/api')\n  .then(res => res.json())\n  .then(data => console.log(data))\n  .catch(err => console.error(err));", examples: ["Fetch API requests", "Promise.all() for parallel tasks", "then/catch handler chaining"], bestPractices: ["Always handle rejections with .catch()", "Return promises inside chains", "Avoid nested promise chains"] } },
-              { id: "async-await", title: "Async / Await", content: { description: "Modern, cleaner syntax for working with promises that reads like synchronous code.", syntax: "async function loadData() {\n  try {\n    const res = await fetch('/api');\n    const data = await res.json();\n    return data;\n  } catch (err) {\n    console.error(err);\n  }\n}", examples: ["async function keyword", "await promise execution", "try / catch block error handling"], bestPractices: ["Always wrap await in try/catch blocks", "Use Promise.all with await for parallel operations", "Keep async helper functions small"] } }
-            ]
-          }
-        ]
+        x: 450,
+        y: 100,
+        labelPos: "above",
+        isInterchange: true,
+        subtitle: "logic - interchange",
+        content: {
+          description: "JavaScript is the programming language of the web. It enables interactive user interfaces, dynamic content updates, asynchronous communication, and complex web applications.",
+          syntax: "const fetchData = async (url) => {\n  try {\n    const response = await fetch(url);\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    console.error(\"API error:\", error);\n  }\n};",
+          examples: ["DOM event listeners and modifiers", "Asynchronous fetch operations and Promises", "Modern ES6+ array methods (map, filter, reduce)"],
+          bestPractices: ["Use const by default, let only when reassignment is needed", "Avoid implicit coercion by always using ===", "Wrap asynchronous operations in try/catch blocks"]
+        }
       },
       {
-        id: "vcs",
-        title: "Version Control",
-        description: "Systems for tracking changes to code and files over time, enabling safe collaboration.",
-        subtopics: [
-          {
-            id: "vcs-basics",
-            title: "VCS Fundamentals",
-            children: [
-              { id: "vcs-intro", title: "What is VCS?", content: { description: "Version Control Systems record changes to files over time so you can recall specific versions later.", syntax: "# Key types:\n- Local VCS\n- Centralized VCS (e.g. SVN)\n- Distributed VCS (e.g. Git)", examples: ["Track file history", "Revert changes easily", "Compare changes over time"], bestPractices: ["Use a VCS for every project", "Back up your repositories remotely", "Learn how diffs work"] } }
-            ]
-          }
-        ]
+        id: "react",
+        title: "React",
+        description: "A component-based JavaScript library for building user interfaces.",
+        x: 530,
+        y: 250,
+        labelPos: "right",
+        subtitle: "components",
+        content: {
+          description: "React is a popular open-source JavaScript library developed by Meta for building component-based user interfaces. It optimizes rendering using a virtual DOM.",
+          syntax: "import { useState } from 'react';\n\nexport function Counter() {\n  const [count, setCount] = useState(0);\n  return (\n    <button onClick={() => setCount(c => c + 1)}>\n      Count: {count}\n    </button>\n  );\n}",
+          examples: ["Functional components and Hooks", "State management and context APIs", "Reusable component composition"],
+          bestPractices: ["Keep components small and focused on a single task", "Avoid unnecessary state; compute values dynamically when possible", "Memoize heavy computations using useMemo"]
+        }
       },
       {
-        id: "git",
-        title: "Git",
-        description: "Distributed version control system for tracking changes in source code during software development.",
-        subtopics: [
-          {
-            id: "git-basics",
-            title: "Git Fundamentals",
-            children: [
-              { id: "git-commands", title: "Essential Commands", content: { description: "Core commands used in the daily Git version control workflow.", syntax: "git init\ngit add .\ngit commit -m 'feat: add login'\ngit push origin main", examples: ["git init - start repo", "git clone - copy remote repo", "git status - check changes", "git commit - commit staged"], bestPractices: ["Commit early and commit often", "Write clean, descriptive commit messages", "Always pull changes before pushing"] } },
-              { id: "branching", title: "Branching", content: { description: "Creating isolated development environments to work on features without affecting the main code.", syntax: "git checkout -b feature-login\ngit merge feature-login\ngit branch -d feature-login", examples: ["feature branches", "bugfix branches", "release branches", "main / master branch"], bestPractices: ["Name branches after features or fixes", "Merge frequently to avoid merge conflicts", "Delete branches after merging"] } },
-              { id: "collaboration", title: "Collaboration", content: { description: "Working together using remote repositories like GitHub or GitLab.", syntax: "git remote add origin url\ngit pull origin main\ngit fetch", examples: ["GitHub Pull Requests", "Resolving merge conflicts", "Cloning remote repos", "Forking workflows"], bestPractices: ["Perform code reviews on PRs", "Keep pull requests small and focused", "Resolve conflicts locally before merging"] } }
-            ]
-          }
-        ]
+        id: "tailwind",
+        title: "Tailwind CSS",
+        description: "A utility-first CSS framework for rapid UI development.",
+        x: 700,
+        y: 250,
+        labelPos: "above",
+        subtitle: "utility styling",
+        content: {
+          description: "Tailwind CSS is a utility-first CSS framework that provides low-level utility classes to build custom designs directly in HTML without writing custom CSS files.",
+          syntax: "<div className=\"flex flex-col items-center justify-between p-6 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-brand-500 transition-all shadow-xl\">\n  <h2 className=\"text-lg font-bold text-white\">Card Title</h2>\n</div>",
+          examples: ["Responsive classes (md:flex-row)", "Interactive state modifiers (hover:bg-zinc-800)", "Arbitrary value styling (h-[400px])"],
+          bestPractices: ["Extract repetitive class combinations into reusable React components", "Leverage design tokens in tailwind.config.js", "Use container queries and modern grid classes"]
+        }
       },
       {
-        id: "responsive",
-        title: "Responsive Design",
-        description: "Designing websites to behave fluidly and look beautiful on all screen sizes and devices.",
-        subtopics: [
-          {
-            id: "responsive-basics",
-            title: "Responsive Fundamentals",
-            children: [
-              { id: "media-queries", title: "Media Queries", content: { description: "Apply CSS rules based on device properties like screen width, height, or resolution.", syntax: "@media (max-width: 768px) {\n  .sidebar { display: none; }\n}", examples: ["Mobile: max-width 768px", "Tablet: 768px - 1024px", "Desktop: 1024px+", "Print media styles"], bestPractices: ["Take a mobile-first approach", "Define breakpoints based on content, not devices", "Use relative units inside media queries"] } },
-              { id: "flexible-layouts", title: "Flexible Layouts", content: { description: "Layout structures that adapt fluidly to screen sizes using percentages and relative units.", syntax: ".container {\n  width: 100%;\n  max-width: 1200px;\n  margin: 0 auto;\n}", examples: ["Fluid layouts", "Flexible images (max-width: 100%)", "Relative sizing units (em, rem, %)", "Viewport units (vw, vh)"], bestPractices: ["Always set max-width on images", "Avoid fixed pixel widths for layout containers", "Test layouts at extreme widths"] } },
-              { id: "mobile-first", title: "Mobile-First Design", content: { description: "Designing the mobile layout first, then progressively enhancing for larger screen sizes.", syntax: "/* Default mobile style */\n.main { padding: 10px; }\n\n/* Desktop enhancement */\n@media (min-width: 1024px) {\n  .main { padding: 30px; }\n}", examples: ["Default styles target mobile", "Use min-width queries for desktop", "Touch-friendly UI targets", "Progressive layout complexity"], bestPractices: ["Set touch targets to at least 44x44px", "Optimize assets for mobile speed first", "Focus on core content hierarchy"] } }
-            ]
-          }
-        ]
+        id: "nextjs",
+        title: "Next.js",
+        description: "A production-grade React framework with server-side rendering capabilities.",
+        x: 880,
+        y: 250,
+        labelPos: "above-right",
+        isInterchange: true,
+        subtitle: "framework - interchange",
+        content: {
+          description: "Next.js is a production-ready React framework that enables server-side rendering (SSR), static site generation (SSG), incremental static regeneration (ISR), and native API routes.",
+          syntax: "// App Router Server Component\nimport React from 'react';\n\nexport default async function Page() {\n  const res = await fetch('https://api.example.com/data');\n  const data = await res.json();\n  return (\n    <main className=\"p-6 text-white\">\n      <h1>{data.title}</h1>\n    </main>\n  );\n}",
+          examples: ["Server-side data fetching", "File-system-based App Routing", "Optimized image and font delivery"],
+          bestPractices: ["Use Server Components by default for better performance", "Use Client Components only for interactivity and client-side hooks", "Leverage dynamic routing and loading UI states"]
+        }
       },
       {
-        id: "deployment",
-        title: "Deployment",
-        description: "Getting your local website files hosted on a public web server and configured for the internet.",
-        subtopics: [
-          {
-            id: "deployment-basics",
-            title: "Deployment Fundamentals",
-            children: [
-              { id: "hosting", title: "Hosting Platforms", content: { description: "Web servers that store and serve your site files to public visitors.", syntax: "# Vercel deployment CLI\nvercel --prod\n\n# Netlify deployment CLI\nnetlify deploy --prod", examples: ["Vercel (serverless/frontend)", "Netlify (static site hosting)", "GitHub Pages (free simple hosting)", "Traditional VPS (AWS, DigitalOcean)"], bestPractices: ["Set up automated Git-based deployment (CI/CD)", "Enable production caching", "Secure backend credentials"] } },
-              { id: "domains-dns", title: "Domains & DNS", content: { description: "Configuring a custom URL address (domain name) and directing traffic to your hosting server.", syntax: "# DNS Record Types:\n- A record: points to IP\n- CNAME: points to alias domain\n- TXT: domain verification", examples: ["Registering custom domain", "Configuring nameservers", "Adding DNS records", "Enabling SSL/HTTPS certificates"], bestPractices: ["Always redirect HTTP to HTTPS", "Maintain DNS backups", "Keep domain auto-renewal enabled"] } },
-              { id: "performance", title: "Performance & Audits", content: { description: "Measuring website speed, accessibility, and SEO quality using developer tools.", syntax: "# Lighthouse Core Web Vitals:\n- LCP: Largest Contentful Paint\n- INP: Interaction to Next Paint\n- CLS: Cumulative Layout Shift", examples: ["Lighthouse browser audits", "Asset minification", "CDN file delivery", "Image lazy-loading"], bestPractices: ["Keep Lighthouse performance score above 90", "Serve next-gen image formats (WebP/AVIF)", "Enable text compression (Gzip/Brotli)"] } }
-            ]
-          }
-        ]
+        id: "nodejs",
+        title: "Node.js",
+        description: "A server-side JavaScript runtime built on Chrome's V8 engine.",
+        x: 880,
+        y: 400,
+        labelPos: "above-right",
+        subtitle: "runtime",
+        content: {
+          description: "Node.js is an open-source, cross-platform JavaScript runtime environment built on Chrome's V8 engine that executes JavaScript code outside of a web browser (server-side).",
+          syntax: "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  res.statusCode = 200;\n  res.setHeader('Content-Type', 'text/plain');\n  res.end('Hello from Node.js!');\n});\nserver.listen(3000);",
+          examples: ["File system access and streaming", "Custom HTTP server setup", "Command-line tools and utilities"],
+          bestPractices: ["Use asynchronous non-blocking methods for I/O tasks", "Handle process errors and unhandled rejections gracefully", "Manage configuration values in environment variables"]
+        }
+      },
+      {
+        id: "express",
+        title: "Express",
+        description: "A minimal and flexible web application framework for Node.js.",
+        x: 1030,
+        y: 400,
+        labelPos: "above-right",
+        subtitle: "server framework",
+        content: {
+          description: "Express is a minimal and flexible Node.js web application framework that provides a robust set of features for building single, multi-page, and hybrid web applications/APIs.",
+          syntax: "const express = require('express');\nconst app = express();\n\napp.use(express.json());\napp.get('/api/users', (req, res) => {\n  res.json([{ id: 1, name: 'Alice' }]);\n});\napp.listen(3000);",
+          examples: ["Routing and controller configuration", "Middleware pipelines (logging, body parsing)", "Error handling middleware integrations"],
+          bestPractices: ["Keep routes clean by isolating controller logic", "Use middleware to validate requests", "Always return standard, predictable JSON structures"]
+        }
+      },
+      {
+        id: "rest-api",
+        title: "REST APIs",
+        description: "Stateless interface standard for web communication.",
+        x: 1030,
+        y: 550,
+        labelPos: "right",
+        isInterchange: true,
+        subtitle: "data layer interchange",
+        content: {
+          description: "Representational State Transfer (REST) is an architectural style for designing networked applications. It relies on stateless, client-server communication using HTTP verbs.",
+          syntax: "// HTTP Request Structure\nGET /api/users HTTP/1.1\nHost: api.example.com\nAuthorization: Bearer <token>\n\n// HTTP Response Structure\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{ \"users\": [] }",
+          examples: ["Standard HTTP methods (GET, POST, PUT, DELETE)", "Standard HTTP response codes (200, 201, 400, 401, 403, 404, 500)", "Query parameters and route constraints"],
+          bestPractices: ["Use plural nouns for resource endpoints (e.g., /users)", "Implement proper pagination and filtering", "Use nested routes for relationships (e.g., /users/1/posts)"]
+        }
+      },
+      {
+        id: "mongodb",
+        title: "MongoDB",
+        description: "Document-oriented database for flexible applications.",
+        x: 1030,
+        y: 700,
+        labelPos: "right",
+        subtitle: "database",
+        content: {
+          description: "MongoDB is a source-available, document-oriented NoSQL database. It stores data in flexible, JSON-like documents (BSON), enabling dynamic schemas and scalable queries.",
+          syntax: "// Mongoose schema definition\nconst mongoose = require('mongoose');\nconst userSchema = new mongoose.Schema({\n  username: { type: String, required: true, unique: true },\n  email: { type: String, required: true },\n  createdAt: { type: Date, default: Date.now }\n});\nconst User = mongoose.model('User', userSchema);",
+          examples: ["Document creation, reading, updating, and deletion (CRUD)", "Aggregation pipelines for analytical queries", "Indexing for search speed optimization"],
+          bestPractices: ["Define indexes for frequently queried fields", "Avoid deep document nesting; link collections where appropriate", "Use transactions for multi-document operations"]
+        }
+      },
+      {
+        id: "auth",
+        title: "Auth & JWT",
+        description: "Secure login and authorization patterns.",
+        x: 780,
+        y: 700,
+        labelPos: "above",
+        subtitle: "security",
+        content: {
+          description: "JSON Web Tokens (JWT) are an open, industry-standard method for representing claims securely between two parties, commonly used for stateless authorization and secure login.",
+          syntax: "const jwt = require('jsonwebtoken');\n\n// Sign Token\nconst token = jwt.sign({ userId: '123' }, process.env.JWT_SECRET, {\n  expiresIn: '24h'\n});\n\n// Verify Token\nconst decoded = jwt.verify(token, process.env.JWT_SECRET);",
+          examples: ["Stateless token-based authentication", "Refresh token rotation flows", "Role-based authorization middleware"],
+          bestPractices: ["Never store sensitive info (like passwords) inside JWT claims", "Set appropriate token expiration times", "Store JWTs securely on the client (e.g., in httpOnly cookies)"]
+        }
+      },
+      {
+        id: "cloud-deploy",
+        title: "Cloud Deploy",
+        description: "Deployment to AWS and Vercel services.",
+        x: 580,
+        y: 700,
+        labelPos: "above",
+        isInterchange: true,
+        subtitle: "AWS / Vercel - interchange",
+        content: {
+          description: "Deploying frontend apps to serverless hosting (Vercel/Netlify) and backend services to cloud providers (AWS, Google Cloud, Heroku) for public access.",
+          syntax: "# Vercel deployment command\nvercel --prod\n\n# Dockerfile template for Node.js backend\nFROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\nCMD [\"npm\", \"start\"]",
+          examples: ["Vercel Git-integrated deployments", "AWS EC2 and ECS container instances", "Docker containerization and deployment"],
+          bestPractices: ["Set up automated CI/CD pipelines", "Use environment variables for production secrets", "Enable CDN caching and asset optimization"]
+        }
+      },
+      {
+        id: "portfolio",
+        title: "Portfolio Projects",
+        description: "Building production-grade applications to showcase.",
+        x: 580,
+        y: 850,
+        labelPos: "below",
+        subtitle: "4 shipped apps",
+        content: {
+          description: "Building and launching high-quality, fully-functional web applications to demonstrate your technical skill set, system architecture design, and coding style.",
+          syntax: "# Recommended Portfolio Project Stack:\n- App 1: SaaS Platform (Next.js, Tailwind, Node, Postgres, Stripe)\n- App 2: Real-time Chat App (React, Socket.io, Express, MongoDB)\n- App 3: Interactive Dashboard (Vite, CSS Grid, Chart.js, REST API)\n- App 4: Open Source Contribution / NPM Package",
+          examples: ["A full-stack e-commerce store with payments", "A real-time collaborative tool (like Trello)", "A developer tool or utility package"],
+          bestPractices: ["Deploy all apps live and provide visible links", "Ensure your Git repositories have high-quality, descriptive READMEs", "Focus on clean UI design, accessibility, and zero-bug execution"]
+        }
+      },
+      {
+        id: "internship",
+        title: "Paid Internship",
+        description: "Gain professional real-world software experience.",
+        x: 400,
+        y: 850,
+        labelPos: "below",
+        subtitle: "real client work",
+        content: {
+          description: "Gaining professional, real-world development experience by working in a team, writing production code, handling client feedback, and participating in agile ceremonies.",
+          syntax: "# Core Internship Workflows:\n- Daily Standups (What you did yesterday, what you will do today, blockers)\n- Pull Request Reviews (Giving and receiving constructive code feedback)\n- Agile Sprint Cycles (Estimation, story points, retrospectives)",
+          examples: ["Working on client-facing features", "Refactoring legacy code bases for performance", "Writing integration and unit tests"],
+          bestPractices: ["Be proactive and ask questions after attempting solutions", "Document your work and findings cleanly", "Prioritize learning team processes and production standards"]
+        }
+      },
+      {
+        id: "placement",
+        title: "Placement",
+        description: "Transitioning to a professional software engineer role.",
+        x: 250,
+        y: 850,
+        labelPos: "below-left",
+        isInterchange: true,
+        subtitle: "final stop",
+        content: {
+          description: "The final milestone where you transition into a professional software engineer role through job interviews, technical screens, portfolio showcases, and offers.",
+          syntax: "# Target Placement Checklist:\n- Optimized Resume (focused on projects & internships)\n- Active LinkedIn and GitHub profiles\n- Confident communication & salary negotiation skills\n- Signed offer letter!",
+          examples: ["Full-time frontend engineer roles", "Full-time full-stack developer roles", "Remote engineering opportunities"],
+          bestPractices: ["Maintain a consistent application pipeline", "Prepare thoroughly for HR and technical interview stages", "Review salary benchmarks and practice negotiation"]
+        }
+      },
+      {
+        id: "dsa",
+        title: "DSA",
+        description: "Data Structures and Algorithms for problem solving.",
+        x: 250,
+        y: 400,
+        labelPos: "left",
+        subtitle: "problem solving",
+        content: {
+          description: "Data Structures and Algorithms (DSA) form the foundation of computer science. Master key concepts to solve complex computational problems and pass technical screens.",
+          syntax: "// Binary Search Implementation\nfunction binarySearch(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    if (arr[mid] === target) return mid;\n    if (arr[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}",
+          examples: ["Arrays, Linked Lists, Trees, and Graphs", "Sorting, searching, and traversal algorithms", "Dynamic Programming and Recursion"],
+          bestPractices: ["Analyze time and space complexities (Big O notation)", "Solve patterns rather than memorizing individual problems", "Practice mock coding interviews regularly"]
+        }
+      },
+      {
+        id: "system-design",
+        title: "System Design",
+        description: "System architecture and scalability principles.",
+        x: 250,
+        y: 550,
+        labelPos: "left",
+        subtitle: "architecture",
+        content: {
+          description: "System Design involves defining the architecture, modules, interfaces, and data for a system to satisfy specified requirements, focusing on scalability and reliability.",
+          syntax: "# Key Architectural Components:\n- Client (Browser, Mobile App)\n- CDN (Asset caching)\n- Load Balancer (Traffic distribution)\n- Web Servers (Stateless application layer)\n- Cache (Redis database load reduction)\n- Database (SQL/NoSQL storage)",
+          examples: ["Scalable vertical and horizontal scaling designs", "Distributed caching and database replication structures", "Rate limiters and microservice architectures"],
+          bestPractices: ["Identify scale requirements and bottlenecks first", "Design stateless server components", "Incorporate redundancy and failover mechanisms"]
+        }
+      },
+      {
+        id: "interview-prep",
+        title: "Interview Prep",
+        description: "Mock rounds and interview strategies.",
+        x: 250,
+        y: 700,
+        labelPos: "left",
+        subtitle: "mock rounds - interchange",
+        content: {
+          description: "Preparing for behavioral, system design, and coding interview rounds using mock practice sessions, resume reviews, and question banks.",
+          syntax: "# STAR Method for Behavioral Questions:\n- Situation: Describe the context of your task\n- Task: Explain your responsibility or challenge\n- Action: Detail the steps you took to address it\n- Result: State the positive outcome and what you learned",
+          examples: ["Peer-to-peer mock coding interviews", "Behavioral mock sessions", "Whiteboard system design practice"],
+          bestPractices: ["Think out loud during coding sessions to share your process", "Prepare 3-4 key project stories using the STAR method", "Understand the business and culture of the company you are interviewing with"]
+        }
       }
     ]
   }
