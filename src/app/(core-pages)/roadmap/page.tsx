@@ -1,22 +1,30 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Compass, Bookmark } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { roadmapApi } from '@/lib/api-modules';
 
 interface RoadmapCardItem {
   title: string;
   slug: string;
   isAvailable: boolean;
+  icon?: string;
 }
 
-const skillRoadmaps: RoadmapCardItem[] = [];
-
-const roleRoadmaps: RoadmapCardItem[] = [
-  { title: "Frontend", slug: "frontend", isAvailable: true }
+const roleRoadmapIds = [
+  "frontend", "backend", "fullstack", "devops", "mobile", 
+  "cybersecurity", "data-engineer", "game-dev", "embedded-iot", 
+  "cloud-architect", "platform-engineer", "sre", "qa-engineer"
 ];
+
+const skillRoadmapIds = [
+  "ml-ai", "blockchain", "product-manager", 
+  "devsecops", "technical-writer", "low-code-no-code", "ar-vr"
+];
+
 
 function RoadmapCard({ item }: { item: RoadmapCardItem }) {
   const [isBookmarked, setIsBookmarked] = useState(() => {
@@ -71,9 +79,12 @@ function RoadmapCard({ item }: { item: RoadmapCardItem }) {
       onClick={handleCardClick}
       className={`group flex items-center justify-between h-14 px-5 rounded-[12px] border transition-all duration-300 cursor-pointer shadow-sm relative overflow-hidden bg-zinc-900/40 border-zinc-800/60 hover:bg-zinc-900/80 hover:border-brand-500/30`}
     >
-      <span className="font-semibold text-sm text-zinc-300 group-hover:text-white transition-colors truncate pr-4">
-        {item.title}
-      </span>
+      <div className="flex items-center gap-3 truncate pr-4">
+        {item.icon && <span className="text-base shrink-0">{item.icon}</span>}
+        <span className="font-semibold text-sm text-zinc-300 group-hover:text-white transition-colors truncate">
+          {item.title}
+        </span>
+      </div>
       <button
         onClick={handleBookmarkClick}
         type="button"
@@ -90,20 +101,60 @@ function RoadmapCard({ item }: { item: RoadmapCardItem }) {
 
 export default function RoadmapPage() {
   const [search, setSearch] = useState('');
+  const [roadmapsList, setRoadmapsList] = useState<RoadmapCardItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    roadmapApi.getRoadmaps()
+      .then((data) => {
+        setRoadmapsList(data.map((item) => ({
+          title: item.title,
+          slug: item.slug,
+          isAvailable: true,
+          icon: item.icon,
+        })));
+      })
+      .catch((err) => {
+        console.error("Failed to load roadmaps:", err);
+        toast.error("Failed to load roadmaps from the server");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const roleRoadmaps = useMemo(() => {
+    return roadmapsList.filter((item) => roleRoadmapIds.includes(item.slug));
+  }, [roadmapsList]);
+
+  const skillRoadmaps = useMemo(() => {
+    return roadmapsList.filter((item) => skillRoadmapIds.includes(item.slug));
+  }, [roadmapsList]);
 
   const filteredSkillRoadmaps = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return skillRoadmaps;
     return skillRoadmaps.filter((item) => item.title.toLowerCase().includes(query));
-  }, [search]);
+  }, [search, skillRoadmaps]);
 
   const filteredRoleRoadmaps = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return roleRoadmaps;
     return roleRoadmaps.filter((item) => item.title.toLowerCase().includes(query));
-  }, [search]);
+  }, [search, roleRoadmaps]);
 
   const totalFilteredCount = filteredSkillRoadmaps.length + filteredRoleRoadmaps.length;
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-zinc-950 text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Loading roadmaps...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col p-4 md:p-6 min-h-0 overflow-hidden font-sans text-zinc-100 max-w-7xl mx-auto w-full">

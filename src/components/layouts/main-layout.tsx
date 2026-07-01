@@ -10,6 +10,8 @@ import Sidebar from './Sidebar';
 import { TutorialGuide } from '@/components/TutorialGuide';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
+import icon from '../../../public/icon.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -149,11 +151,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* Mobile Header */}
-        <div className="lg:hidden h-14 border-b border-white/5 flex items-center px-4 gap-4 bg-zinc-900/50 backdrop-blur-md z-30 shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-            <Menu className="h-5 w-5 text-zinc-300" />
-          </Button>
-          <span className="font-semibold text-white">Swadhyaayi</span>
+        <div className="lg:hidden h-14 border-b border-white/5 flex items-center px-4 justify-between bg-zinc-900/50 backdrop-blur-md z-30 shrink-0">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+              <Menu className="h-5 w-5 text-zinc-300" />
+            </Button>
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+              <Image src={icon} width={24} height={24} alt="Swadhyaayi Icon" className="object-contain" />
+            </div>
+          </div>
         </div>
 
         {/* Premium Deep Radial Background */}

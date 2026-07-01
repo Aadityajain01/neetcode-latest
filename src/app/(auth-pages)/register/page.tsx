@@ -119,14 +119,11 @@ export default function RegisterPage() {
          <div className="absolute bottom-0 right-0 w-[40dvw] h-[40dvw] bg-brand-500/10 blur-[12dvw] rounded-full pointer-events-none" />
 
          <div className="relative z-10 text-right space-y-[2dvh]">
-           <div className="flex items-center justify-end gap-3 text-zinc-100 font-sans text-xs uppercase tracking-widest mb-[4dvh]">
-             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
-               Swadhyaayi
-             </span>
-             <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
-               <Image src={logo} alt="Swadhyaayi Logo" width={28} height={28} className="object-contain" />
-             </div>
-           </div>
+            <div className="flex items-center justify-end gap-3 text-zinc-100 font-sans text-xs uppercase tracking-widest mb-[4dvh]">
+              <div className="flex items-center justify-center overflow-hidden shrink-0">
+                <Image src={logo} alt="Swadhyaayi Logo" width={90} height={36} className="object-contain" />
+              </div>
+            </div>
            
            <h1 className="text-[3.5dvw] font-black text-white tracking-tighter leading-[1.05] mb-6 uppercase">
              Start Your <br />

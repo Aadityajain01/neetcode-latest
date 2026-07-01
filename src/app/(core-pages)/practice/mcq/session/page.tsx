@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 import { mcqApi, MCQ } from "@/lib/api-modules";
 import { useAuthStore } from "@/store/auth-store";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { Button } from "@/components/ui/button";
 import { PracticePageSkeleton } from "@/components/skeletons/site-skeletons";
 import {
@@ -55,6 +56,7 @@ function MCQSessionContent() {
   const params = useSearchParams();
   const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const isAuthReady = initialized && !authLoading;
+  const { requireAuth } = useRequireAuth();
   const rawLang = params.get("lang");
   const lang = rawLang && rawLang.includes(" ") ? rawLang.replace(/\s+/g, "+") : rawLang;
   const difficulty = params.get("difficulty");
@@ -106,24 +108,17 @@ function MCQSessionContent() {
     }
   };
 
-  // Auth guard: redirect to login if not authenticated
-  useEffect(() => {
-    if (isAuthReady && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthReady, isAuthenticated, router]);
-
   // Trigger load on mount
   useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!isAuthReady) return;
     if (lang) {
       const size = limitParam ? (parseInt(limitParam) || 20) : 20;
       fetchMCQs(size);
     }
-  }, [lang, limitParam, difficulty, unsolvedOnlyParam, isAuthReady, isAuthenticated]);
+  }, [lang, limitParam, difficulty, unsolvedOnlyParam, isAuthReady]);
 
   useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!isAuthReady) return;
     if (!lang) {
       mcqApi.getMeta().then((res) => {
         const defaultLang = res?.data?.languages?.[0] || 'javascript';
@@ -132,7 +127,7 @@ function MCQSessionContent() {
         router.replace(`/practice/mcq/session?lang=javascript&difficulty=${difficulty || 'all'}`);
       });
     }
-  }, [lang, difficulty, router, isAuthReady, isAuthenticated]);
+  }, [lang, difficulty, router, isAuthReady]);
 
   const currentMcq = mcqs[currentIndex] || null;
 
@@ -150,6 +145,9 @@ function MCQSessionContent() {
       toast.error("Answer at least one question before submitting");
       return;
     }
+    const isAuth = requireAuth(undefined, "Sign in to submit your practice session");
+    if (!isAuth) return;
+
     try {
       setSubmitting(true);
       const answerArray: LocalAnswer[] = [];

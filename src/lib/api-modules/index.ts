@@ -8,6 +8,7 @@ export { authApi } from './auth.api';
 export { adminApi } from './admin.api';
 export { messageApi } from './message.api';
 export { profileApi } from './profile.api';
+export { roadmapApi } from './roadmap.api';
 
 export type { User, UserStats } from './user.api';
 export type { Problem, TestCase } from './problem.api';
@@ -15,3 +16,4 @@ export type { Submission } from './submission.api';
 export type { LeaderboardEntry, CommunityAverageLeaderboardMe, CommunityAverageLeaderboardResponse } from './leaderboard.api';
 export type { Community, CommunityMember, CommunityTest, TestQuestion, TestResult } from './community.api';
 export type { MCQ, SubmissionResult } from './mcq.api';
+export type { RoadmapMetadata, RoadmapDetail } from './roadmap.api';

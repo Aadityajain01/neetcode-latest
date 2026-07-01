@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { communityApi } from "@/lib/api-modules";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { toast } from "sonner";
 import {
   BarChart3, FileText, Loader2, Lock, LogOut, MessageSquare,
@@ -28,6 +29,7 @@ import {
 export function CommunityLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { requireAuth } = useRequireAuth();
   const {
     community,
     isMember,
@@ -129,6 +131,8 @@ export function CommunityLayout({ children }: { children: React.ReactNode }) {
   ].filter((item) => item.show);
 
   const handleJoinCommunity = async () => {
+    const isAuth = requireAuth(undefined, "Sign in to join this community");
+    if (!isAuth) return;
     setActionLoading(true);
     try {
       await communityApi.joinCommunity(community._id);

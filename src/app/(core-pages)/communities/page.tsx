@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
   communityApi,
   userApi,
@@ -840,6 +841,8 @@ function InnerCommunityLayout({
     groupUserRole,
   } = useCommunity();
 
+  const { requireAuth } = useRequireAuth();
+
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupDesc, setGroupDesc] = useState("");
@@ -883,6 +886,8 @@ function InnerCommunityLayout({
 
   const handleJoinCommunity = async () => {
     if (!community) return;
+    const isAuth = requireAuth(undefined, "Sign in to join this community");
+    if (!isAuth) return;
     try {
       setActionLoading(true);
       await communityApi.joinCommunity(community._id);
@@ -1158,6 +1163,7 @@ function CommunitiesPageContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { requireAuth } = useRequireAuth();
 
   const [allCommunities, setAllCommunities] = useState<Community[]>([]);
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -1217,10 +1223,17 @@ function CommunitiesPageContent() {
   const fetchCommunities = async () => {
     try {
       setLoading(true);
-      const [list, mine] = await Promise.all([communityApi.getCommunities(), userApi.getCommunities()]);
-      setJoinedCommunityIds(new Set((mine || []).map((c: any) => c._id || c.id).filter(Boolean)));
-      setAllCommunities(list);
-      setCommunities(list);
+      if (isAuthenticated) {
+        const [list, mine] = await Promise.all([communityApi.getCommunities(), userApi.getCommunities()]);
+        setJoinedCommunityIds(new Set((mine || []).map((c: any) => c._id || c.id).filter(Boolean)));
+        setAllCommunities(list);
+        setCommunities(list);
+      } else {
+        const list = await communityApi.getCommunities();
+        setJoinedCommunityIds(new Set());
+        setAllCommunities(list);
+        setCommunities(list);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load communities");
@@ -1231,9 +1244,8 @@ function CommunitiesPageContent() {
 
   useEffect(() => {
     if (!initialized || authLoading) return;
-    if (!isAuthenticated) { router.push("/login"); return; }
     fetchCommunities();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [initialized, isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (!debouncedSearch) { setCommunities(allCommunities); setCurrentPage(1); return; }
@@ -1246,6 +1258,8 @@ function CommunitiesPageContent() {
   const paginatedCommunities = communities.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleCreateCommunity = async () => {
+    const isAuth = requireAuth(undefined, "Sign in to create a community");
+    if (!isAuth) return;
     if (!newCommunity.name || !newCommunity.description) { toast.error("Name and description are required"); return; }
     if (newCommunity.type === "domain_restricted" && !newCommunity.domain) { toast.error("Domain is required"); return; }
     const normalizedDomain = newCommunity.type === "domain_restricted" ? normalizeDomainInput(newCommunity.domain) : "";
@@ -1269,6 +1283,8 @@ function CommunitiesPageContent() {
   };
 
   const handleJoinCommunity = async (communityId: string) => {
+    const isAuth = requireAuth(undefined, "Sign in to join this community");
+    if (!isAuth) return;
     if (joinRequestLockRef.current.has(communityId)) return;
     joinRequestLockRef.current.add(communityId);
     setJoiningCommunityId(communityId);

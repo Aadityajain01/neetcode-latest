@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import logo from "../../public/logo.png";
+import icon from "../../public/icon.png";
 
 // ─── MONOCHROME REDESIGN COMPONENTS ───────────────────────────────────────────
 
@@ -185,11 +186,12 @@ const Navbar = () => {
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
-            <Image src={logo} width={24} height={24} alt="Logo" className="object-contain" />
+          <div className="hidden sm:flex items-center justify-center overflow-hidden shrink-0">
+            <Image src={logo} width={80} height={32} alt="Swadhyaayi Logo" className="object-contain" />
           </div>
-          <span className="font-sans text-[13px] tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-black uppercase hidden sm:inline">SWADHYAAYI</span>
-          <span className="font-sans text-[13px] tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-black uppercase sm:hidden">SWADHYAAYI</span>
+          <div className="sm:hidden w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+            <Image src={icon} width={24} height={24} alt="Swadhyaayi Icon" className="object-contain" />
+          </div>
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-[11px] font-sans font-bold tracking-wider text-zinc-400 uppercase">
@@ -654,12 +656,12 @@ const Footer = () => {
     <footer className="py-16 border-t border-zinc-950 bg-black text-zinc-500 text-xs font-sans font-medium">
       <div className="container mx-auto px-6 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
-            <Image src={logo} width={24} height={24} alt="Logo" className="object-contain" />
+          <div className="hidden sm:flex items-center justify-center overflow-hidden shrink-0">
+            <Image src={logo} width={80} height={32} alt="Swadhyaayi Logo" className="object-contain" />
           </div>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
-            SWADHYAAYI
-          </span>
+          <div className="sm:hidden w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+            <Image src={icon} width={24} height={24} alt="Swadhyaayi Icon" className="object-contain" />
+          </div>
         </div>
         <div className="flex items-center gap-6 text-xs font-sans font-bold uppercase tracking-wider">
           <Link href="/problems" className="hover:text-brand-500 transition-colors">Problems</Link>

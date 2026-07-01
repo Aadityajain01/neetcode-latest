@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { mcqApi, MCQ, SubmissionResult, problemApi, Problem } from '@/lib/api-modules';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -54,6 +55,7 @@ export default function PracticePage() {
   const router = useRouter();
   const { initialized, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const isAuthReady = initialized && !authLoading;
+  const { requireAuth } = useRequireAuth();
 
   // Raw data states
   const [loading, setLoading] = useState(true);
@@ -145,47 +147,63 @@ export default function PracticePage() {
 
   useEffect(() => {
     if (!isAuthReady) return;
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
     fetchData();
-  }, [isAuthReady, isAuthenticated, router]);
+  }, [isAuthReady, isAuthenticated]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [metaRes, mcqsRes, statsRes, countsRes, attemptsRes] = await Promise.all([
-        mcqApi.getMeta(),
-        mcqApi.getMCQs({ limit: 1000 }),
-        api.get('/mcqs/stats'),
-        mcqApi.getCounts(),
-        mcqApi.getMyAttempts({ limit: 1000 }),
-      ]);
+      if (isAuthenticated) {
+        const [metaRes, mcqsRes, statsRes, countsRes, attemptsRes] = await Promise.all([
+          mcqApi.getMeta(),
+          mcqApi.getMCQs({ limit: 1000 }),
+          api.get('/mcqs/stats'),
+          mcqApi.getCounts(),
+          mcqApi.getMyAttempts({ limit: 1000 }),
+        ]);
 
-      if (metaRes?.data?.languages) {
-        setLanguages(metaRes.data.languages);
-      }
-      if (mcqsRes?.mcqs) {
-        setAllMcqs(mcqsRes.mcqs);
-      }
-      if (statsRes?.data?.stats) {
-        setMcqStats(statsRes.data.stats);
-      }
-      if (countsRes) {
-        setMcqCounts(countsRes);
-      }
+        if (metaRes?.data?.languages) {
+          setLanguages(metaRes.data.languages);
+        }
+        if (mcqsRes?.mcqs) {
+          setAllMcqs(mcqsRes.mcqs);
+        }
+        if (statsRes?.data?.stats) {
+          setMcqStats(statsRes.data.stats);
+        }
+        if (countsRes) {
+          setMcqCounts(countsRes);
+        }
 
-      // Solved MCQs Set
-      const solvedMcqSet = new Set<string>();
-      if (attemptsRes?.submissions) {
-        attemptsRes.submissions.forEach((sub: any) => {
-          if (sub.status === 'accepted' && sub.mcqId?._id) {
-            solvedMcqSet.add(sub.mcqId._id);
-          }
-        });
+        // Solved MCQs Set
+        const solvedMcqSet = new Set<string>();
+        if (attemptsRes?.submissions) {
+          attemptsRes.submissions.forEach((sub: any) => {
+            if (sub.status === 'accepted' && sub.mcqId?._id) {
+              solvedMcqSet.add(sub.mcqId._id);
+            }
+          });
+        }
+        setSolvedMcqs(solvedMcqSet);
+      } else {
+        const [metaRes, mcqsRes, countsRes] = await Promise.all([
+          mcqApi.getMeta(),
+          mcqApi.getMCQs({ limit: 1000 }),
+          mcqApi.getCounts(),
+        ]);
+
+        if (metaRes?.data?.languages) {
+          setLanguages(metaRes.data.languages);
+        }
+        if (mcqsRes?.mcqs) {
+          setAllMcqs(mcqsRes.mcqs);
+        }
+        if (countsRes) {
+          setMcqCounts(countsRes);
+        }
+        setMcqStats(null);
+        setSolvedMcqs(new Set());
       }
-      setSolvedMcqs(solvedMcqSet);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load practice details');
@@ -250,6 +268,9 @@ export default function PracticePage() {
   // Submit in-place answer for MCQ
   const handleSubmitAnswer = async () => {
     if (!selectedMcq || selectedAnswer === null) return;
+    const isAuth = requireAuth(undefined, "Sign in to submit your answer");
+    if (!isAuth) return;
+
     try {
       setSubmitting(true);
       const res = await mcqApi.submitAnswer({

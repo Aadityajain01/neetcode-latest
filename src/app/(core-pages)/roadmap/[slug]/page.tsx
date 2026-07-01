@@ -1,29 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { RoadmapCanvas } from '@/components/roadmap/RoadmapCanvas';
-import { roadmaps } from '../../../../../data/roadmaps';
-
-export const generateStaticParams = async () => {
-  return Object.keys(roadmaps).map((slug) => ({
-    slug,
-  }));
-};
-
-const countNodes = (topics: any[]) => {
-  let count = 0;
-  topics?.forEach(topic => {
-    count++;
-    if (topic.subtopics) {
-      topic.subtopics.forEach(sub => {
-        count++;
-        if (sub.children) {
-          count += sub.children.length;
-        }
-      });
-    }
-  });
-  return count;
-};
 
 export default async function RoadmapDetailPage({
   params,
@@ -38,8 +15,18 @@ export default async function RoadmapDetailPage({
 
   const slug = String(rawSlug ?? "").toLowerCase();
 
-  const roadmap = (roadmaps as Record<string, any>)[slug] ??
-    Object.values(roadmaps).find((r: any) => String(r.slug).toLowerCase() === slug);
+  let roadmap: any = null;
+  try {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+    const res = await fetch(`${apiBaseUrl}/api/roadmaps/${slug}`, {
+      cache: 'no-store'
+    });
+    if (res.ok) {
+      roadmap = await res.json();
+    }
+  } catch (error) {
+    console.error("Failed to fetch roadmap from DB:", error);
+  }
 
   if (!roadmap) {
     return (
@@ -57,7 +44,10 @@ export default async function RoadmapDetailPage({
     );
   }
 
-  const totalTopics = countNodes(roadmap.topics);
+  const topics = roadmap.topics || [];
+  const totalTopics = roadmap.totalTopics || topics.length;
+  const layoutType = roadmap.layoutType || "tree";
+  const metroLines = roadmap.metroLines || [];
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden bg-zinc-950 text-white">
@@ -67,10 +57,10 @@ export default async function RoadmapDetailPage({
         description={roadmap.description}
         level={roadmap.level}
         estimatedTime={roadmap.estimatedTime}
-        topics={roadmap.topics}
+        topics={topics}
         totalTopics={totalTopics}
-        layoutType={roadmap.layoutType}
-        metroLines={roadmap.metroLines}
+        layoutType={layoutType as "metromap" | "tree"}
+        metroLines={metroLines}
       />
     </div>
   );

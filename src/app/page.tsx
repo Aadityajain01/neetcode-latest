@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import logo from "../../public/logo.png";
 import { AppRouteSkeleton } from '@/components/skeletons/site-skeletons';
 import MainLayout from '@/components/layouts/main-layout';
 import { useQuery } from '@tanstack/react-query';

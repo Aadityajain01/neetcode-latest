@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import logo from "../../../../public/logo.png";
+import icon from "../../../../public/icon.png";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -51,12 +52,12 @@ export default function ForgotPasswordPage() {
         
         <div className="flex justify-center lg:justify-start mb-2">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
-              <Image src={logo} alt="Swadhyaayi Logo" width={28} height={28} className="object-contain" />
+            <div className="hidden sm:flex items-center justify-center overflow-hidden shrink-0">
+              <Image src={logo} alt="Swadhyaayi Logo" width={90} height={36} className="object-contain" />
             </div>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
-              Swadhyaayi
-            </span>
+            <div className="sm:hidden w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+              <Image src={icon} alt="Swadhyaayi Icon" width={28} height={28} className="object-contain" />
+            </div>
           </Link>
         </div>
         

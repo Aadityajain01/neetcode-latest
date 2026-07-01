@@ -174,12 +174,8 @@ export function CommunityProvider({ children, communityId }: { children: ReactNo
       setLoading(false);
       return;
     }
-    if (isAuthenticated) {
-      fetchCommunityData();
-    } else {
-      router.push("/login");
-    }
-  }, [initialized, authLoading, isAuthenticated, communityId, router]);
+    fetchCommunityData();
+  }, [initialized, authLoading, communityId, router]);
 
   const activeGroup = useMemo(() => {
     if (!activeGroupId) return null;

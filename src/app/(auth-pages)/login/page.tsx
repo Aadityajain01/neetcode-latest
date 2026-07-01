@@ -108,12 +108,9 @@ export default function LoginPage() {
 
         <div className="relative z-10 space-y-[2dvh]">
           <div className="flex items-center gap-3 text-zinc-100 font-sans text-xs uppercase tracking-widest mb-[4dvh]">
-            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
-              <Image src={logo} alt="Swadhyaayi Logo" width={28} height={28} className="object-contain" />
+            <div className="flex items-center justify-center overflow-hidden shrink-0">
+              <Image src={logo} alt="Swadhyaayi Logo" width={90} height={36} className="object-contain" />
             </div>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-brand-400 font-extrabold text-sm font-sans uppercase tracking-wider">
-              Swadhyaayi
-            </span>
           </div>
 
           <h1 className="text-[3.5dvw] font-black text-white tracking-tighter leading-[1.05] mb-6 uppercase">

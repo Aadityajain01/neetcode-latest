@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 
 import { Toaster as SonnerToaster } from "sonner";
+import { AuthPromptModal } from "@/components/auth-prompt-modal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: "/logo.png",
+    icon: "/icon.png",
   },
 };
 
@@ -45,6 +46,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
               {children}
+              <AuthPromptModal />
           </AuthProvider>
         </QueryProvider>
         <Toaster />

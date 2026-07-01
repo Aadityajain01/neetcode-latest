@@ -123,7 +123,6 @@ export default function LeaderboardPage() {
   const isAuthReady = initialized && !authLoading;
 
   useEffect(() => { setListPage(0); }, [activeTab]);
-  useEffect(() => { if (!isAuthReady) return; if (!isAuthenticated) router.push('/login'); }, [isAuthReady, isAuthenticated, router]);
 
   const communitiesQuery = useQuery<CommunityOption[]>({
     queryKey: ['leaderboard-communities', user?.id], enabled: isAuthReady && isAuthenticated,
@@ -131,20 +130,24 @@ export default function LeaderboardPage() {
   });
 
   const rankingsQuery = useQuery<{ leaderboard: LeaderboardEntry[]; myStats: { rank: number; score: number } | null }>({
-    queryKey: ['leaderboard-rankings', user?.id, activeTab], enabled: isAuthReady && isAuthenticated,
+    queryKey: ['leaderboard-rankings', user?.id, activeTab], enabled: isAuthReady,
     queryFn: async () => {
       if (activeTab === 'global') {
-        const [data, stats] = await Promise.all([leaderboardApi.getGlobal({ limit: 50 }), leaderboardApi.getGlobalMe().catch(() => null)]);
+        const [data, stats] = await Promise.all([
+          leaderboardApi.getGlobal({ limit: 50 }),
+          isAuthenticated ? leaderboardApi.getGlobalMe().catch(() => null) : Promise.resolve(null)
+        ]);
         const processed = (data || []).filter((entry) => entry.score > 0 && entry.displayName && entry.displayName !== 'Anonymous' && entry.displayName !== 'admin');
         const reRanked = processed.map((entry, index) => ({ ...entry, rank: index + 1 }));
-        const myEntryInList = reRanked.find((entry) => entry.userId === user?.id);
+        const myEntryInList = user?.id ? reRanked.find((entry) => entry.userId === user?.id) : null;
         const myStats = myEntryInList ? { rank: myEntryInList.rank, score: myEntryInList.score } : stats ? { rank: stats.rank, score: stats.score } : null;
         return { leaderboard: reRanked, myStats };
       } else {
+        if (!isAuthenticated) return { leaderboard: [], myStats: null };
         const [data, me] = await Promise.all([leaderboardApi.getCommunityAverageLeaderboard(activeTab, { limit: 100 }), leaderboardApi.getCommunityAverageMe(activeTab).catch(() => null)]);
         const list = (data.leaderboard || []).filter((entry) => entry.displayName && entry.displayName !== 'Anonymous' && entry.displayName !== 'admin');
         const reRanked = list.map((entry, index) => ({ ...entry, rank: index + 1 }));
-        const myEntryInList = reRanked.find((entry) => entry.userId === user?.id);
+        const myEntryInList = user?.id ? reRanked.find((entry) => entry.userId === user?.id) : null;
         const myStats = myEntryInList ? { rank: myEntryInList.rank, score: myEntryInList.score } : me ? { rank: me.rank, score: me.averageScore } : null;
         return { leaderboard: reRanked, myStats };
       }
@@ -161,11 +164,10 @@ export default function LeaderboardPage() {
   const allRest = leaderboard.slice(3);
   const totalPages = Math.ceil(allRest.length / PAGE_SIZE);
   const pagedList = allRest.slice(listPage * PAGE_SIZE, (listPage + 1) * PAGE_SIZE);
-  const isMeInTop3 = useMemo(() => top3.some((e) => e.userId === user?.id), [top3, user]);
-  const isMeInPagedList = useMemo(() => pagedList.some((e) => e.userId === user?.id), [pagedList, user]);
+  const isMeInTop3 = useMemo(() => user?.id ? top3.some((e) => e.userId === user?.id) : false, [top3, user]);
+  const isMeInPagedList = useMemo(() => user?.id ? pagedList.some((e) => e.userId === user?.id) : false, [pagedList, user]);
 
   if (!isAuthReady) return null;
-  if (!isAuthenticated) return null;
 
   return (
     <>

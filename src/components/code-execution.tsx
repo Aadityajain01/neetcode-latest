@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { submissionApi, Submission, Problem, TestCase } from "@/lib/api-modules";
 import { useUIStore } from "@/store/ui-store";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
   getEditorSnippet,
   isFunctionBasedProblem,
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/resizable";
 
 export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProblem, initialCode, onCodeChange, initialLanguage, onLanguageChange, isReadOnly = false }: CodeExecutorProps) {
+  const { requireAuth } = useRequireAuth();
   // --- STATE ---
   const [code, setCode] = useState(initialCode || "");
   const [language, setLanguage] = useState(initialLanguage || "javascript");
@@ -140,6 +142,9 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
   };
 
   const handleRunCode = async () => {
+    const isAuth = requireAuth(undefined, "Sign in to run your solution");
+    if (!isAuth) return;
+
     setIsRunning(true);
     setOutput("Running...");
     setCurrentSubmission(null);
@@ -198,6 +203,9 @@ export function CodeExecutor({ problem, problemType, sampleTestCases, onNextProb
   };
 
   const handleSubmitCode = async () => {
+    const isAuth = requireAuth(undefined, "Sign in to submit your solution");
+    if (!isAuth) return;
+
     setIsSubmitting(true);
     setOutput("");
     setOutputMode('submit');

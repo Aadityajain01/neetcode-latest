@@ -50,28 +50,33 @@ export default function ProblemsPage() {
   // Fetch initial raw dataset
   useEffect(() => {
     if (!initialized || authLoading) return;
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
 
     const initData = async () => {
       try {
         setLoading(true);
-        const [problemsRes, solvedRes, profileRes] = await Promise.all([
-          problemApi.getProblems({ limit: 1000, type: 'dsa' }),
-          api.get('/users/me/solved'),
-          api.get('/users/profile/me'),
-        ]);
+        if (isAuthenticated) {
+          const [problemsRes, solvedRes, profileRes] = await Promise.all([
+            problemApi.getProblems({ limit: 1000, type: 'dsa' }),
+            api.get('/users/me/solved'),
+            api.get('/users/profile/me'),
+          ]);
 
-        if (problemsRes?.problems) {
-          setAllProblems(problemsRes.problems);
-        }
-        if (Array.isArray(solvedRes?.data?.solved)) {
-          setSolvedProblems(new Set(solvedRes.data.solved));
-        }
-        if (profileRes?.data?.profile?.stats) {
-          setProfileStats(profileRes.data.profile.stats);
+          if (problemsRes?.problems) {
+            setAllProblems(problemsRes.problems);
+          }
+          if (Array.isArray(solvedRes?.data?.solved)) {
+            setSolvedProblems(new Set(solvedRes.data.solved));
+          }
+          if (profileRes?.data?.profile?.stats) {
+            setProfileStats(profileRes.data.profile.stats);
+          }
+        } else {
+          const problemsRes = await problemApi.getProblems({ limit: 1000, type: 'dsa' });
+          if (problemsRes?.problems) {
+            setAllProblems(problemsRes.problems);
+          }
+          setSolvedProblems(new Set());
+          setProfileStats(null);
         }
       } catch (error) {
         console.error('Failed to load data', error);
@@ -82,7 +87,7 @@ export default function ProblemsPage() {
     };
 
     initData();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [initialized, isAuthenticated, authLoading]);
 
   // Extract unique categories (tags) and count their occurrences
   const categories = useMemo(() => {

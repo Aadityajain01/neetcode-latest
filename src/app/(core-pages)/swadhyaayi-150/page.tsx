@@ -25,10 +25,6 @@ export default function Swadhyaayi150Page() {
 
   useEffect(() => {
     if (!initialized || authLoading) return;
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
 
     const fetchData = async () => {
       try {
@@ -52,7 +48,7 @@ export default function Swadhyaayi150Page() {
     };
 
     fetchData();
-  }, [initialized, isAuthenticated, authLoading, router]);
+  }, [initialized, authLoading]);
 
   if (loading || !initialized) {
     return (

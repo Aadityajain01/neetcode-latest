@@ -87,7 +87,9 @@ export function RoadmapCanvas({
     if (stored) {
       try {
         setProgress(JSON.parse(stored));
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, []);
 
@@ -345,6 +347,28 @@ export function RoadmapCanvas({
             if (pts.length < 2) return null;
             const pathD = generateRoundedPath(pts, 32);
 
+            const startPt = pts[0];
+            const endPt = pts[pts.length - 1];
+
+            // Direction vector at Start (points backwards)
+            const dx = pts[1].x - startPt.x;
+            const dy = pts[1].y - startPt.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            const ux = len > 0 ? -dx / len : 0;
+            const uy = len > 0 ? -dy / len : -1;
+            const startLabelX = startPt.x + ux * 38;
+            const startLabelY = startPt.y + uy * 38;
+
+            // Direction vector at End (points forwards)
+            const lastIdx = pts.length - 1;
+            const dxEnd = endPt.x - pts[lastIdx - 1].x;
+            const dyEnd = endPt.y - pts[lastIdx - 1].y;
+            const lenEnd = Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
+            const uxEnd = lenEnd > 0 ? dxEnd / lenEnd : 0;
+            const uyEnd = lenEnd > 0 ? dyEnd / lenEnd : 1;
+            const endLabelX = endPt.x + uxEnd * 38;
+            const endLabelY = endPt.y + uyEnd * 38;
+
             return (
               <g key={line.id}>
                 {/* Thick glow effect */}
@@ -366,13 +390,77 @@ export function RoadmapCanvas({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+
+                {/* Start Terminal Indicator */}
+                <g>
+                  <circle cx={startPt.x} cy={startPt.y} r={18} fill="none" stroke={line.color} strokeWidth={2.5} strokeDasharray="3 2" />
+                  <text
+                    x={startLabelX}
+                    y={startLabelY + 3.5}
+                    fill={line.color}
+                    fontSize="9"
+                    fontWeight="900"
+                    textAnchor="middle"
+                    className="font-sans select-none tracking-wider"
+                    style={{ textShadow: "0 1px 2px #000, 0 1px 4px #000" }}
+                  >
+                    START
+                  </text>
+                </g>
+
+                {/* End Terminal Indicator */}
+                <g>
+                  <line 
+                    x1={endPt.x - uyEnd * 12} 
+                    y1={endPt.y + uxEnd * 12} 
+                    x2={endPt.x + uyEnd * 12} 
+                    y2={endPt.y - uxEnd * 12} 
+                    stroke={line.color} 
+                    strokeWidth={4} 
+                    strokeLinecap="round" 
+                  />
+                  <circle cx={endPt.x} cy={endPt.y} r={18} fill="none" stroke={line.color} strokeWidth={2.5} />
+                  <text
+                    x={endLabelX}
+                    y={endLabelY + 3.5}
+                    fill={line.color}
+                    fontSize="9"
+                    fontWeight="900"
+                    textAnchor="middle"
+                    className="font-sans select-none tracking-wider"
+                    style={{ textShadow: "0 1px 2px #000, 0 1px 4px #000" }}
+                  >
+                    END
+                  </text>
+                </g>
               </g>
             );
           })}
 
           {/* Dynamic Metro Line Labels */}
           {metroLines.map((line) => {
-            const labelConfig = lineLabels[line.id];
+            let labelConfig = lineLabels[line.id];
+            
+            if (!labelConfig) {
+              const stations = line.stations;
+              if (stations && stations.length > 0) {
+                // Find midpoint station
+                const midIdx = Math.floor(stations.length / 2);
+                const midStation = stations[midIdx];
+                const midStationId = typeof midStation === "string" ? midStation : (midStation as any).id;
+                
+                const topic = topics.find((t) => t.id === midStationId);
+                if (topic && topic.x !== undefined && topic.y !== undefined) {
+                  labelConfig = {
+                    x: topic.x,
+                    y: topic.y + 42, // offset below the node
+                    text: line.name || `${line.id.toUpperCase()} LINE`,
+                    color: line.color
+                  };
+                }
+              }
+            }
+
             if (!labelConfig) return null;
             return (
               <text
@@ -380,11 +468,11 @@ export function RoadmapCanvas({
                 x={labelConfig.x}
                 y={labelConfig.y}
                 fill={labelConfig.color}
-                fontSize="12"
-                fontWeight="900"
+                fontSize="11"
+                fontWeight="950"
                 letterSpacing="0.18em"
                 textAnchor="middle"
-                opacity="0.85"
+                opacity="0.8"
                 className="font-sans select-none"
                 style={{ textShadow: "0 2px 4px rgba(9, 9, 11, 0.95), 0 0 6px rgba(9, 9, 11, 0.95)" }}
               >
@@ -431,7 +519,7 @@ export function RoadmapCanvas({
         const midY = (startY + endY) / 2;
         paths.push(
           <path
-            key={`center-wavy-${topics[i].id}-${topics[i+1].id}`}
+            key={`center-wavy-${topics[i].id}-${topics[i + 1].id}`}
             d={`M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}`}
             className="stroke-[#FF6A1F] stroke-[3.5] fill-none stroke-linecap-round"
           />
@@ -672,7 +760,7 @@ export function RoadmapCanvas({
 
   return (
     <div className="flex-1 w-full flex flex-col min-h-0 relative overflow-hidden bg-zinc-950 font-sans">
-      
+
       {/* Stats bar / header */}
       <div className="shrink-0 px-6 py-4 border-b border-zinc-900/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-950/80 backdrop-blur-md z-30">
         <div className="space-y-1">
@@ -709,7 +797,7 @@ export function RoadmapCanvas({
 
       {/* Main workspace */}
       <div className="flex-1 flex min-h-0 relative">
-        
+
         {/* Canvas area */}
         <div
           ref={containerRef}
@@ -832,9 +920,8 @@ export function RoadmapCanvas({
 
         {/* Sidebar details panel */}
         <div
-          className={`w-[360px] border-l border-zinc-800/80 bg-zinc-950/95 backdrop-blur-md flex flex-col overflow-hidden h-full z-40 transition-transform duration-300 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] ${
-            selectedNode ? 'translate-x-0' : 'translate-x-full absolute right-0'
-          }`}
+          className={`w-[360px] border-l border-zinc-800/80 bg-zinc-950/95 backdrop-blur-md flex flex-col overflow-hidden h-full z-40 transition-transform duration-300 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] ${selectedNode ? 'translate-x-0' : 'translate-x-full absolute right-0'
+            }`}
         >
           {selectedNode && (
             <>
@@ -851,26 +938,24 @@ export function RoadmapCanvas({
                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Status</span>
                 <button
                   onClick={(e) => cycleProgressState(selectedNode.id, e)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                    progress[selectedNode.id] === "completed"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${progress[selectedNode.id] === "completed"
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                       : progress[selectedNode.id] === "in-progress"
-                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800"
-                  }`}
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                    }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    progress[selectedNode.id] === "completed"
+                  <span className={`w-1.5 h-1.5 rounded-full ${progress[selectedNode.id] === "completed"
                       ? "bg-emerald-400"
                       : progress[selectedNode.id] === "in-progress"
-                      ? "bg-amber-400 animate-pulse"
-                      : "bg-zinc-500"
-                  }`} />
+                        ? "bg-amber-400 animate-pulse"
+                        : "bg-zinc-500"
+                    }`} />
                   {progress[selectedNode.id] === "completed"
                     ? "Completed"
                     : progress[selectedNode.id] === "in-progress"
-                    ? "In Progress"
-                    : "Not Started"}
+                      ? "In Progress"
+                      : "Not Started"}
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-brand">
@@ -903,14 +988,18 @@ export function RoadmapCanvas({
                         </ul>
                       </div>
                     )}
-                    {selectedNode.content.bestPractices && selectedNode.content.bestPractices.length > 0 && (
+                    {((selectedNode.content?.resources && selectedNode.content.resources.length > 0) || (selectedNode.resources && selectedNode.resources.length > 0)) && (
                       <div className="space-y-1.5">
-                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Best Practices</h3>
-                        <ul className="space-y-2.5 list-none">
-                          {selectedNode.content.bestPractices.map((bp: string, idx: number) => (
-                            <li key={idx} className="text-xs text-zinc-300 bg-zinc-900 border border-zinc-800/60 p-2.5 rounded-xl leading-relaxed flex items-start gap-2">
-                              <span className="text-emerald-500 font-bold shrink-0">✓</span>
-                              <span>{bp}</span>
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Recommended Resources</h3>
+                        <ul className="space-y-2 list-none">
+                          {(((selectedNode.content?.resources || selectedNode.resources) || []) as any[]).map((res: any, idx: number) => (
+                            <li key={idx} className="text-xs text-zinc-300 bg-zinc-900 border border-zinc-800/60 p-2.5 rounded-xl leading-relaxed flex items-center justify-between gap-3 hover:border-zinc-700/60 transition-all duration-200">
+                              <a href={res.url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-500 hover:underline font-bold truncate flex-1">
+                                {res.title}
+                              </a>
+                              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400 bg-zinc-950 shrink-0">
+                                {res.type || "docs"}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -918,14 +1007,52 @@ export function RoadmapCanvas({
                     )}
                   </>
                 ) : selectedNode.description ? (
-                  <div className="space-y-1.5">
-                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Description</h3>
-                    <p className="text-xs leading-relaxed text-zinc-300">{selectedNode.description}</p>
+                  <div className="space-y-6">
+                    <div className="space-y-1.5">
+                      <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Description</h3>
+                      <p className="text-xs leading-relaxed text-zinc-300">{selectedNode.description}</p>
+                    </div>
+                    {selectedNode.resources && selectedNode.resources.length > 0 && (
+                      <div className="space-y-1.5">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Recommended Resources</h3>
+                        <ul className="space-y-2 list-none">
+                          {(selectedNode.resources as any[]).map((res: any, idx: number) => (
+                            <li key={idx} className="text-xs text-zinc-300 bg-zinc-900 border border-zinc-800/60 p-2.5 rounded-xl leading-relaxed flex items-center justify-between gap-3 hover:border-zinc-700/60 transition-all duration-200">
+                              <a href={res.url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-500 hover:underline font-bold truncate flex-1">
+                                {res.title}
+                              </a>
+                              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400 bg-zinc-950 shrink-0">
+                                {res.type || "docs"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
-                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Overview</h3>
-                    <p className="text-xs leading-relaxed text-zinc-300">{selectedNode.title} is part of the Frontend Development learning path.</p>
+                  <div className="space-y-6">
+                    <div className="space-y-1.5">
+                      <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Overview</h3>
+                      <p className="text-xs leading-relaxed text-zinc-300">{selectedNode.title} is part of the learning path.</p>
+                    </div>
+                    {selectedNode.resources && selectedNode.resources.length > 0 && (
+                      <div className="space-y-1.5">
+                        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-850 pb-1.5">Recommended Resources</h3>
+                        <ul className="space-y-2 list-none">
+                          {(selectedNode.resources as any[]).map((res: any, idx: number) => (
+                            <li key={idx} className="text-xs text-zinc-300 bg-zinc-900 border border-zinc-800/60 p-2.5 rounded-xl leading-relaxed flex items-center justify-between gap-3 hover:border-zinc-700/60 transition-all duration-200">
+                              <a href={res.url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-500 hover:underline font-bold truncate flex-1">
+                                {res.title}
+                              </a>
+                              <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-800 text-zinc-400 bg-zinc-950 shrink-0">
+                                {res.type || "docs"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1009,9 +1136,9 @@ function RoadmapNodeComponent({
       dotBorder = isInterchange ? "border-white border-2" : `border-[3px]`;
       glowClass = isInterchange ? "shadow-[0_0_10px_rgba(255,255,255,0.25)]" : "";
       innerDot = (
-        <div 
-          className="w-2 h-2 rounded-full" 
-          style={{ backgroundColor: isInterchange ? "#ffffff" : lineColor }} 
+        <div
+          className="w-2 h-2 rounded-full"
+          style={{ backgroundColor: isInterchange ? "#ffffff" : lineColor }}
         />
       );
     }
@@ -1071,23 +1198,39 @@ function RoadmapNodeComponent({
           {innerDot}
         </div>
 
-        {/* Text Label */}
+        {/* Button Box Label */}
         <div
           onClick={(e) => {
             e.stopPropagation();
             onNodeClick();
           }}
           className={`${labelClasses} group/label`}
-          style={{ textShadow: "0 2px 4px rgba(9, 9, 11, 0.95), 0 0 6px rgba(9, 9, 11, 0.95)" }}
         >
-          <span className={`text-base font-black tracking-tight transition-colors duration-200 ${isSelected ? 'text-[#FF6A1F] scale-105' : 'text-zinc-100 group-hover/label:text-white'}`}>
-            {node.title}
-          </span>
-          {subtitle && (
-            <span className="text-xs font-bold text-zinc-400 lowercase tracking-wide mt-0.5 leading-none">
-              {subtitle}
+          <div
+            className={`px-3.5 py-2 rounded-xl border bg-zinc-900/90 backdrop-blur-md shadow-xl flex flex-col transition-all duration-300 hover:scale-[1.04] hover:bg-zinc-850/95 ${
+              isSelected
+                ? "border-brand-500 shadow-[0_0_15px_rgba(255,106,31,0.25)]"
+                : "border-zinc-800/80 hover:border-zinc-700"
+            } ${
+              labelPos === "above" || labelPos === "below" || labelPos.includes("above-") || labelPos.includes("below-")
+                ? "items-center text-center"
+                : labelPos === "left"
+                ? "items-end text-right"
+                : "items-start text-left"
+            }`}
+            style={{
+              borderLeft: `4px solid ${lineColor}`
+            }}
+          >
+            <span className={`text-xs font-extrabold tracking-tight transition-colors duration-200 ${isSelected ? 'text-brand-400' : 'text-zinc-200 group-hover/label:text-white'}`}>
+              {node.title}
             </span>
-          )}
+            {subtitle && (
+              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-wider mt-1.5 leading-none">
+                {subtitle}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     );
