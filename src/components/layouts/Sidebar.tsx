@@ -21,7 +21,6 @@ import {
   X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass, Terminal, Bookmark
 } from 'lucide-react';
 import Image from 'next/image';
-import logo from '../../../public/logo.png';
 import icon from '../../../public/icon.png';
 
 interface SidebarProps {
@@ -98,8 +97,7 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       <div className="h-24 flex items-center justify-start lg:justify-center px-6 lg:px-0 shrink-0 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
         <Link href="/" onClick={onClose} className="relative h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-zinc-900 border border-white/10 shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 outline-none">
-          <Image src={logo} alt="Swadhyaayi Logo" fill sizes="40px" className="object-contain hidden lg:block p-1" />
-          <Image src={icon} alt="Swadhyaayi Icon" fill sizes="40px" className="object-cover lg:hidden" />
+          <Image src={icon} alt="Swadhyaayi Icon" fill sizes="40px" className="object-contain p-1" />
         </Link>
         <Button variant="ghost" size="icon" className="lg:hidden ml-auto shrink-0 text-zinc-400 hover:text-white" onClick={onClose}>
           <X className="h-5 w-5" />

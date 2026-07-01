@@ -8,7 +8,7 @@ import Lenis from 'lenis';
 import { 
   Code2, Trophy, Users, ArrowRight, BarChart3, 
   Terminal, Zap, Target, Activity, CheckCircle2,
-  Menu, X, GitBranch, ArrowUpRight, ChevronLeft, ChevronRight, Circle, BrainCircuit, Loader2
+  Menu, X, GitBranch, ArrowUpRight, ChevronLeft, ChevronRight, Circle, BrainCircuit, Loader2, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -165,6 +165,8 @@ const CustomCursor = () => {
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [practiceOpen, setPracticeOpen] = useState(false);
+  const [mobilePracticeOpen, setMobilePracticeOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -195,10 +197,43 @@ const Navbar = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-[11px] font-sans font-bold tracking-wider text-zinc-400 uppercase">
-          <a href="#practice" className="hover:text-brand-500 transition-colors duration-300">Practice</a>
-          <a href="#stats" className="hover:text-brand-500 transition-colors duration-300">Telemetry</a>
-          <a href="#leaderboard" className="hover:text-brand-500 transition-colors duration-300">Index</a>
-          <a href="#community" className="hover:text-brand-500 transition-colors duration-300">Ecosystem</a>
+          {/* Practice Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setPracticeOpen(true)}
+            onMouseLeave={() => setPracticeOpen(false)}
+          >
+            <button className="flex items-center gap-1 hover:text-brand-500 transition-colors duration-300 outline-none pb-0.5">
+              Practice
+              <ChevronDown size={10} className={cn("transition-transform duration-300", practiceOpen && "rotate-180")} />
+            </button>
+            <AnimatePresence>
+              {practiceOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 mt-2 w-48 bg-zinc-950 border border-zinc-800/80 rounded-xl shadow-xl py-2 flex flex-col z-50 backdrop-blur-md"
+                >
+                  <Link href="/problems" className="px-4 py-2 hover:bg-zinc-900 hover:text-brand-500 text-zinc-400 transition-colors normal-case text-xs font-semibold">
+                    DSA Problems
+                  </Link>
+                  <Link href="/practice/code" className="px-4 py-2 hover:bg-zinc-900 hover:text-brand-500 text-zinc-400 transition-colors normal-case text-xs font-semibold">
+                    Programming Arena
+                  </Link>
+                  <Link href="/practice" className="px-4 py-2 hover:bg-zinc-900 hover:text-brand-500 text-zinc-400 transition-colors normal-case text-xs font-semibold">
+                    MCQ Arena
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <Link href="/roadmap" className="hover:text-brand-500 transition-colors duration-300">Roadmaps</Link>
+          <Link href="/communities" className="hover:text-brand-500 transition-colors duration-300">Communities</Link>
+          <Link href="/tech-opportunities" className="hover:text-brand-500 transition-colors duration-300">Opportunities</Link>
+          <Link href="/leaderboard" className="hover:text-brand-500 transition-colors duration-300">Leaderboard</Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -233,35 +268,69 @@ const Navbar = () => {
             className="fixed inset-0 z-40 bg-black flex flex-col justify-center px-12 md:hidden"
           >
             <div className="blueprint-grid absolute inset-0 opacity-20 pointer-events-none" />
-            <div className="space-y-8 flex flex-col items-start font-swiss z-10">
-              <a 
-                href="#practice" 
+            <div className="space-y-8 flex flex-col items-start font-swiss z-10 w-full overflow-y-auto max-h-[85vh] py-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {/* Practice Collapsible */}
+              <div className="w-full">
+                <button 
+                  onClick={() => setMobilePracticeOpen(!mobilePracticeOpen)}
+                  className="flex items-center justify-between w-full text-4xl font-black text-zinc-500 hover:text-white transition-colors tracking-tighter text-left"
+                >
+                  <span>01 / PRACTICE</span>
+                  <ChevronDown className={cn("transition-transform duration-300 h-6 w-6", mobilePracticeOpen && "rotate-180")} />
+                </button>
+                <AnimatePresence>
+                  {mobilePracticeOpen && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden flex flex-col items-start pl-6 mt-4 gap-4 text-lg font-bold text-zinc-400"
+                    >
+                      <Link href="/problems" onClick={() => setMobileOpen(false)} className="hover:text-white">
+                        DSA Problems
+                      </Link>
+                      <Link href="/practice/code" onClick={() => setMobileOpen(false)} className="hover:text-white">
+                        Programming Arena
+                      </Link>
+                      <Link href="/practice" onClick={() => setMobileOpen(false)} className="hover:text-white">
+                        MCQ Arena
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Link 
+                href="/roadmap" 
                 onClick={() => setMobileOpen(false)}
                 className="text-4xl font-black text-zinc-500 hover:text-white transition-colors tracking-tighter"
               >
-                01 / PRACTICE
-              </a>
-              <a 
-                href="#stats" 
+                02 / ROADMAPS
+              </Link>
+              
+              <Link 
+                href="/communities" 
                 onClick={() => setMobileOpen(false)}
                 className="text-4xl font-black text-zinc-500 hover:text-white transition-colors tracking-tighter"
               >
-                02 / TELEMETRY
-              </a>
-              <a 
-                href="#leaderboard" 
+                03 / COMMUNITIES
+              </Link>
+              
+              <Link 
+                href="/tech-opportunities" 
                 onClick={() => setMobileOpen(false)}
                 className="text-4xl font-black text-zinc-500 hover:text-white transition-colors tracking-tighter"
               >
-                03 / INDEX
-              </a>
-              <a 
-                href="#community" 
+                04 / OPPORTUNITIES
+              </Link>
+
+              <Link 
+                href="/leaderboard" 
                 onClick={() => setMobileOpen(false)}
                 className="text-4xl font-black text-zinc-500 hover:text-white transition-colors tracking-tighter"
               >
-                04 / ECOSYSTEM
-              </a>
+                05 / LEADERBOARD
+              </Link>
               
               <div className="pt-12 w-full border-t border-zinc-900 flex flex-col gap-4 font-sans font-bold text-sm tracking-wide">
                 <Link href="/login" onClick={() => setMobileOpen(false)} className="text-zinc-400 hover:text-brand-400 uppercase tracking-wider">Log in</Link>
@@ -284,15 +353,8 @@ const HeroSection = () => {
       {/* Subtle brand orange ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[60dvw] h-[60dvw] max-w-[600px] max-h-[600px] bg-brand-500/10 blur-[10dvw] rounded-full pointer-events-none z-0" />
 
-      <div className="z-10 flex flex-col items-center justify-center max-w-7xl w-full text-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="font-sans font-bold text-xs tracking-[0.2em] text-brand-500 uppercase mb-8"
-        >
-          SWADHYAAYI ENGINE // VERSION 2.0
-        </motion.div>
+      <div className="z-10 flex mt-20 flex-col items-center justify-center max-w-7xl w-full text-center">
+
 
         <div className="flex flex-col items-center space-y-4 tracking-tighter">
           <div className="text-[12vw] sm:text-[10vw] font-black leading-[0.8] text-zinc-300 select-none">
