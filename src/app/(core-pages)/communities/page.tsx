@@ -478,6 +478,18 @@ function RightSidebarTests() {
 
   useEffect(() => {
     fetchTests();
+
+    const handleRefresh = () => {
+      fetchTests();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("test-created", handleRefresh);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("test-created", handleRefresh);
+      }
+    };
   }, [community?._id, activeGroupId]);
 
   return (

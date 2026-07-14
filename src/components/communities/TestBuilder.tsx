@@ -331,6 +331,9 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
       toast.success("Test created successfully");
       handleOpenChange(false);
       onTestCreated();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("test-created"));
+      }
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to create test";

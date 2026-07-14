@@ -406,7 +406,7 @@ export function ChatBox() {
           <div className="flex items-center gap-3 w-full max-w-5xl">
             {canCreateTest && (
               <div className="shrink-0 bg-transparent">
-                <TestBuilder onTestCreated={() => {}} />
+                <TestBuilder onTestCreated={fetchMessages} />
               </div>
             )}
             <form onSubmit={handleSend} className="flex-1 flex items-center bg-zinc-900 rounded-lg px-4 py-2 min-h-11 shadow-sm border border-zinc-800">
