@@ -30,6 +30,7 @@ export interface CommunityTest {
   title: string;
   description: string;
   communityId: string;
+  groupId?: string;
   createdBy: string;
   type: "mcq" | "programming" | "mixed";
   startTime: string;
@@ -229,7 +230,12 @@ export const communityApi = {
         isLocked?: boolean;
       }[];
     }
-  ) => {
+  ): Promise<{
+    message: string;
+    evaluationComplete: boolean;
+    resultHidden: boolean;
+    result: TestResult | null;
+  }> => {
     if (process.env.NODE_ENV !== 'production') {
       console.info('[MCQ_DEBUG][FE][API][SUBMIT_TEST] Request payload', {
         communityId,
@@ -239,7 +245,12 @@ export const communityApi = {
       });
     }
 
-    const response = await api.post(`/communities/${communityId}/tests/${testId}/submit`, data);
+    const response = await api.post<{
+      message: string;
+      evaluationComplete: boolean;
+      resultHidden: boolean;
+      result: TestResult | null;
+    }>(`/communities/${communityId}/tests/${testId}/submit`, data);
     return response.data;
   },
 

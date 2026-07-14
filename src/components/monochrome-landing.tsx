@@ -105,62 +105,6 @@ const Counter = ({ target, duration = 2 }: { target: number; duration?: number }
   return <span ref={ref}>{count.toLocaleString()}</span>;
 };
 
-const CustomCursor = () => {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-  const cursorSize = useMotionValue(20);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isTouch, setIsTouch] = useState(false);
-
-  const springConfig = { damping: 40, stiffness: 400, mass: 0.4 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
-  const cursorSizeSpring = useSpring(cursorSize, springConfig);
-
-  useEffect(() => {
-    if (window.matchMedia('(pointer: coarse)').matches) {
-      setIsTouch(true);
-      return;
-    }
-
-    const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-    };
-
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('a') || target.closest('button') || target.closest('.hover-invert')) {
-        setIsHovered(true);
-        cursorSize.set(50);
-      } else {
-        setIsHovered(false);
-        cursorSize.set(20);
-      }
-    };
-
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mouseover', handleMouseOver);
-    return () => {
-      window.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('mouseover', handleMouseOver);
-    };
-  }, [cursorX, cursorY, cursorSize]);
-
-  if (isTouch) return null;
-
-  return (
-    <motion.div
-      className="fixed top-0 left-0 rounded-full border border-white mix-blend-difference pointer-events-none z-[9999] items-center justify-center -translate-x-1/2 -translate-y-1/2 hidden md:flex"
-      style={{
-        x: cursorXSpring,
-        y: cursorYSpring,
-        width: cursorSizeSpring,
-        height: cursorSizeSpring,
-      }}
-    />
-  );
-};
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -212,7 +156,7 @@ const Navbar = () => {
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
+                  exit={{ opacity: 0, y: 10 }} 
                   transition={{ duration: 0.15 }}
                   className="absolute left-0 mt-2 w-48 bg-zinc-950 border border-zinc-800/80 rounded-xl shadow-xl py-2 flex flex-col z-50 backdrop-blur-md"
                 >
@@ -346,24 +290,25 @@ const Navbar = () => {
 
 const HeroSection = () => {
   return (
-    <section className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden bg-black px-6 select-none border-b border-zinc-950">
+    <section className="relative min-h-[100dvh] w-full flex flex-col justify-between items-center overflow-hidden bg-black px-6 py-[8dvh] select-none border-b border-zinc-950">
       <GridBackground />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black pointer-events-none" />
       
-      {/* Subtle brand orange ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[60dvw] h-[60dvw] max-w-[600px] max-h-[600px] bg-brand-500/10 blur-[10dvw] rounded-full pointer-events-none z-0" />
+      {/* Subtle brand orange ambient glow using dvw and dvh */}
+      <div className="absolute top-[20dvh] left-1/2 -translate-x-1/2 w-[50dvw] h-[40dvh] bg-brand-500/10 blur-[10dvw] rounded-full pointer-events-none z-0" />
 
-      <div className="z-10 flex mt-20 flex-col items-center justify-center max-w-7xl w-full text-center">
+      {/* Spacer to push content down below the fixed navbar */}
+      <div className="h-[10dvh]" />
 
-
-        <div className="flex flex-col items-center space-y-4 tracking-tighter">
-          <div className="text-[12vw] sm:text-[10vw] font-black leading-[0.8] text-zinc-300 select-none">
+      <div className="z-10 flex flex-col items-center justify-center max-w-5xl w-full text-center my-auto">
+        <div className="flex flex-col items-center space-y-[2dvh] tracking-tighter">
+          <div className="text-[clamp(2.5rem,10dvw,8dvh)] font-black leading-[0.85] text-zinc-300 select-none">
             <DistortedWord word="MASTER" />
           </div>
-          <div className="text-[12vw] sm:text-[10vw] font-black leading-[0.8] text-zinc-300 select-none">
+          <div className="text-[clamp(2.5rem,10dvw,8dvh)] font-black leading-[0.85] text-zinc-300 select-none">
             <DistortedWord word="THE" />
           </div>
-          <div className="text-[12vw] sm:text-[10vw] font-black leading-[0.8] text-brand-500 select-none">
+          <div className="text-[clamp(2.5rem,10dvw,8dvh)] font-black leading-[0.85] text-brand-500 select-none">
             <DistortedWord word="ALGORITHM." isHighlight={true} />
           </div>
         </div>
@@ -372,7 +317,7 @@ const HeroSection = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 1 }}
-          className="text-xs sm:text-sm font-sans tracking-wide text-zinc-400 max-w-xl mt-12 leading-relaxed font-semibold"
+          className="text-[clamp(0.75rem,2dvw,0.9rem)] font-sans tracking-wide text-zinc-400 max-w-xl mt-[4dvh] leading-relaxed font-semibold"
         >
           An editorial blueprint for competitive developers. No noise, just clean data structures and algorithmic mastery.
         </motion.p>
@@ -381,22 +326,22 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.8 }}
-          className="flex items-center gap-6 mt-12"
+          className="flex flex-wrap justify-center items-center gap-[2dvw] mt-[5dvh]"
         >
           <Link href="/register">
-            <Button size="lg" className="h-12 px-8 bg-brand-500 text-white font-sans font-black tracking-wider text-xs uppercase hover:bg-brand-600 transition-all rounded-none border border-brand-500 shadow-[0_0_20px_rgba(255,106,31,0.25)] hover:scale-105">
+            <Button size="lg" className="h-[6dvh] min-h-[44px] px-[4dvw] bg-brand-500 text-white font-sans font-black tracking-wider text-xs uppercase hover:bg-brand-600 transition-all rounded-none border border-brand-500 shadow-[0_0_20px_rgba(255,106,31,0.25)] hover:scale-105">
               Initialize Practice
             </Button>
           </Link>
           <a href="#practice">
-            <Button size="lg" variant="outline" className="h-12 px-8 border-zinc-800 bg-transparent text-zinc-400 hover:text-brand-500 hover:border-brand-500 font-sans font-bold tracking-wider text-xs uppercase transition-all rounded-none hover:bg-brand-500/5">
+            <Button size="lg" variant="outline" className="h-[6dvh] min-h-[44px] px-[4dvw] border-zinc-800 bg-transparent text-zinc-400 hover:text-brand-500 hover:border-brand-500 font-sans font-bold tracking-wider text-xs uppercase transition-all rounded-none hover:bg-brand-500/5">
               Scroll Down ↓
             </Button>
           </a>
         </motion.div>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 font-sans text-xs font-bold tracking-[0.2em] text-zinc-650 animate-pulse uppercase">
+      <div className="z-10 font-sans text-[clamp(10px,1.2dvw,12px)] font-bold tracking-[0.2em] text-zinc-600 animate-pulse uppercase mt-[4dvh]">
         System Status: Operational
       </div>
     </section>
@@ -780,7 +725,7 @@ export default function MonochromeLanding() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-zinc-800 selection:text-white font-sans overflow-x-hidden relative">
-      <CustomCursor />
+      
       <div className="noise-overlay" />
       <Navbar />
       <HeroSection />

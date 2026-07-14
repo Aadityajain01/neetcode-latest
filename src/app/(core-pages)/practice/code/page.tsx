@@ -14,10 +14,13 @@ import { cn } from "@/lib/utils";
 import { ProblemsTableSkeleton } from "@/components/skeletons/inline-skeletons";
 import { toast } from "sonner";
 
+import { useAuthStore } from "@/store/auth-store";
+
 const ITEMS_PER_PAGE = 8;
 
 function ProgrammingPracticeContent() {
   const params = useSearchParams();
+  const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   
   // Parse lang parameter using the C++ bug fix
@@ -72,16 +75,24 @@ function ProgrammingPracticeContent() {
     const initData = async () => {
       try {
         setLoading(true);
-        const [problemsRes, solvedRes] = await Promise.all([
-          problemApi.getProblems({ limit: 1000, type: "practice" }),
-          api.get("/users/me/solved"),
-        ]);
+        if (isAuthenticated) {
+          const [problemsRes, solvedRes] = await Promise.all([
+            problemApi.getProblems({ limit: 1000, type: "practice" }),
+            api.get("/users/me/solved"),
+          ]);
 
-        if (problemsRes?.problems) {
-          setAllProblems(problemsRes.problems);
-        }
-        if (Array.isArray(solvedRes?.data?.solved)) {
-          setSolvedProblems(new Set(solvedRes.data.solved));
+          if (problemsRes?.problems) {
+            setAllProblems(problemsRes.problems);
+          }
+          if (Array.isArray(solvedRes?.data?.solved)) {
+            setSolvedProblems(new Set(solvedRes.data.solved));
+          }
+        } else {
+          const problemsRes = await problemApi.getProblems({ limit: 1000, type: "practice" });
+          if (problemsRes?.problems) {
+            setAllProblems(problemsRes.problems);
+          }
+          setSolvedProblems(new Set());
         }
       } catch (error) {
         console.error("Failed to load practice data", error);
@@ -92,7 +103,7 @@ function ProgrammingPracticeContent() {
     };
 
     initData();
-  }, [lang]);
+  }, [lang, isAuthenticated]);
 
   // Filter problems by active language
   const languageFilteredProblems = useMemo(() => {

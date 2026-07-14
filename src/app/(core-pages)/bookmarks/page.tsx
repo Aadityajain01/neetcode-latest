@@ -3,10 +3,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bookmark, Compass, Zap, ArrowRight, Search, Inbox } from 'lucide-react';
+import { Bookmark, Compass, Zap, ArrowRight, Search, Inbox, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useAuthStore } from '@/store/auth-store';
 
 interface BookmarkedRoadmap {
   title: string;
@@ -26,9 +28,17 @@ interface BookmarkedJob {
 
 export default function BookmarksPage() {
   const router = useRouter();
+  const { requireAuth, isAuthenticated } = useRequireAuth();
+  const { initialized, isLoading: authLoading } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'roadmaps' | 'jobs'>('roadmaps');
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (initialized && !authLoading && !isAuthenticated) {
+      requireAuth(undefined, "Sign in to view your bookmarks");
+    }
+  }, [initialized, authLoading, isAuthenticated]);
 
   // Bookmarked items state
   const [roadmaps, setRoadmaps] = useState<BookmarkedRoadmap[]>([]);
@@ -111,11 +121,11 @@ export default function BookmarksPage() {
   }, [jobs, search]);
 
   // Prevent flash or hydration error
-  if (!mounted) {
+  if (!mounted || !initialized || authLoading || !isAuthenticated) {
     return (
       <div className="h-full flex items-center justify-center bg-[#020617]">
         <div className="animate-pulse flex flex-col items-center gap-2">
-          <Bookmark className="h-8 w-8 text-zinc-700 animate-spin" />
+          <Bookmark className="h-8 w-8 text-zinc-700 animate-pulse" />
           <span className="text-xs text-zinc-500 uppercase tracking-widest font-black">Loading Bookmarks...</span>
         </div>
       </div>

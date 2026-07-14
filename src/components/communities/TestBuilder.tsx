@@ -49,7 +49,7 @@ import {
 
 export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
   const QUESTIONS_PER_PAGE = 5;
-  const { community } = useCommunity();
+  const { community, activeGroupId } = useCommunity();
   const [open, setOpen] = useState(false);
   const [selectedTestType, setSelectedTestType] = useState<"mcq" | "programming" | "mixed">("mcq");
   const [loading, setLoading] = useState(false);
@@ -323,6 +323,7 @@ export function TestBuilder({ onTestCreated }: { onTestCreated: () => void }) {
 
       await communityApi.createTest(community._id, {
         ...form,
+        groupId: activeGroupId || undefined,
         type: selectedTestType,
         questions,
       });

@@ -22,6 +22,8 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip
 } from 'recharts';
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuthStore } from "@/store/auth-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SocialLinks { github?: string; linkedin?: string; website?: string; twitter?: string; }
@@ -67,13 +69,22 @@ const CustomTooltip = ({ active, payload }: any) => {
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const router = useRouter();
+  const { requireAuth, isAuthenticated } = useRequireAuth();
+  const { initialized, isLoading: authLoading } = useAuthStore();
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialized && !authLoading && !isAuthenticated) {
+      requireAuth(undefined, "Sign in to view your profile");
+    }
+  }, [initialized, authLoading, isAuthenticated]);
 
   const profileQuery = useQuery<{
     data: ProfileResponse | null;
     dsaCounts: { easy: number; medium: number; hard: number; total: number };
   }>({
     queryKey: ["my-profile"],
+    enabled: initialized && !authLoading && isAuthenticated,
     queryFn: async () => {
       const [profileRes, dsaCountsRes] = await Promise.all([
         profileApi.getMyProfile(),
@@ -88,6 +99,14 @@ export default function ProfilePage() {
       toast.error("Failed to load profile");
     }
   }, [profileQuery.error]);
+
+  if (!initialized || authLoading || !isAuthenticated) {
+    return (
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <ProfileContentSkeleton />
+      </div>
+    );
+  }
 
   const data = profileQuery.data?.data ?? null;
   const dsaCounts = profileQuery.data?.dsaCounts ?? { easy: 0, medium: 0, hard: 0, total: 0 };

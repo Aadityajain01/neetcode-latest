@@ -144,7 +144,7 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
         })
         .filter(Boolean);
 
-      await communityApi.submitTest(communityId, testId, {
+      const res = await communityApi.submitTest(communityId, testId, {
         answers: answersArr,
         codeSubmissions: codesArr,
       });
@@ -155,10 +155,21 @@ export default function TestTakingInterface(props: { params: ParamsType }) {
       antiCheat.cancelReturnCountdown();
       antiCheat.exitFullscreen();
 
-      const data = await communityApi.getTestById(communityId, testId);
-      if (data.result) setResult(data.result);
-      setResultHidden(data.resultHidden ?? false);
-      setEvaluationComplete(data.evaluationComplete ?? false);
+      setResultHidden(res.resultHidden ?? false);
+      setEvaluationComplete(res.evaluationComplete ?? false);
+      if (res.result) {
+        setResult(res.result);
+      } else if (!res.evaluationComplete && !res.resultHidden) {
+        // If not complete and not hidden, fetch fresh state
+        try {
+          const data = await communityApi.getTestById(communityId, testId);
+          if (data.result) setResult(data.result);
+          setResultHidden(data.resultHidden ?? false);
+          setEvaluationComplete(data.evaluationComplete ?? false);
+        } catch (fetchErr) {
+          console.error("Error fetching updated test detail after submission:", fetchErr);
+        }
+      }
     } catch (error: any) {
       console.error("Submission failed:", error);
       toast.error(error?.response?.data?.error || "Failed to submit test. Please check your internet.");

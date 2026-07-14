@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Code2, Trophy, Users, Shield,
-  X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass, Terminal, Bookmark
+  X, LogOut, Zap, User, HelpCircle, TrendingUp, Compass, Terminal, Bookmark, LogIn
 } from 'lucide-react';
 import Image from 'next/image';
 import icon from '../../../public/icon.png';
@@ -32,7 +32,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: SidebarProps) {
   const pathname = usePathname();
-  const { user, firebaseUser } = useAuthStore();
+  const { user, firebaseUser, isAuthenticated } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const profileImageUrl = user?.avatarUrl || firebaseUser?.photoURL || undefined;
   const profileInitial =
@@ -142,74 +142,85 @@ export default function Sidebar({ isOpen, onClose, onLogout, onShowTutorial }: S
       {/* Profile Section at the Bottom (Non-Homepage Pages) */}
       {pathname !== '/' && (
         <div className="shrink-0 pb-6 pt-4 px-2 lg:px-0 flex flex-col items-center bg-gradient-to-t from-zinc-950/80 to-transparent w-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2.5 px-3 py-1.5 lg:p-0 rounded-full cursor-pointer select-none group transition-all duration-300">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-zinc-500 via-zinc-200 to-zinc-600 p-[1px] relative transition-all duration-300 group-hover:scale-105">
-                  <Avatar className="h-full w-full rounded-full bg-zinc-950 border border-zinc-950">
-                    <AvatarImage
-                      src={profileImageUrl}
-                      alt={user?.displayName || user?.email || 'User avatar'}
-                      className="h-full w-full rounded-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    <AvatarFallback className="rounded-full bg-zinc-950 text-white font-bold text-[10px] flex items-center justify-center">
-                      {profileInitial}
-                    </AvatarFallback>
-                  </Avatar>
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2.5 px-3 py-1.5 lg:p-0 rounded-full cursor-pointer select-none group transition-all duration-300">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-zinc-500 via-zinc-200 to-zinc-600 p-[1px] relative transition-all duration-300 group-hover:scale-105">
+                    <Avatar className="h-full w-full rounded-full bg-zinc-950 border border-zinc-950">
+                      <AvatarImage
+                        src={profileImageUrl}
+                        alt={user?.displayName || user?.email || 'User avatar'}
+                        className="h-full w-full rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <AvatarFallback className="rounded-full bg-zinc-950 text-white font-bold text-[10px] flex items-center justify-center">
+                        {profileInitial}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {/* Mobile/Open Drawer Display Name */}
+                  <span className="lg:hidden text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors truncate max-w-[150px]">
+                    {user?.displayName || 'Developer'}
+                  </span>
                 </div>
-                {/* Mobile/Open Drawer Display Name */}
-                <span className="lg:hidden text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors truncate max-w-[150px]">
-                  {user?.displayName || 'Developer'}
-                </span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="right" sideOffset={12} className="w-52 bg-zinc-900/95 border border-white/10 text-zinc-300 rounded-xl shadow-2xl p-1 z-[100] backdrop-blur-md">
+                <div className="flex flex-col space-y-1 px-2.5 py-2.5 border-b border-white/5 mb-1">
+                  <p className="text-xs font-semibold text-white truncate">
+                    {user?.displayName || 'Developer'}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                
+                <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                  <Link href="/" className="flex items-center w-full">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span className="font-semibold text-xs">Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                  <Link href="/profile" className="flex items-center w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    <span className="font-semibold text-xs">Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                  <Link href="/bookmarks" className="flex items-center w-full">
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    <span className="font-semibold text-xs">Bookmarks</span>
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
+                  <Link href="/leaderboard" className="flex items-center w-full">
+                    <Trophy className="mr-2 h-4 w-4" />
+                    <span className="font-semibold text-xs">Leaderboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="bg-white/5 my-1" />
+                
+                <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors py-2 px-2.5 mb-0.5">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span className="font-semibold text-xs">Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/login" onClick={onClose} className="flex items-center gap-2.5 px-3 py-1.5 lg:p-0 rounded-full cursor-pointer select-none group transition-all duration-300">
+              <div className="h-8 w-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-brand-500/50 group-hover:bg-zinc-800">
+                <LogIn className="h-4 w-4 text-zinc-400 group-hover:text-brand-500 transition-colors" />
               </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="right" sideOffset={12} className="w-52 bg-zinc-900/95 border border-white/10 text-zinc-300 rounded-xl shadow-2xl p-1 z-[100] backdrop-blur-md">
-              <div className="flex flex-col space-y-1 px-2.5 py-2.5 border-b border-white/5 mb-1">
-                <p className="text-xs font-semibold text-white truncate">
-                  {user?.displayName || 'Developer'}
-                </p>
-                <p className="text-[10px] text-zinc-500 truncate">
-                  {user?.email}
-                </p>
-              </div>
-              
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
-                <Link href="/" className="flex items-center w-full">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  <span className="font-semibold text-xs">Dashboard</span>
-                </Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
-                <Link href="/profile" className="flex items-center w-full">
-                  <User className="mr-2 h-4 w-4" />
-                  <span className="font-semibold text-xs">Profile</span>
-                </Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
-                <Link href="/bookmarks" className="flex items-center w-full">
-                  <Bookmark className="mr-2 h-4 w-4" />
-                  <span className="font-semibold text-xs">Bookmarks</span>
-                </Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-800/50 focus:text-white rounded-lg transition-colors py-2 px-2.5">
-                <Link href="/leaderboard" className="flex items-center w-full">
-                  <Trophy className="mr-2 h-4 w-4" />
-                  <span className="font-semibold text-xs">Leaderboard</span>
-                </Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator className="bg-white/5 my-1" />
-              
-              <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-400 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors py-2 px-2.5 mb-0.5">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span className="font-semibold text-xs">Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <span className="lg:hidden text-xs font-semibold text-zinc-400 group-hover:text-white transition-colors truncate max-w-[150px]">
+                Sign In
+              </span>
+            </Link>
+          )}
         </div>
       )}
 
